@@ -1,5 +1,5 @@
 [package]
-name = "solver"
+name = "partial-lib-spec-solver"
 version = "0.1.0"
 authors = ["KangJing (Chaser) Huang <huang989@purdue.edu>"]
 edition = "2018"

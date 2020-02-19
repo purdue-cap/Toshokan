@@ -1,0 +1,631 @@
+// Keyword Tokens
+TK_ATOMIC = { "atomic" }
+TK_FORK = { "fork" }
+TK_INSERT = { "insert" }
+TK_INTO = { "into" }
+TK_LOOP = { "loop" }
+TK_REPEAT = { "repeat" }
+TK_MINREPEAT = { "minrepeat" }
+TK_NEW = { "new" }
+TK_NULL = { "null" }
+TK_REORDER = { "reorder" }
+TK_ASSUME = { "assume" }
+TK_HASSERT = { "hassert" }
+TK_BOOLEAN = { "boolean" }
+TK_FLOAT = { "float" }
+TK_BIT = { "bit" }
+TK_INT = { "int" }
+TK_VOID = { "void" }
+TK_DOUBLE = { "double" }
+TK_FUN = { "fun" }
+TK_CHAR = { "char" }
+TK_STRUCT = { "struct" }
+TK_REF = { "ref" }
+TK_ADT = { "adt" }
+TK_IF = { "if" }
+TK_ELSE = { "else" }
+TK_WHILE = { "while" }
+TK_FOR = { "for" }
+TK_SWITCH = { "switch" }
+TK_CASE = { "case" }
+TK_REPEAT_CASE = { "repeat_case" }
+TK_DEFAULT = { "default" }
+TK_BREAK = { "break" }
+TK_DO = { "do" }
+TK_CONTINUE = { "continue" }
+TK_RETURN = { "return" }
+TK_TRUE = { "true" }
+TK_FALSE = { "false" }
+TK_PARFOR = { "parfor" }
+TK_UNTIL = { "until" }
+TK_BY = { "by" }
+TK_IMPLEMENTS = { "implements" }
+TK_ASSERT = { "assert" }
+TK_ASSERT_MAX = { "assert_max" }
+TK_H_ASSERT = { "h_assert" }
+TK_GENERATOR = { "generator" }
+TK_HARNESS = { "harness" }
+TK_MODEL = { "model" }
+TK_FIXES = { "fixes" }
+TK_GLOBAL = { "global" }
+TK_SERIAL = { "serial" }
+TK_SPMDFORK = { "spmdfork" }
+TK_STENCIL = { "stencil" }
+TK_INCLUDE = { "include" }
+TK_PRAGMA = { "pragma" }
+TK_PACKAGE = { "package" }
+TK_EXTENDS = { "extends" }
+TK_LET = { "let" }
+TK_PRECOND = { "precond" }
+BANG = @{ "~" | "!" }
+
+WHITESPACE = _{
+    " " | "\t" | "\n" | "\r"
+}
+
+COMMENT = _{
+    "/*" ~ (!"*/" ~ ANY)* ~ "*/"
+|   "//" ~ (!"\n" ~ ANY)*
+}
+
+// REGEN Structures
+
+REGEN = @{
+    "{|" ~ (!("|" | "}") ~ ANY) ~
+    (
+        &("{|") ~ REGEN
+    |   !("|}") ~ "|"
+    |   !("|") ~ ANY
+    )* ~ "|}"
+}
+
+// Literals
+CHAR_LITERAL = @{ "'" ~ (ESC|(!"'" ~ ANY)) ~ "'" }
+STRING_LITERAL = @{ "\"" ~ (ESC|!"\"" ~ ANY)* ~ "\"" }
+ESC = @{
+    "\\" ~ (
+        "n" | "r" | "t" | "b" | "f" | "\"" | "'" | "\\" 
+    |   '0'..'3' ~ (ASCII_DIGIT ~ (ASCII_DIGIT)?)?
+    |   '4'..'7' ~ (ASCII_DIGIT)?
+    )
+}
+HQUAN = @{
+    "0x" ~ (
+        'A'..'F'
+    |   'a'..'f'
+    |   ASCII_DIGIT
+    )+
+}
+NUMBER = @{
+    (ASCII_DIGIT)+ ~
+    ("." ~ (ASCII_DIGIT)+)? ~
+    (("e" | "E") ~ ("+" | "-")? ~ (ASCII_DIGIT)+)? ~ ("i")?
+}
+
+// Other Tokens
+ID = @{
+    (
+        ( ASCII_ALPHA | "_" ) ~
+        ( ASCII_ALPHANUMERIC | "_" )*
+    )
+|   "op.+" | "op.-" | "op.*" |  "op./" |  "op.%"  | "op.=" | "op.<" 
+}
+
+// Grammar Structures
+program = { 
+    SOI ~
+    (
+        top_level_decls
+    |   include_stmt
+    |   TK_PACKAGE ~ ID ~ ( ";" | pkgbody )
+    |   pragma_stmt
+    )* ~ EOI
+}
+
+top_level_decls = _{
+    &( annotation_list ~
+        ( TK_SERIAL | TK_HARNESS | TK_GENERATOR | TK_STENCIL | TK_MODEL )* ~
+        return_type ~ ID ~ (type_params)? ~ "("
+    ) ~ function_decl
+|   &( return_type ~ ID ~ (type_params)? ~ "(" ) ~ function_decl
+|   field_decl ~ ";"
+|   &( annotation_list ~ TK_STRUCT ) ~ struct_decl
+|   adt_decl
+|   special_assert_statement
+}
+
+pkgbody = {
+    "{" ~
+    (top_level_decls)* ~ "}"
+}
+
+include_stmt = { TK_INCLUDE ~ STRING_LITERAL ~ ";" }
+
+pragma_stmt = { TK_PRAGMA ~ ID ~ (STRING_LITERAL)? ~ ";" }
+
+field_decl = {
+    data_type ~ ID ~
+    ( "=" ~ expr_or_lambda )? ~
+    ( "," ~ ID ~ ( "=" ~ expr_or_lambda )?)*
+}
+
+statement = {
+    loop_statement
+|   minrepeat_statement
+|   fork_statement
+|   spmdfork_statement
+|   parfor_statement
+|   insert_block
+|   reorder_block
+|   atomic_block
+|   &("{") ~ block
+|   &(return_type ~ ID ~ "{") ~ fdecl_statement
+|   &(data_type ~ ID) ~ variable_decl ~ ";"
+|   &(expr_statement) ~ expr_statement ~ ";"
+|   TK_BREAK ~ ";"
+|   TK_CONTINUE ~ ";"
+|   switch_statement
+|   if_else_statement
+|   while_statement
+|   do_while_statement ~ ";"
+|   for_statement
+|   assume_statement ~ ";"
+|   assert_statement ~ ";"
+|   assert_max_statement ~ ";"
+|   hassert_statement ~ ";"
+|   &(annotation_list ~
+     (TK_SERIAL | TK_HARNESS | TK_GENERATOR | TK_STENCIL | TK_MODEL)* ~
+     return_type ~ ID ~ "("
+    ) ~ fdecl_statement
+|   return_statement ~ ";"
+|   ";"
+}
+
+fdecl_statement = { function_decl }
+
+loop_statement = {
+    &((TK_LOOP | TK_REPEAT) ~
+      "(" ~ ID ~ ":"
+    ) ~ (TK_LOOP | TK_REPEAT) ~ "(" ~
+    ID ~ ":" ~ right_expr ~ ")" ~ pseudo_block
+|   (TK_LOOP | TK_REPEAT) ~ "(" ~ right_expr ~ ")" ~ pseudo_block
+}
+
+minrepeat_statement = {
+    TK_MINREPEAT ~ pseudo_block
+}
+
+fork_statement = {
+    TK_FORK ~ "(" ~ variable_decl ~ ";" ~ right_expr ~ ")" ~ pseudo_block
+}
+
+spmdfork_statement = {
+    TK_SPMDFORK ~ "(" ~ (ID ~ ";")? ~ right_expr ~ ")" ~ pseudo_block
+}
+
+parfor_statement = {
+    TK_PARFOR ~ "(" ~ var_expr ~ "<-" ~ range_exp ~ ")" ~ pseudo_block
+}
+
+range_exp = {
+    right_expr ~ TK_UNTIL ~ right_expr ~ (TK_BY ~ right_expr)?
+}
+
+type_params_use = {
+    &("<" ~ (ID ~ "@")? ~ ID ~ "<" ~ data_type ~ ">>") ~
+    "<" ~ (ID ~ "@")? ~ ID ~ "<" ~ data_type ~ ">>"
+|   "<" ~ data_type ~ ("," ~ data_type)* ~ ">"
+}
+
+data_type = {
+    (TK_GLOBAL)? ~
+    ( primitive_type
+    | (ID ~ "@")? ~ ID
+    | "|" ~ (ID ~ "@")? ~ ID ~ "|" ) ~
+    (type_params_use)? ~
+    ( "[" ~
+        ( (expr_named_param ~ ("<:" ~ NUMBER)?)? ~
+          ("," ~ expr_named_param ~ ("<:" ~ NUMBER)?)*
+        ) ~ "]"
+    )*
+|   TK_VOID
+}
+
+primitive_type = {
+    TK_BOOLEAN
+|   TK_BIT
+|   TK_INT
+|   TK_FLOAT
+|   TK_DOUBLE
+|   TK_FUN
+|   TK_CHAR
+}
+
+variable_decl = {
+    data_type ~ ID ~ ("=" ~ expr_or_lambda)? ~
+    ("," ~ ID ~ ("=" ~ expr_or_lambda)?)*
+}
+
+expr_or_lambda = {
+    &( "(" ~ ( ")" | ID ~ ( ")" ~ "->" | "," ))) ~
+    lambda_expr
+|   right_expr
+}
+
+annotation = {
+    "@" ~ ID ~ "(" ~ (STRING_LITERAL)? ~ ")"
+}
+
+annotation_list = {
+    (annotation)*
+}
+
+type_params = {
+    "<" ~ ID ~ ("," ~ ID)* ~ ">"
+}
+
+function_decl  = {
+    annotation_list ~
+    (TK_SERIAL | TK_HARNESS | TK_GENERATOR | TK_STENCIL | TK_MODEL)* ~
+    return_type ~ ID ~ (type_params)? ~
+    param_decl_list ~
+    (TK_IMPLEMENTS ~ ID)? ~
+    (TK_FIXES ~ ID)? ~
+    (block | ";")
+}
+
+return_type = { data_type }
+
+param_decl_list = {
+    "(" ~  (impl_param)? ~ (param_decl ~ ("," ~ param_decl)* )? ~ ")"
+}
+
+impl_param = {
+    "[" ~ TK_INT ~ ID ~ ("," ~ TK_INT ~ ID)* ~ "]" ~ ","
+}
+
+param_decl = {
+    (TK_REF)? ~ data_type ~ ID
+}
+
+block = {
+    "{" ~ (statement)* ~ "}"
+}
+
+insert_block = {
+    TK_INSERT ~ "{" ~ (statement)* ~"}" ~
+    TK_INTO ~ "{"~ (statement)* ~ "}"
+}
+
+reorder_block = {
+    TK_REORDER ~ "{" ~ (statement)* ~ "}"
+}
+
+atomic_block = {
+    TK_ATOMIC ~ ( "(" ~ right_expr ~ ")" )? ~ block
+}
+
+pseudo_block = {
+    statement
+}
+
+return_statement = {
+    TK_RETURN ~ (right_expr)?
+}
+
+assume_statement = {
+    TK_ASSUME ~ right_expr ~ (":" ~ STRING_LITERAL)?
+}
+
+special_assert_statement = {
+    (
+        TK_LET ~ 
+        (( ID ~ "=" ~ right_expr) ~
+        ("," ~ ID ~ "=" ~ right_expr)*)?
+    ) ~ "{" ~
+    (TK_ASSUME ~ right_expr)? ~
+    (TK_ASSERT ~ right_expr ~ ";") ~
+    (TK_ASSERT ~ right_expr ~ ";")* ~
+    "}"
+|   TK_ASSERT ~ right_expr ~ ";"
+}
+
+assert_statement = {
+    (TK_ASSERT | TK_H_ASSERT) ~ right_expr ~ (":" ~ STRING_LITERAL)?
+}
+
+hassert_statement = {
+    TK_HASSERT ~ right_expr ~ (":" ~ STRING_LITERAL)?
+}
+
+assert_max_statement = {
+    TK_ASSERT_MAX ~ ("\\")? ~ right_expr ~ (":" ~ STRING_LITERAL)?
+}
+
+switch_statement = {
+    TK_SWITCH ~ "(" ~ ID ~ ")" ~ "{" ~ 
+    (TK_CASE ~ ID ~ ":" ~ pseudo_block)* ~
+    (
+        (TK_DEFAULT ~ ":" ~  pseudo_block)
+    |   (TK_REPEAT_CASE ~ ":" ~ pseudo_block)
+    )? ~
+    "}"
+}
+
+if_else_statement = {
+    TK_IF ~ "(" ~ right_expr ~ ")" ~ pseudo_block ~
+    (
+        &(TK_ELSE) ~
+        (TK_ELSE ~ pseudo_block)
+    )?
+}
+
+while_statement = {
+    TK_WHILE ~ "(" ~ right_expr ~ ")" ~ pseudo_block
+}
+
+do_while_statement = {
+    TK_DO ~ pseudo_block ~ TK_WHILE ~ "(" ~ right_expr ~ ")"
+}
+
+for_statement = {
+    TK_FOR ~ "(" ~ for_init_statement ~ ";"
+                 ~  (right_expr)? ~ ";"
+                 ~ for_incr_statement ~ ")" ~
+    pseudo_block
+}
+
+for_init_statement = {
+    (
+        &(variable_decl) ~ variable_decl
+    |   &(expr_statement) ~ expr_statement
+    )?
+}
+
+for_incr_statement = {
+    (expr_statement)?
+}
+
+expr_statement = {
+    assign_expr
+}
+
+assign_expr = {
+    prefix_expr ~
+    (( 
+        "=" | "+=" | "-=" | "*=" | "/=" | ".="
+    ) ~ expr_or_lambda)?
+}
+
+func_call = {
+    ID ~ ("@" ~  ID)? ~ func_call_params
+}
+
+expr_get = {
+    "??" ~ "(" ~ "{" ~ expr_get_params ~ "}" ~ ")"
+}
+
+expr_get_params = {
+    (expr_named_param ~ 
+    ("," ~ expr_named_param)*)?
+}
+
+func_call_params = {
+    "(" ~ (
+        expr_named_param ~
+        ("," ~ expr_named_param)*
+    )? ~ ")"
+}
+
+lambda_expr = {
+    "(" ~
+    (
+        ID ~
+        ("," ~ ID)*
+    )?
+    ~ ")" ~ "->" ~ right_expr
+}
+
+constr_params = {
+    "(" ~ 
+    (
+        expr_named_param_only ~
+        ("," ~ expr_named_param_only)*
+    )?
+    ~")"
+}
+
+expr_named_param = {
+    (ID ~ "=")? ~ expr_or_lambda
+}
+
+expr_named_param_only = {
+    ID ~ "=" ~ right_expr
+}
+
+right_expr_not_agmax = {
+    ternaryExpr
+}
+
+right_expr = {
+    right_expr_not_agmax
+}
+
+arr_initializer = {
+    "{" ~ (
+        right_expr ~
+        ("," ~ right_expr)*
+    )? ~"}"
+}
+
+ternaryExpr = {
+    logicOrExpr ~
+    (
+        "?" ~ ternaryExpr ~ ":" ~ ternaryExpr
+    )?
+}
+
+logicOrExpr = {
+    logicAndExpr ~ ("||" ~ logicAndExpr)*
+}
+
+logicAndExpr = {
+    bitwiseOrExpr ~ ("&&" ~ bitwiseOrExpr)*
+}
+
+bitwiseOrExpr = {
+    bitwiseXorExpr ~ ("|" ~ bitwiseXorExpr)*
+}
+
+bitwiseXorExpr = {
+    bitwiseAndExpr ~ ("^" ~ bitwiseAndExpr)*
+}
+
+bitwiseAndExpr = {
+    equalExpr ~ ("&" ~ equalExpr)*
+}
+
+equalExpr = {
+    compareExpr ~ (
+        ("==" | "===" | "!=") ~ compareExpr
+    )*
+}
+
+compareExpr = {
+    shiftExpr ~ (
+        ("<" | "<=" | ">" | ">=" | ".<" | ".>" | ".<=" | ".>=" ) ~ shiftExpr
+    )*
+}
+
+shiftExpr = {
+    addExpr ~ (
+        ("<<" | ">>") ~ addExpr
+    )*
+}
+
+addExpr = {
+    multExpr ~(
+        ("+" | "-" | "{|}" | ".+" | ".-") ~ multExpr
+    )*
+}
+
+multExpr = {
+    prefix_expr ~(
+        ("*" | "/" | "%" | ".*" | "./" | ".%") ~
+        prefix_expr
+    )*
+}
+
+prefix_expr = {
+    &(castExpr) ~ castExpr
+|   postfix_expr
+|   ("++" | "--" | "-" | BANG) ~ prefix_expr 
+}
+
+prefix_expr_nominus = {
+    &(castExpr) ~ castExpr
+|   postfix_expr
+|   ("++" | "--" | BANG) ~ prefix_expr 
+}
+
+castExpr = {
+    "(" ~ data_type ~ ")" ~ prefix_expr_nominus
+}
+
+postfix_expr = {
+    primary_expr ~ ("++" | "--")*
+}
+
+primary_expr = {
+    tminic_value_expr ~ (
+        "." ~ (
+            ID
+        |   "??"
+        |   "{" ~ data_type ~ "}"
+        )
+    |   "[" ~ array_range ~ "]"
+    )*
+}
+
+tminic_value_expr = {
+    "(" ~ right_expr ~ ")"
+|   &(expr_get) ~ expr_get
+|   &(func_call) ~ func_call
+|   &(constructor_expr) ~ constructor_expr
+|   var_expr
+|   constantExpr
+|   arr_initializer
+|   REGEN
+}
+
+constructor_expr = {
+    TK_NEW ~ (ID ~ "@")? ~ (ID | "??") ~
+    (type_params_use)? ~ constr_params
+|   "|" ~ (ID ~ "@")? ~ ID ~ "|" ~ constr_params
+}
+
+var_expr = {
+    ID
+}
+
+array_range = {
+    expr_named_param ~ ("," ~ expr_named_param)* ~
+    (":" ~  (
+        right_expr | ":" ~ right_expr
+    ))?
+}
+
+constantExpr = {
+    HQUAN
+|   NUMBER
+|   CHAR_LITERAL
+|   STRING_LITERAL
+|   TK_TRUE
+|   TK_FALSE
+|   TK_NULL
+|   "{*}"
+|   "??" ~ ("("~ addExpr ~ ("," ~ addExpr)? ~ ")")?
+|   "**"
+|   "??s"
+|   &(local_variable) ~ local_variable
+}
+
+local_variable = {
+    "$" ~ "(" ~ data_type ~ ")"
+}
+
+adt_decl = {
+    TK_ADT ~ ID ~
+    (
+        "<" ~ ID ~ ("," ~ ID)* ~ ">"
+    )? ~ "{" ~
+    (
+        adt_decl
+    |   structInsideADT_decl
+    |   param_decl ~ ";"
+    |   annotation
+    )* ~ "}"
+}
+
+structInsideADT_decl = {
+    ID ~ "{" ~
+    (
+        param_decl ~ ";"
+    |   annotation
+    )* ~ "}"
+}
+
+struct_decl = {
+    (annotation)* ~
+    TK_STRUCT ~ ID ~
+    (
+        "<" ~ ID ~ ("," ~ ID)* ~ ">"
+    )? ~
+    (
+        TK_EXTENDS ~ ID
+    )? ~ "{" ~
+    (
+        param_decl ~ ";"
+    |   annotation
+    )* ~ "}"
+}

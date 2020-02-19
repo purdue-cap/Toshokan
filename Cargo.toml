@@ -16,3 +16,4 @@ path = "src/main.rs"
 [dependencies]
 clang = ">=0.23.0"
 pest = ">=2.1.2"
+pest_derive = ">=2.1.0"

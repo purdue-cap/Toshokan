@@ -23,6 +23,8 @@ pub enum SynthesisResult {
     ExecutionErr(io::Error)
 }
 
+pub type GenerationResult = io::Result<()>;
+
 impl SketchRunner{
     pub fn new<P: AsRef<Path>>(path: P, output_dir: P) -> Self{
         SketchRunner{
@@ -54,12 +56,19 @@ impl SketchRunner{
         self.clear().flag("--debug-cex").flag("-V").flag("3")
     }
 
-    pub fn flag_synthesis(&mut self) -> &mut Self {
+    pub fn flag_synthesize(&mut self) -> &mut Self {
         let output_dir = self.output_dir.clone();
         self.clear().flag("--fe-output-test")
-            .flag("--fe-output-dir").flag(&output_dir)
+            .flag("--fe-output-dir").flag(output_dir.join("./"))
             .flag("--fe-output-xml").flag(output_dir.join("holes.xml"))
             .flag("--fe-output-hole-func").flag(output_dir.join("holes.txt"))
+    }
+
+    pub fn flag_generate(&mut self) -> &mut Self {
+        let output_dir = self.output_dir.clone();
+        self.clear().flag("--fe-output-test")
+            .flag("--fe-output-dir").flag(output_dir.join("./"))
+            .flag("--fe-force-codegen")
     }
 
     pub fn verify_file<P: AsRef<Path>>(&mut self, input_file:P) -> VerificationResult {
@@ -84,8 +93,8 @@ impl SketchRunner{
         }
     }
 
-    pub fn synthesis_file<P: AsRef<Path>>(&mut self, input_file:P) -> SynthesisResult {
-        self.flag_synthesis();
+    pub fn synthesize_file<P: AsRef<Path>>(&mut self, input_file:P) -> SynthesisResult {
+        self.flag_synthesize();
         match self.output(input_file) {
             Ok(output) => {
                 if let Some(code) = output.status.code() {
@@ -100,6 +109,11 @@ impl SketchRunner{
             },
             Err(error) => SynthesisResult::ExecutionErr(error)
         }
+    }
+
+    pub fn generate_file<P: AsRef<Path>>(&mut self, input_file:P) -> GenerationResult {
+        self.flag_generate();
+        self.output(input_file).and(Ok(()))
     }
 
     pub fn verify_str<S: AsRef<str>>(&mut self, input: S) -> VerificationResult {
@@ -120,13 +134,13 @@ impl SketchRunner{
         }
     }
 
-    pub fn synthesis_str<S: AsRef<str>>(&mut self, input: S) -> SynthesisResult {
+    pub fn synthesize_str<S: AsRef<str>>(&mut self, input: S) -> SynthesisResult {
         match NamedTempFile::new() {
             Ok(mut temp_file) => {
                 match temp_file.write(input.as_ref().as_bytes()) {
                     Ok(bytes_written) => {
                         if bytes_written == input.as_ref().len() {
-                            self.synthesis_file(temp_file.path())
+                            self.synthesize_file(temp_file.path())
                         } else {
                             SynthesisResult::ExecutionErr(io::Error::new(io::ErrorKind::UnexpectedEof, "Content truncated"))
                         }
@@ -136,6 +150,18 @@ impl SketchRunner{
             }, 
             Err(error) => SynthesisResult::ExecutionErr(error)
         }
+    }
+
+    pub fn generate_str<S: AsRef<str>>(&mut self, input: S) -> GenerationResult {
+        NamedTempFile::new().and_then(|mut temp_file|{
+            temp_file.write(input.as_ref().as_bytes()).and_then(|bytes_written| {
+                if bytes_written == input.as_ref().len() {
+                    self.generate_file(temp_file.path())
+                } else {
+                    Err(io::Error::new(io::ErrorKind::UnexpectedEof, "Content truncated"))
+                }
+            })
+        })
     }
 }
 

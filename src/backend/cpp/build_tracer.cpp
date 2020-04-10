@@ -178,6 +178,20 @@ int BuildTracer(string& lib_func_name, string& input_file, string& output_file) 
 
 } // namespace TracerBuilder
 
+
+// C version of the functions
+
+extern "C" {
+
+int build_tracer(const char* lib_func_name, const char* input_file, const char* output_file){
+    std::string LibFuncName(lib_func_name);
+    std::string InputFile(input_file);
+    std::string OutputFile(output_file);
+    return TracerBuilder::BuildTracer(LibFuncName, InputFile, OutputFile);
+}
+
+}
+
 #ifdef TESTBIN
 using namespace TracerBuilder;
 

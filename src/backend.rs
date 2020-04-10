@@ -1,3 +1,5 @@
+pub mod build_tracer;
+
 mod solution_analyzer;
 pub use solution_analyzer::SolutionAnalyzer;
 mod log_analyzer;

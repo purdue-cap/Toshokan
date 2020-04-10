@@ -12,10 +12,6 @@
 #include "clang/Tooling/Tooling.h"
 #include "clang/Tooling/CompilationDatabase.h"
 
-#ifdef TESTBIN
-#include "clang/Tooling/CommonOptionsParser.h"
-#endif // TESTBIN
-
 namespace TracerBuilder {
 
 using namespace clang;
@@ -24,10 +20,6 @@ using namespace clang::tooling;
 using std::string;
 using std::stringstream;
 using std::vector;
-
-#ifdef TESTBIN
-static llvm::cl::OptionCategory TestBinCategory("Test Binary");
-#endif // TESTBIN
 
 class TracerBuilderVisitor : public RecursiveASTVisitor<TracerBuilderVisitor> {
     public:

@@ -1,10 +1,6 @@
-use crate::cegis::{CEGISState, CEGISStateParams};
 use handlebars::Handlebars;
 use std::cell::RefCell;
-use std::path::Path;
-use std::io::Write;
-
-use super::EncodeError;
+use super::Encoder;
 
 pub struct CEEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -25,42 +21,17 @@ impl<'h, 'r> CEEncoder<'h, 'r> {
             name: name,
         }
     }
-
-    pub fn load_str<S: AsRef<str>>(&mut self, template: S) -> Result<(), EncodeError>{
-        Ok(self.handlebars.try_borrow_mut()?
-            .register_template_string(self.name, template)?)
-    }
-
-    pub fn load_file<P: AsRef<Path>>(&mut self, template_file: P) -> Result<(), EncodeError>{
-        Ok(self.handlebars.try_borrow_mut()?
-            .register_template_file(self.name, template_file)?)
-    }
-
-    pub fn render(&self, state: &CEGISState) -> Result<String, EncodeError> {
-        Ok(self.handlebars.try_borrow()?
-            .render(self.name, state.get_params())?)
-    }
-
-    pub fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError> {
-        Ok(self.handlebars.try_borrow()?
-            .render(self.name, params)?)
-    }
-
-    pub fn render_to_write<W: Write>(&self, state:&CEGISState, writer: W) -> Result<(), EncodeError> {
-        Ok(self.handlebars.try_borrow()?
-            .render_to_write(self.name, state.get_params(), writer)?)
-    }
-
-    pub fn render_params_to_write<W: Write>(&self, params: &CEGISStateParams, writer: W) -> Result<(), EncodeError> {
-        Ok(self.handlebars.try_borrow()?
-            .render_to_write(self.name, params, writer)?)
-    }
 }
 
+impl<'h, 'r> Encoder<'r> for CEEncoder<'h, 'r> {
+    fn name(&self) -> &'static str { self.name }
+    fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cegis::CEGISState;
     use std::error::Error;
     
     #[test]

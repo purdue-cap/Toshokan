@@ -6,6 +6,8 @@ pub use sketch_runner::VerificationResult;
 pub use sketch_runner::SynthesisResult;
 pub use sketch_runner::GenerationResult;
 
+mod encoder;
+pub use encoder::Encoder;
 mod cand_encoder;
 pub use cand_encoder::CandEncoder;
 mod ce_encoder;

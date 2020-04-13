@@ -9,7 +9,7 @@ use tempfile::{tempdir, TempDir};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::fs;
-use log::{debug, info};
+use log::{trace, debug, info};
 
 pub struct CEGISLoop<'r> {
     hb: RefCell<Handlebars<'r>>,
@@ -44,7 +44,7 @@ impl<'r> CEGISLoop<'r> {
         let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
             PathBuf::from(format!("verification_{}", self.state.get_iter_count())));
         cand.render_to_file(&self.state, &verification_sk)?;
-        debug!(target: "Verification", "Sketch template {}:\n{}",
+        trace!(target: "Verification", "Sketch template {}:\n{}",
             verification_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&verification_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
@@ -55,7 +55,7 @@ impl<'r> CEGISLoop<'r> {
             VerificationResult::Pass => {Ok(None)},
             VerificationResult::ExecutionErr(err) => {Err(Box::new(err))},
             VerificationResult::CounterExample(exec_log) => {
-                debug!(target:"Verification", "Sketch execution log: {}", exec_log);
+                trace!(target:"Verification", "Sketch execution log: {}", exec_log);
                 Ok(Some(log_analyzer.read_c_e_s_from_str(exec_log.as_str())?))
             }
         }
@@ -68,7 +68,7 @@ impl<'r> CEGISLoop<'r> {
         let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
             PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
         c_e.render_to_file(&self.state, &synthesis_sk)?;
-        debug!(target: "Synthesis", "Sketch template {}:\n{}",
+        trace!(target: "Synthesis", "Sketch template {}:\n{}",
             synthesis_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&synthesis_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
@@ -82,7 +82,7 @@ impl<'r> CEGISLoop<'r> {
                 let holes_file = self.output_dir.as_ref()
                     .ok_or("Output dir unset")?.join("holes.xml");
                 
-                debug!(target: "Synthesis", "Holes file: {}", fs::read(&holes_file).ok()
+                trace!(target: "Synthesis", "Holes file: {}", fs::read(&holes_file).ok()
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string()));
                 
@@ -97,7 +97,7 @@ impl<'r> CEGISLoop<'r> {
         let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
             PathBuf::from(format!("generation_{}", self.state.get_iter_count())));
         generation.render_to_file(&self.state, &generation_sk)?;
-        debug!(target: "Generation", "Sketch template {}:\n{}",
+        trace!(target: "Generation", "Sketch template {}:\n{}",
             generation_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&generation_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
@@ -108,14 +108,14 @@ impl<'r> CEGISLoop<'r> {
             GenerationResult::Err(err) => {Err(Box::new(err))},
             GenerationResult::Ok(base_name) => {
                 info!(target: "Generation", "Base Name: {}", base_name.to_str().unwrap_or("<Failure>"));
-                debug!(target: "Generation", "Main file: {}", 
+                trace!(target: "Generation", "Main file: {}", 
                 base_name.to_str()
                 .map(|s| format!("{}.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string())
                 );
-                debug!(target: "Generation", "Harness file: {}", 
+                trace!(target: "Generation", "Harness file: {}", 
                 base_name.to_str()
                 .map(|s| format!("{}_test.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
@@ -138,10 +138,11 @@ impl<'r> CEGISLoop<'r> {
         library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
         info!(target: "Trace", "Building tracer source successful");
 
-        debug!(target: "Trace", "Tracer source: {:?}",
+        trace!(target: "Trace", "Tracer source: {}",
             self.output_dir.as_ref().map(|dir| dir.join("tracer.cpp"))
                 .and_then(|p| fs::read(&p).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
+                .unwrap_or("<Failure>".to_string())
         );
 
         info!(target: "Trace", "Building tracer binary");
@@ -193,7 +194,7 @@ impl<'r> CEGISLoop<'r> {
             if let Some(new_c_e) = self.verify(&cand_encoder,
                 &log_analyzer, &mut sketch_runner)? {
                 info!(target: "CEGISMainLoop", "Verification returned C.E.");
-                debug!(target: "CEGISMainLoop", "C.E: {:?}", new_c_e);
+                debug!(target: "CEGISMainLoop", "New C.E: {:?}", new_c_e);
                 self.state.add_c_e(new_c_e);
             } else {
                 // Verification passed
@@ -206,7 +207,7 @@ impl<'r> CEGISLoop<'r> {
             if let Some(new_holes) = self.synthesize(&c_e_encoder,
                 &hole_extractor, &mut sketch_runner)? {
                 info!(target: "CEGISMainLoop", "Synthesis returned candidate");
-                debug!(target: "CEGISMainLoop", "Holes: {:?}", new_holes);
+                debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
                 self.state.update_holes(new_holes.as_slice());
             } else {
                 info!(target: "CEGISMainLoop", "Synthesis failed, returning None result");
@@ -218,11 +219,16 @@ impl<'r> CEGISLoop<'r> {
             info!(target: "CEGISMainLoop", "Tracing");
             let traces = self.trace(base_name.as_path(), &library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
-            debug!(target: "CEGISMainLoop", "Traces: {:?}", traces);
+            debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             for (args, rtn) in traces.into_iter() {
                 self.state.add_log(args, rtn);
             }
             self.clear_output()?;
+            debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_params().c_e_s);
+            debug!(target: "CEGISMainLoop", "Current Holes: {:?}", self.state.get_params().holes);
+            debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_params().n_logs);
+            debug!(target: "CEGISMainLoop", "Current Trace args: {:?}", self.state.get_params().logs_i);
+            debug!(target: "CEGISMainLoop", "Current Trace rtns: {:?}", self.state.get_params().logs_r);
             info!(target: "CEGISMainLoop", "Exiting iteration #{}", self.state.get_iter_count());
             self.state.incr_iteration();
         };

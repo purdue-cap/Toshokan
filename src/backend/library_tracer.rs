@@ -5,7 +5,7 @@ use std::fs::File;
 use regex::Regex;
 use super::CFlagManager;
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
-use log::error;
+use log::{error, trace};
 
 pub struct LibraryTracer<'i, 'n, 'w> {
     impl_file: &'i Path,
@@ -74,18 +74,31 @@ impl<'i, 'n, 'w> LibraryTracer<'i, 'n, 'w> {
     }
 
     fn match_log_line<S: AsRef<str>>(&self, line: S) -> Option<(Vec<isize>, isize)> {
+        trace!(target: "LibraryTracer", "Read trace log: {}", line.as_ref());
         let log_regex = Regex::new(format!(r"{}\(([\d, ]+)\) = (\d+)", self.lib_func_name).as_str()).ok()?;
+        trace!(target: "LibraryTracer", "Regex: {:?}", log_regex);
         let caps = log_regex.captures(line.as_ref())?;
-        let args = caps.get(0)?.as_str().split(",")
+        trace!(target: "LibraryTracer", "Captures: {:?}", caps);
+        let args = caps.get(1)?.as_str().split(",")
             .map(|arg| arg.trim()).map(|arg| arg.parse::<isize>().ok())
             .collect::<Option<Vec<_>>>()?;
-        let rtn = caps.get(1)?.as_str().trim().parse::<isize>().ok()?;
+        let rtn = caps.get(2)?.as_str().trim().parse::<isize>().ok()?;
+        trace!(target: "LibraryTracer", "result: {:?}", (&args, &rtn));
         Some((args, rtn))
     }
 
     pub fn collect_traces(&self) -> Option<Vec<(Vec<isize>, isize)>> {
         let mut tracing_cmd = Command::new(self.work_dir?.join("tracer"));
         let tracing_output = tracing_cmd.output().ok()?;
+        trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", tracing_output.status.clone());
+        trace!(target: "LibraryTracer", "Sketch tracing_output.stdout: {}",
+            String::from_utf8(tracing_output.stdout.clone()).ok()
+            .unwrap_or("<Failure>".to_string())
+        );
+        trace!(target: "LibraryTracer", "Sketch tracing_output.stderr: {}",
+            String::from_utf8(tracing_output.stderr.clone()).ok()
+            .unwrap_or("<Failure>".to_string())
+        );
         let err_reader = BufReader::new(tracing_output.stderr.as_slice());
         let mut logs = Vec::new();
         for line_result in err_reader.lines() {

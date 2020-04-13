@@ -20,7 +20,7 @@ impl<'i, 'n, 'w> LibraryTracer<'i, 'n, 'w> {
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None
         };
-        tracer.flag_manager.add_include_path(sketch_home);
+        tracer.flag_manager.add_include_path(sketch_home.join("include"));
         tracer
     }
 

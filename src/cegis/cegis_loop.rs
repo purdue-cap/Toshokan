@@ -42,14 +42,14 @@ impl<'r> CEGISLoop<'r> {
             -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
         info!(target: "Verification", "Filling sketch template");
         let verification_sk = cand.render(&self.state)?;
-        debug!(target: "Verification", "Sketch template: {:?}", verification_sk);
+        debug!(target: "Verification", "Sketch template: {}", verification_sk);
         info!(target: "Verification", "Running sketch");
         let output = runner.verify_str(verification_sk.as_str());
         match output {
             VerificationResult::Pass => {Ok(None)},
             VerificationResult::ExecutionErr(err) => {Err(Box::new(err))},
             VerificationResult::CounterExample(exec_log) => {
-                debug!(target:"Verification", "Sketch execution log: {:?}", exec_log);
+                debug!(target:"Verification", "Sketch execution log: {}", exec_log);
                 Ok(Some(log_analyzer.read_c_e_s_from_str(exec_log.as_str())?))
             }
         }
@@ -60,7 +60,7 @@ impl<'r> CEGISLoop<'r> {
             -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
         info!(target: "Synthesis", "Filling sketch template");
         let synthesis_sk = c_e.render(&self.state)?;
-        debug!(target: "Synthesis", "Sketch template: {:?}", synthesis_sk);
+        debug!(target: "Synthesis", "Sketch template: {}", synthesis_sk);
         info!(target: "Synthesis", "Running sketch");
         let output = runner.synthesize_str(synthesis_sk.as_str());
         match output {
@@ -70,8 +70,9 @@ impl<'r> CEGISLoop<'r> {
                 let holes_file = self.output_dir.as_ref()
                     .ok_or("Output dir unset")?.join("holes.xml");
                 
-                debug!(target: "Synthesis", "Holes file: {:?}", fs::read(&holes_file).ok()
-                .and_then(|bytes| String::from_utf8(bytes).ok()));
+                debug!(target: "Synthesis", "Holes file: {}", fs::read(&holes_file).ok()
+                .and_then(|bytes| String::from_utf8(bytes).ok())
+                .unwrap_or("<Failure>".to_string()));
                 
                 Ok(Some(hole_extractor.read_holes_from_file(holes_file)?))
             }
@@ -82,24 +83,26 @@ impl<'r> CEGISLoop<'r> {
             -> Result<PathBuf, Box<dyn std::error::Error>> {
        info!(target: "Generation", "Filling sketch template");
        let generation_sk = generation.render(&self.state)?;
-       debug!(target: "Generation", "Sketch template: {:?}", generation_sk);
+       debug!(target: "Generation", "Sketch template: {}", generation_sk);
        info!(target: "Generation", "Running sketch");
        let output = runner.generate_str(generation_sk.as_str());
        match output {
            GenerationResult::Err(err) => {Err(Box::new(err))},
            GenerationResult::Ok(base_name) => {
-                info!(target: "Generation", "Base Name: {:?}", base_name);
-                debug!(target: "Generation", "Main file: {:?}", 
+                info!(target: "Generation", "Base Name: {}", base_name.to_str().unwrap_or("<Failure>"));
+                debug!(target: "Generation", "Main file: {}", 
                 base_name.to_str()
                 .map(|s| format!("{}.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
+                .unwrap_or("<Failure>".to_string())
                 );
-                debug!(target: "Generation", "Harness file: {:?}", 
+                debug!(target: "Generation", "Harness file: {}", 
                 base_name.to_str()
                 .map(|s| format!("{}_test.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
+                .unwrap_or("<Failure>".to_string())
                 );
 
                 Ok(base_name)

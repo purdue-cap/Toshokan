@@ -21,8 +21,7 @@ impl HoleExtractor {
     fn extract_hole_from_element(&self, holes: &mut Vec<isize>, element: &BytesStart) -> Option<()> {
         if element.name() != b"hole_value" { return None; }
         let attrs: HashMap<_, _>= element.attributes()
-                    .filter(|attr| attr.is_ok())
-                    .map(|attr| attr.expect("Errors are already filtered out"))
+                    .into_iter().flatten()
                     .map(|attr| (attr.key, attr.value))
                     .collect();
         let e_type = attrs.get(b"type".as_ref())?;

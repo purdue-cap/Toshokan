@@ -1,14 +1,28 @@
 use handlebars::Handlebars;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::io::Write;
 use std::cell::RefCell;
 
 use super::EncodeError;
 use crate::cegis::{CEGISState, CEGISStateParams};
 
+pub enum EncoderSource {
+    LoadFromFile(PathBuf),
+    LoadFromStr(String),
+    Rewrite
+}
+
 pub trait Encoder<'r> {
     fn name(&self) -> &'static str;
     fn handlebars(&self) -> &RefCell<Handlebars<'r>>;
+
+    fn load(&mut self, src: &EncoderSource) -> Result<(), EncodeError> {
+        match src {
+            EncoderSource::LoadFromFile(p) => self.load_file(p.as_path()),
+            EncoderSource::LoadFromStr(s) => self.load_str(s.as_str()),
+            _ => Err(EncodeError::SourceNotSupported)
+        }
+    }
 
     fn load_str<S: AsRef<str>>(&mut self, template: S) -> Result<(), EncodeError>{
         Ok(self.handlebars().try_borrow_mut()?

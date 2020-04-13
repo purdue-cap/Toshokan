@@ -32,6 +32,9 @@ quick_error! {
             cause(err)
             display("{}", err)
         }
+        SourceNotSupported {
+            display("Encoder source is not supported")
+        }
     }
 }
 

@@ -3,6 +3,7 @@ use std::ffi::{OsStr, OsString};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
+use log::{info, debug};
 
 pub struct SketchRunner {
     path: OsString,
@@ -47,7 +48,19 @@ impl SketchRunner{
     pub fn output<P: AsRef<Path>>(&mut self, input_file:P) -> io::Result<Output> {
         self.sketch.args(&self.flags);
         self.sketch.arg(input_file.as_ref());
+        info!(target: "SketchRunner", "Sketch command: {:?}", self.sketch);
         let result = self.sketch.output();
+        debug!(target: "SketchRunner", "Sketch result.status: {:?}", result.as_ref().ok().map(|r| r.status));
+        debug!(target: "SketchRunner", "Sketch result.stdout: {}",
+            result.as_ref().ok().map(|r| &r.stdout)
+            .and_then(|b| String::from_utf8(b.clone()).ok())
+            .unwrap_or("<Failure>".to_string())
+        );
+        debug!(target: "SketchRunner", "Sketch result.stderr: {}",
+            result.as_ref().ok().map(|r| &r.stderr)
+            .and_then(|b| String::from_utf8(b.clone()).ok())
+            .unwrap_or("<Failure>".to_string())
+        );
         self.sketch = Command::new(self.path.clone());
         result
     }

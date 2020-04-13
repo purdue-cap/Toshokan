@@ -23,7 +23,7 @@ pub enum SynthesisResult {
     ExecutionErr(io::Error)
 }
 
-pub type GenerationResult = io::Result<()>;
+pub type GenerationResult = io::Result<PathBuf>; // Generated base file name
 
 impl SketchRunner{
     pub fn new<P: AsRef<Path>>(path: P, output_dir: P) -> Self{
@@ -113,7 +113,8 @@ impl SketchRunner{
 
     pub fn generate_file<P: AsRef<Path>>(&mut self, input_file:P) -> GenerationResult {
         self.flag_generate();
-        self.output(input_file).and(Ok(()))
+        self.output(input_file.as_ref()).and(Ok(self.output_dir.join(input_file.as_ref().file_name()
+            .ok_or(io::Error::new(io::ErrorKind::InvalidInput, "Input file has no base file name"))?)))
     }
 
     pub fn verify_str<S: AsRef<str>>(&mut self, input: S) -> VerificationResult {

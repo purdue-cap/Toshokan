@@ -20,7 +20,8 @@ pub struct CEGISState {
     n_holes: usize,
     c_e_set: HashSet<Vec<isize>>,
     v_p_set: HashSet<Vec<isize>>,
-    log_set: LibFuncLog
+    log_set: LibFuncLog,
+    iter_count: usize
 }
 
 enum LibFuncLog {
@@ -45,7 +46,8 @@ impl CEGISState {
             n_holes: n_holes,
             c_e_set: HashSet::new(),
             v_p_set: HashSet::new(),
-            log_set: if pure_function {LibFuncLog::Pure(HashSet::new())} else {LibFuncLog::NonPure}
+            log_set: if pure_function {LibFuncLog::Pure(HashSet::new())} else {LibFuncLog::NonPure},
+            iter_count: 0
         }
     }
 
@@ -62,6 +64,10 @@ impl CEGISState {
     pub fn get_n_c_e_s(&self) -> usize {self.c_e_set.len()}
 
     pub fn get_n_v_p_s(&self) -> usize {self.v_p_set.len()}
+
+    pub fn get_iter_count(&self) -> usize {self.iter_count}
+
+    pub fn incr_iteration(&mut self) {self.iter_count += 1}
 
     pub fn update_hole(&mut self, index: usize, value: isize) -> Option<()> {
         *self.params.holes.get_mut(index)? = value;

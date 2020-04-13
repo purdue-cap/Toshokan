@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::iter::repeat;
+use std::collections::HashSet;
 
 #[derive(Serialize)]
 pub struct CEGISStateParams {
@@ -17,11 +18,18 @@ pub struct CEGISState {
     n_f_args: usize,
     n_input: usize,
     n_holes: usize,
-    n_c_e_s: usize
+    c_e_set: HashSet<Vec<isize>>,
+    v_p_set: HashSet<Vec<isize>>,
+    log_set: LibFuncLog
+}
+
+enum LibFuncLog {
+    Pure(HashSet<(Vec<isize>, isize)>),
+    NonPure
 }
 
 impl CEGISState {
-    pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, n_holes: usize) -> Self {
+    pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, n_holes: usize, pure_function: bool) -> Self {
         CEGISState {
             params: CEGISStateParams {
                 n_logs: 0,
@@ -35,7 +43,9 @@ impl CEGISState {
             n_f_args: n_f_args,
             n_input: n_input,
             n_holes: n_holes,
-            n_c_e_s: 0
+            c_e_set: HashSet::new(),
+            v_p_set: HashSet::new(),
+            log_set: if pure_function {LibFuncLog::Pure(HashSet::new())} else {LibFuncLog::NonPure}
         }
     }
 
@@ -49,27 +59,72 @@ impl CEGISState {
 
     pub fn get_n_holes(&self) -> usize {self.n_holes}
 
-    pub fn get_n_c_e_s(&self) -> usize {self.n_c_e_s}
+    pub fn get_n_c_e_s(&self) -> usize {self.c_e_set.len()}
+
+    pub fn get_n_v_p_s(&self) -> usize {self.v_p_set.len()}
 
     pub fn update_hole(&mut self, index: usize, value: isize) -> Option<()> {
         *self.params.holes.get_mut(index)? = value;
         Some(())
     }
 
-    pub fn add_log(&mut self, i: &Vec<isize>, r: isize) -> Option<()> {
-        self.params.n_logs += 1;
-        for (index_i, value_i) in i.iter().enumerate() {
-            self.params.logs_i.get_mut(index_i)?.push(*value_i);
+    pub fn update_holes(&mut self, holes: &[isize]) -> Option<()> {
+        if holes.len() != self.n_holes {
+            None
+        } else {
+            for (index_i, value_i) in holes.iter().enumerate() {
+                self.update_hole(index_i, *value_i)?;
+            }
+            Some(())
         }
-        self.params.logs_r.push(r);
+
+    }
+
+    pub fn update_n_unknowns(&mut self, new_unknowns: usize) {
+        self.params.n_logs = new_unknowns;
+    }
+
+    pub fn add_verify_point(&mut self, inputs: Vec<isize>) -> Option<()> {
+        if self.v_p_set.contains(&inputs) {
+            return Some(());
+        }
+        for (index_i, value_i) in inputs.iter().enumerate() {
+            self.params.verify_points.get_mut(index_i)?.push(*value_i);
+        }
+        self.v_p_set.insert(inputs);
         Some(())
     }
 
-    pub fn add_c_e(&mut self, c_e: &Vec<isize>) -> Option<()> {
-        self.n_c_e_s += 1;
+    pub fn add_log(&mut self, i: Vec<isize>, r: isize) -> Option<()> {
+        match self.log_set {
+            LibFuncLog::NonPure => {unimplemented!();},
+            LibFuncLog::Pure(ref mut set) => {
+                let log_pair = (i, r);
+                if set.contains(&log_pair) {
+                    return Some(());
+                }
+
+                for (index_i, value_i) in log_pair.0.iter().enumerate() {
+                    self.params.logs_i.get_mut(index_i)?.push(*value_i);
+                }
+                self.params.logs_r.push(log_pair.1);
+                set.insert(log_pair);
+                self.params.n_logs = set.len();
+
+                Some(())
+            }
+        }
+
+    }
+
+    pub fn add_c_e(&mut self, c_e: Vec<isize>) -> Option<()> {
+        if self.c_e_set.contains(&c_e) {
+            return Some(());
+        }
         for (index_i, value_i) in c_e.iter().enumerate() {
             self.params.c_e_s.get_mut(index_i)?.push(*value_i);
         }
+        self.c_e_set.insert(c_e);
         Some(())
     }
 }

@@ -36,7 +36,7 @@ mod tests {
     
     #[test]
     fn renders_holes() -> Result<(), Box<dyn Error>> {
-        let mut state = CEGISState::new(1, 1, 10, 5);
+        let mut state = CEGISState::new(1, 1, 10, 5, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CandEncoder::new(&handlebars);
         encoder.load_str("holes_2 = {{holes.[2]}}")?;

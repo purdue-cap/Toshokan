@@ -1,6 +1,7 @@
 use handlebars::Handlebars;
 use std::path::{Path, PathBuf};
 use std::io::Write;
+use std::fs::File;
 use std::cell::RefCell;
 
 use super::EncodeError;
@@ -52,5 +53,15 @@ pub trait Encoder<'r> {
     fn render_params_to_write<W: Write>(&self, params: &CEGISStateParams, writer: W) -> Result<(), EncodeError> {
         Ok(self.handlebars().try_borrow()?
             .render_to_write(self.name(), params, writer)?)
+    }
+
+    fn render_to_file<P: AsRef<Path>>(&self, state:&CEGISState, file_path: P) -> Result<(), EncodeError> {
+        let file = File::create(file_path)?;
+        self.render_to_write(state, file)
+    }
+
+    fn render_params_to_file<P: AsRef<Path>>(&self, params: &CEGISStateParams, file_path: P) -> Result<(), EncodeError> {
+        let file = File::create(file_path)?;
+        self.render_params_to_write(params, file)
     }
 }

@@ -41,10 +41,16 @@ impl<'r> CEGISLoop<'r> {
         log_analyzer: &LogAnalyzer, runner: &mut SketchRunner)
             -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
         info!(target: "Verification", "Filling sketch template");
-        let verification_sk = cand.render(&self.state)?;
-        debug!(target: "Verification", "Sketch template: {}", verification_sk);
+        let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+            PathBuf::from(format!("verification_{}", self.state.get_iter_count())));
+        cand.render_to_file(&self.state, &verification_sk)?;
+        debug!(target: "Verification", "Sketch template {}:\n{}",
+            verification_sk.to_str().unwrap_or("<Failure>"),
+            fs::read(&verification_sk).ok()
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .unwrap_or("<Failure>".to_string()));
         info!(target: "Verification", "Running sketch");
-        let output = runner.verify_str(verification_sk.as_str());
+        let output = runner.verify_file(&verification_sk);
         match output {
             VerificationResult::Pass => {Ok(None)},
             VerificationResult::ExecutionErr(err) => {Err(Box::new(err))},
@@ -59,10 +65,16 @@ impl<'r> CEGISLoop<'r> {
         hole_extractor: &HoleExtractor, runner: &mut SketchRunner)
             -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
         info!(target: "Synthesis", "Filling sketch template");
-        let synthesis_sk = c_e.render(&self.state)?;
-        debug!(target: "Synthesis", "Sketch template: {}", synthesis_sk);
+        let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+            PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
+        c_e.render_to_file(&self.state, &synthesis_sk)?;
+        debug!(target: "Synthesis", "Sketch template {}:\n{}",
+            synthesis_sk.to_str().unwrap_or("<Failure>"),
+            fs::read(&synthesis_sk).ok()
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .unwrap_or("<Failure>".to_string()));
         info!(target: "Synthesis", "Running sketch");
-        let output = runner.synthesize_str(synthesis_sk.as_str());
+        let output = runner.synthesize_file(&synthesis_sk);
         match output {
             SynthesisResult::Failure => {Ok(None)},
             SynthesisResult::ExecutionErr(err) => {Err(Box::new(err))},
@@ -81,14 +93,20 @@ impl<'r> CEGISLoop<'r> {
 
     fn generate(&self, generation: &GenerationEncoder, runner: &mut SketchRunner) 
             -> Result<PathBuf, Box<dyn std::error::Error>> {
-       info!(target: "Generation", "Filling sketch template");
-       let generation_sk = generation.render(&self.state)?;
-       debug!(target: "Generation", "Sketch template: {}", generation_sk);
-       info!(target: "Generation", "Running sketch");
-       let output = runner.generate_str(generation_sk.as_str());
-       match output {
-           GenerationResult::Err(err) => {Err(Box::new(err))},
-           GenerationResult::Ok(base_name) => {
+        info!(target: "Generation", "Filling sketch template");
+        let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+            PathBuf::from(format!("generation_{}", self.state.get_iter_count())));
+        generation.render_to_file(&self.state, &generation_sk)?;
+        debug!(target: "Generation", "Sketch template {}:\n{}",
+            generation_sk.to_str().unwrap_or("<Failure>"),
+            fs::read(&generation_sk).ok()
+            .and_then(|bytes| String::from_utf8(bytes).ok())
+            .unwrap_or("<Failure>".to_string()));
+        info!(target: "Generation", "Running sketch");
+        let output = runner.generate_file(&generation_sk);
+        match output {
+            GenerationResult::Err(err) => {Err(Box::new(err))},
+            GenerationResult::Ok(base_name) => {
                 info!(target: "Generation", "Base Name: {}", base_name.to_str().unwrap_or("<Failure>"));
                 debug!(target: "Generation", "Main file: {}", 
                 base_name.to_str()

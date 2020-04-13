@@ -3,6 +3,7 @@ use handlebars::TemplateFileError;
 use handlebars::RenderError;
 use std::cell::BorrowError;
 use std::cell::BorrowMutError;
+use std::io::Error as IOError;
 
 quick_error! {
     #[derive(Debug)]
@@ -28,6 +29,11 @@ quick_error! {
             display("{}", err)
         }
         BorrowMutError(err: BorrowMutError){
+            from()
+            cause(err)
+            display("{}", err)
+        }
+        IOError(err: IOError) {
             from()
             cause(err)
             display("{}", err)

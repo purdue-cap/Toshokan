@@ -1,0 +1,72 @@
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
+
+int cap = {{cap_logs}};
+int logged = {{n_logs}};
+int[cap] iarr = { {{expand-array logs_i.[0]}} };
+int[cap] rarr = { {{expand-array logs_r}} };
+
+
+int[{{n_unknowns}}] unknown = ??;
+int used_unknown = 0;
+
+generator int sqrt(int i){
+    for (int idx = 0; idx < logged; idx ++) {
+        if (iarr[idx] == i) {
+            return rarr[idx];
+        }
+    }
+    int val = unknown[used_unknown];
+    used_unknown++;
+    if (logged < cap) {
+        iarr[logged] = i;
+        rarr[logged] = val;
+        logged ++;
+    }
+    return val;
+}
+
+bit condition(int p, int i) {
+    int factor = ??%2;
+    int addor = ??%2;
+    int arg;
+    if (??) {
+        arg = factor*p + addor;
+    } else {
+        arg = factor*p - addor;
+    }
+    int rtn = sqrt(arg);
+
+    if (??) {
+        return i < rtn;
+    }
+    if (??) {
+        return i > rtn;
+    }
+    if (??) {
+        return i <= rtn;
+    }
+    if (??) {
+        return i >= rtn;
+    }
+}
+
+bit primality(int p) {
+	if(p<=1) return 0;
+	for(int i=2;condition(p, i);i++){
+		if(p%i == 0) return 0;
+	}
+	return 1;
+}
+
+bit primality_spec(int p){
+	if(p<=1) return 0;
+	for(int i=2;i<p;i++){
+		if(p%i == 0) return 0;
+	}
+	return 1;
+}
+
+harness void main(int p) {
+    assume {{expand-points c_e_s.[0] "p"}};
+    assert primality(p) == primality_spec(p);
+}

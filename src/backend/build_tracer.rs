@@ -2,6 +2,7 @@ use std::ffi::CString;
 use std::os::unix::ffi::OsStrExt;
 use std::os::raw::{c_int, c_char};
 use std::path::Path;
+use log::debug;
 
 extern {
     fn build_tracer(lib_func_name: *const c_char,
@@ -10,19 +11,21 @@ extern {
 }
 
 pub fn build_tracer_to_file<P: AsRef<Path>, S: AsRef<str>>(
-            lib_func_name: S, input_file: P, output_file: P) -> Option<()> {
-    let c_lib_func_name = CString::new(lib_func_name.as_ref()).ok()?;
-    let c_input_file = CString::new(input_file.as_ref().as_os_str().as_bytes()).ok()?;
-    let c_output_file = CString::new(output_file.as_ref().as_os_str().as_bytes()).ok()?;
+            lib_func_name: S, input_file: P, output_file: P) -> Result<(), c_int> {
+    let c_lib_func_name = CString::new(lib_func_name.as_ref()).or(Err(-128))?;
+    let c_input_file = CString::new(input_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
+    let c_output_file = CString::new(output_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
+    debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?})", c_lib_func_name, c_input_file, c_output_file);
     let rtn_val = unsafe { build_tracer(
         c_lib_func_name.as_ptr(),
         c_input_file.as_ptr(),
         c_output_file.as_ptr())
     };
+    debug!(target:"LibraryTracer", "CPP Function rtn code: {}", rtn_val);
     if rtn_val == 0 {
-        Some(())
+        Ok(())
     } else {
-        None
+        Err(rtn_val)
     }
 
 }
@@ -62,7 +65,7 @@ void sqrt(int i, int& _out) {
         let output_file_path = tmp_dir.path().join("output.cpp");
 
         build_tracer_to_file("sqrt", input_file_path.as_path(), output_file_path.as_path())
-            .ok_or("Main function failed")?;
+            .or(Err("Main function failed"))?;
         
         let mut output_file = File::open(output_file_path.as_path())?;
         let mut output = String::new();

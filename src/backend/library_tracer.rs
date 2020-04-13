@@ -1,9 +1,11 @@
 use std::path::Path;
 use std::process::Command;
-use std::io::{BufRead, BufReader};
+use std::io::{Write, BufRead, BufReader};
+use std::fs::File;
 use regex::Regex;
 use super::CFlagManager;
-use super::build_tracer::build_tracer_to_file;
+use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
+use log::error;
 
 pub struct LibraryTracer<'i, 'n, 'w> {
     impl_file: &'i Path,
@@ -30,7 +32,29 @@ impl<'i, 'n, 'w> LibraryTracer<'i, 'n, 'w> {
 
     pub fn build_tracer_src<P: AsRef<Path>>(&self, main_file: P) -> Option<()> {
         let output_file = self.work_dir?.join("tracer.cpp");
-        build_tracer_to_file(self.lib_func_name, main_file.as_ref(), output_file.as_path())
+        let compilation_db = self.work_dir?.join(COMPILATION_DB_FILE_NAME);
+        let main_file_dir = main_file.as_ref().parent()?;
+        let mut db_file = File::create(&compilation_db).ok()?;
+        write!(db_file,
+        r#"
+        [
+            {{
+                "directory": "{}",
+                "command": "{}",
+                "file": "{}"
+            }}
+        ]
+        "#, main_file_dir.to_str()?,
+            self.flag_manager.get_compilation_cmd_line(main_file.as_ref())?,
+            main_file.as_ref().to_str()?
+        ).ok()?;
+        match build_tracer_to_file(self.lib_func_name, main_file.as_ref(), output_file.as_path()) {
+            Ok(()) => {Some(())}
+            Err(code) => {
+                error!(target: "LibraryTracer", "CPP function error code: {}", code);
+                None
+            }
+        }
     }
 
     pub fn build_tracer_bin<P: AsRef<Path>>(&self, non_main_src_files: &[P]) -> Option<()> {

@@ -19,8 +19,8 @@ pub struct CEGISConfig {
 }
 
 impl CEGISConfig {
-    pub fn new<P: AsRef<Path>, S: AsRef<String>>(
-            sketch_bin: P, sketch_home:P, impl_file: P, lib_func_name: S,
+    pub fn new<P: AsRef<Path>, S: AsRef<str>>(
+            sketch_bin: P, sketch_home: P, impl_file: P, lib_func_name: S,
             n_f_args: usize, n_inputs: usize, init_n_unknowns: usize,
             n_holes: usize, hole_offset: usize, pure_function: bool,
             cand: P, c_e: P, generation: P, c_e_names: &[&str]) -> Self {

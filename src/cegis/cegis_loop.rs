@@ -210,8 +210,7 @@ impl<'r> CEGISLoop<'r> {
                 debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
                 self.state.update_holes(new_holes.as_slice());
             } else {
-                info!(target: "CEGISMainLoop", "Synthesis failed, returning None result");
-                break None;
+                info!(target: "CEGISMainLoop", "Synthesis failed, continue to run logs");
             }
             info!(target: "CEGISMainLoop", "Generating");
             let base_name = self.generate(&generation_encoder, &mut sketch_runner)?;

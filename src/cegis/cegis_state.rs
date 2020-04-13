@@ -4,6 +4,7 @@ use std::collections::HashSet;
 
 #[derive(Serialize)]
 pub struct CEGISStateParams {
+    pub cap_logs: usize,
     pub n_logs: usize,
     pub logs_i: Vec<Vec<isize>>,
     pub logs_r: Vec<isize>,
@@ -33,9 +34,10 @@ impl CEGISState {
     pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, n_holes: usize, pure_function: bool) -> Self {
         CEGISState {
             params: CEGISStateParams {
+                cap_logs: 1,
                 n_logs: 0,
-                logs_i: repeat(Vec::<isize>::new()).take(n_f_args).collect(),
-                logs_r: Vec::<isize>::new(),
+                logs_i: repeat(vec![0]).take(n_f_args).collect(),
+                logs_r: vec![0],
                 n_unknowns: n_unknowns,
                 c_e_s: repeat(Vec::<isize>::new()).take(n_input).collect(),
                 holes: repeat(0).take(n_holes).collect(),
@@ -87,7 +89,7 @@ impl CEGISState {
     }
 
     pub fn update_n_unknowns(&mut self, new_unknowns: usize) {
-        self.params.n_logs = new_unknowns;
+        self.params.n_unknowns = new_unknowns;
     }
 
     pub fn add_verify_point(&mut self, inputs: Vec<isize>) -> Option<()> {
@@ -111,11 +113,18 @@ impl CEGISState {
                 }
 
                 for (index_i, value_i) in log_pair.0.iter().enumerate() {
+                    if self.params.n_logs == 0 {
+                        self.params.logs_i.get_mut(index_i)?.clear();
+                    }
                     self.params.logs_i.get_mut(index_i)?.push(*value_i);
+                }
+                if self.params.n_logs == 0 {
+                    self.params.logs_r.clear();
                 }
                 self.params.logs_r.push(log_pair.1);
                 set.insert(log_pair);
                 self.params.n_logs = set.len();
+                self.params.cap_logs = self.params.n_logs;
 
                 Some(())
             }

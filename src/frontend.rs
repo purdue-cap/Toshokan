@@ -8,10 +8,13 @@ pub use sketch_runner::GenerationResult;
 
 mod encoder;
 pub use encoder::Encoder;
+pub use encoder::EncoderSource;
 mod cand_encoder;
 pub use cand_encoder::CandEncoder;
 mod ce_encoder;
 pub use ce_encoder::CEEncoder;
+mod generation_encoder;
+pub use generation_encoder::GenerationEncoder;
 mod encode_error;
 pub use encode_error::EncodeError;
 

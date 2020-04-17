@@ -53,7 +53,7 @@ impl HoleExtractor {
             }
         }
         buffer.clear();
-        Ok(holes.into_iter().collect::<Option<Vec<isize>>>().ok_or(quick_xml::Error::TextNotFound)?)
+        holes.into_iter().collect::<Option<_>>().ok_or(quick_xml::Error::TextNotFound)
     }
 
     pub fn read_holes_from_str<S: AsRef<str>>(&self, xml: S) -> Result<Vec<isize>, Error> {

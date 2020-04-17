@@ -18,7 +18,7 @@ impl HoleExtractor {
         }
     }
 
-    fn extract_hole_from_element(&self, holes: &mut Vec<isize>, element: &BytesStart) -> Option<()> {
+    fn extract_hole_from_element(&self, holes: &mut Vec<Option<isize>>, element: &BytesStart) -> Option<()> {
         if element.name() != b"hole_value" { return None; }
         let attrs: HashMap<_, _>= element.attributes()
                     .into_iter().flatten()
@@ -36,13 +36,13 @@ impl HoleExtractor {
         let e_value = std::str::from_utf8(attrs.get(b"value".as_ref())?).ok()?
                         .parse::<isize>().ok()?;
         
-        *holes.get_mut(hole_index - self.hole_offset)? = e_value;
+        *holes.get_mut(hole_index - self.hole_offset)? = Some(e_value);
         Some(())
     }
 
     pub fn read_holes<B: BufRead>(&self, r: &mut Reader<B>) -> Result<Vec<isize>, Error> {
         let mut buffer = Vec::new();
-        let mut holes: Vec<isize> = repeat(0).take(self.n_holes).collect();
+        let mut holes: Vec<Option<isize>> = repeat(None).take(self.n_holes).collect();
         loop {
             match r.read_event(&mut buffer)? {
                 Event::Start(ref element) | Event::Empty(ref element) => {
@@ -53,7 +53,7 @@ impl HoleExtractor {
             }
         }
         buffer.clear();
-        Ok(holes)
+        Ok(holes.into_iter().collect::<Option<Vec<isize>>>().ok_or(quick_xml::Error::TextNotFound)?)
     }
 
     pub fn read_holes_from_str<S: AsRef<str>>(&self, xml: S) -> Result<Vec<isize>, Error> {

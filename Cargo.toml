@@ -25,6 +25,7 @@ quick-error = "=1.2.3"
 quick-xml = "0.18.1"
 regex = "1"
 log = ">=0.4"
+rand = "0.7.3"
 
 [build-dependencies]
 cc = "1.0"

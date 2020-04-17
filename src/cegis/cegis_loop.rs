@@ -23,11 +23,11 @@ impl<'r> CEGISLoop<'r> {
     pub fn new(config: CEGISConfig) -> Self{
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
-        let state = CEGISState::new(config.n_f_args,
-            config.n_inputs,
-            config.init_n_unknowns,
-            config.n_holes,
-            config.pure_function);
+        let state = CEGISState::new(config.get_params().n_f_args,
+            config.get_params().n_inputs,
+            config.get_params().init_n_unknowns,
+            config.get_params().n_holes,
+            config.get_params().pure_function);
         CEGISLoop {
             hb: RefCell::new(hb),
             config: config,
@@ -164,27 +164,31 @@ impl<'r> CEGISLoop<'r> {
 
     pub fn run_loop(&mut self) -> Result<Option<String>, Box<dyn std::error::Error>> {
         info!(target: "CEGISMainLoop", "Start initialization");
+
+        self.config.populate_v_p_s(&mut self.state);
+        debug!(target: "CEGISMainLoop", "Verify points: {:?}", self.state.get_params().verify_points);
+
         self.work_dir = Some(tempdir()?);
         self.output_dir = Some(self.work_dir.as_ref().ok_or("Work dir unset")?.path().join("output"));
         fs::create_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)?;
-        let mut sketch_runner = SketchRunner::new(self.config.sketch_bin.as_path(),
+        let mut sketch_runner = SketchRunner::new(self.config.get_params().sketch_bin.as_path(),
             self.output_dir.as_ref().ok_or("Output dir unset")?);
 
         let mut cand_encoder = CandEncoder::new(&self.hb);
         let mut c_e_encoder = CEEncoder::new(&self.hb);
         let mut generation_encoder = GenerationEncoder::new(&self.hb);
-        cand_encoder.load(&self.config.cand_encoder_src)?;
-        c_e_encoder.load(&self.config.c_e_encoder_src)?;
-        generation_encoder.load(&self.config.generation_encoder_src)?;
+        cand_encoder.load(&self.config.get_params().cand_encoder_src)?;
+        c_e_encoder.load(&self.config.get_params().c_e_encoder_src)?;
+        generation_encoder.load(&self.config.get_params().generation_encoder_src)?;
 
-        let c_e_names_in_log : Vec<_> = self.config.c_e_names.iter().map(|s| s.as_str()).collect();
+        let c_e_names_in_log : Vec<_> = self.config.get_params().c_e_names.iter().map(|s| s.as_str()).collect();
         let log_analyzer = LogAnalyzer::new(c_e_names_in_log.as_slice());
 
-        let hole_extractor = HoleExtractor::new(self.config.n_holes, self.config.hole_offset);
+        let hole_extractor = HoleExtractor::new(self.config.get_params().n_holes, self.config.get_params().hole_offset);
 
-        let mut library_tracer = LibraryTracer::new(self.config.impl_file.as_path(),
-            self.config.lib_func_name.as_str(),
-            self.config.sketch_home.as_path());
+        let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
+            self.config.get_params().lib_func_name.as_str(),
+            self.config.get_params().sketch_home.as_path());
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?);
         info!(target: "CEGISMainLoop", "Initialization complete");
 

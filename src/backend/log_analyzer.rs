@@ -21,7 +21,7 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
 
     pub fn read_c_e_s<R: BufRead>(&self, mut reader: R) -> Result<Vec<isize>, Error> {
         let mut buffer = String::new();
-        let mut c_e_s : Vec<isize> = repeat(0).take(self.c_e_names.len()).collect();
+        let mut c_e_s : Vec<Option<isize>> = repeat(None).take(self.c_e_names.len()).collect();
         let mut in_find = false;
         loop {
             if reader.read_line(&mut buffer)? == 0 {
@@ -50,7 +50,7 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
                         if let Some((name, value)) = parse_result {
                             self.lookup_map.get(name)
                                 .and_then(|index|{
-                                    *c_e_s.get_mut(*index)? = value;
+                                    *c_e_s.get_mut(*index)? = Some(value);
                                     Some(())
                                 });
                         }
@@ -60,7 +60,7 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
             }
             buffer.clear();
         }
-        Ok(c_e_s)
+        c_e_s.into_iter().collect::<Option<_>>().ok_or(Error::new(std::io::ErrorKind::Other, "Missing C.E.(s)"))
     }
     
     pub fn read_c_e_s_from_str<S: AsRef<str>>(&self, logs: S) -> Result<Vec<isize>, Error> {

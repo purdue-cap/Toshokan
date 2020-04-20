@@ -13,18 +13,21 @@ bit condition(int p, int i) {
     }
     int rtn = sqrt(arg);
 
-    if ({{holes.[3]}}) {
+    int comp = {{holes.[3]}}%4;
+
+    if (comp == 0) {
         return i < rtn;
     }
-    if ({{holes.[4]}}) {
+    if (comp == 1) {
         return i > rtn;
     }
-    if ({{holes.[5]}}) {
+    if (comp == 2) {
         return i <= rtn;
     }
-    if ({{holes.[6]}}) {
+    if (comp == 3) {
         return i >= rtn;
     }
+    return false;
 }
 
 bit primality(int p) {

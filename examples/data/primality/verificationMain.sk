@@ -1,22 +1,23 @@
 
 pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
 
-int cap = {{cap_logs}};
-int logged = {{n_logs}};
-int[cap] iarr = { {{expand-array logs_i.[0]}} };
-int[cap] rarr = { {{expand-array logs_r}} };
-
-
-int sqrt(int i){
-    for (int idx = 0; idx < logged; idx ++) {
-        if (iarr[idx] == i) {
-            return rarr[idx];
-        }
+int sqrt(int num){
+    if (num==1) return 1;
+    int low=0;
+    int mid;//,square;
+    int high=1+(num/2);
+    while (low+1<high){
+        mid=low+(high-low)/2;
+        //square=mid*mid;
+        if (num %mid == 0 && num/mid == mid)//num == mid*mid
+            return mid;
+        else if (mid<=num/mid)//mid*mid < num
+            low=mid;
+        else
+            high=mid;
     }
-    return uninterpreted_sqrt(i);
+    return low;
 }
-
-int uninterpreted_sqrt(int i);
 
 bit condition(int p, int i) {
     int factor = {{holes.[0]}}%2;
@@ -29,18 +30,21 @@ bit condition(int p, int i) {
     }
     int rtn = sqrt(arg);
 
-    if ({{holes.[3]}}) {
+    int comp = {{holes.[3]}}%4;
+
+    if (comp == 0) {
         return i < rtn;
     }
-    if ({{holes.[4]}}) {
+    if (comp == 1) {
         return i > rtn;
     }
-    if ({{holes.[5]}}) {
+    if (comp == 2) {
         return i <= rtn;
     }
-    if ({{holes.[6]}}) {
+    if (comp == 3) {
         return i >= rtn;
     }
+    return false;
 }
 
 bit primality(int p) {

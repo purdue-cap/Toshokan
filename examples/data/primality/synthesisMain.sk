@@ -36,18 +36,21 @@ bit condition(int p, int i) {
     }
     int rtn = sqrt(arg);
 
-    if (??) {
+    int comp = ??%4;
+
+    if (comp == 0) {
         return i < rtn;
     }
-    if (??) {
+    if (comp == 1) {
         return i > rtn;
     }
-    if (??) {
+    if (comp == 2) {
         return i <= rtn;
     }
-    if (??) {
+    if (comp == 3) {
         return i >= rtn;
     }
+    return false;
 }
 
 bit primality(int p) {

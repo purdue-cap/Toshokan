@@ -207,15 +207,6 @@ impl<'r> CEGISLoop<'r> {
                 let result = generation_encoder.render(&self.state)?;
                 break Some(result);
             }
-            info!(target: "CEGISMainLoop", "Synthesizing");
-            if let Some(new_holes) = self.synthesize(&c_e_encoder,
-                &hole_extractor, &mut sketch_runner)? {
-                info!(target: "CEGISMainLoop", "Synthesis returned candidate");
-                debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
-                self.state.update_holes(new_holes.as_slice());
-            } else {
-                info!(target: "CEGISMainLoop", "Synthesis failed, continue to run logs");
-            }
             info!(target: "CEGISMainLoop", "Generating");
             let base_name = self.generate(&generation_encoder, &mut sketch_runner)?;
             info!(target: "CEGISMainLoop", "Generation successful");
@@ -225,6 +216,16 @@ impl<'r> CEGISLoop<'r> {
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             for (args, rtn) in traces.into_iter() {
                 self.state.add_log(args, rtn);
+            }
+            info!(target: "CEGISMainLoop", "Synthesizing");
+            if let Some(new_holes) = self.synthesize(&c_e_encoder,
+                &hole_extractor, &mut sketch_runner)? {
+                info!(target: "CEGISMainLoop", "Synthesis returned candidate");
+                debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
+                self.state.update_holes(new_holes.as_slice());
+            } else {
+                info!(target: "CEGISMainLoop", "Synthesis failed");
+                break None;
             }
             self.clear_output()?;
             debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_params().c_e_s);

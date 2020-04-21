@@ -16,6 +16,7 @@ pub struct CEGISConfigParams {
     pub n_holes: usize,
     pub hole_offset: usize,
     pub pure_function: bool,
+    pub enable_record: bool,
     pub cand_encoder_src: EncoderSource,
     pub c_e_encoder_src: EncoderSource,
     pub generation_encoder_src: EncoderSource,
@@ -40,7 +41,8 @@ impl CEGISConfig {
     pub fn new<P: AsRef<Path>, S: AsRef<str>>(
             sketch_bin: P, sketch_home: P, impl_file: P, lib_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
-            init_n_unknowns: usize, n_holes: usize, hole_offset: usize, pure_function: bool,
+            init_n_unknowns: usize, n_holes: usize, hole_offset: usize,
+            pure_function: bool, enable_record: bool,
             cand: P, c_e: P, generation: P, c_e_names: &[&str]) -> Self {
         CEGISConfig {
             params: CEGISConfigParams {
@@ -55,6 +57,7 @@ impl CEGISConfig {
                 n_holes: n_holes,
                 hole_offset: hole_offset,
                 pure_function: pure_function,
+                enable_record: enable_record,
                 cand_encoder_src: EncoderSource::LoadFromFile(cand.as_ref().to_path_buf()),
                 c_e_encoder_src: EncoderSource::LoadFromFile(c_e.as_ref().to_path_buf()),
                 generation_encoder_src: EncoderSource::LoadFromFile(generation.as_ref().to_path_buf()),

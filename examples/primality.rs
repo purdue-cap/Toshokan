@@ -2,6 +2,7 @@ extern crate libpartlibspec;
 use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig};
 use std::path::PathBuf;
 use std::collections::HashSet;
+use std::fs::File;
 use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,6 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         4,
         1,
         true,
+        true,
         verification.as_path(),
         synthesis.as_path(),
         generation.as_path(),
@@ -35,5 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());
+    let mut record_file = File::create("primality.record.json")?;
+    main_loop.get_recorder().ok_or("Recorder uninitialized")?.write_json_pretty(&mut record_file)?;
     Ok(())
 }

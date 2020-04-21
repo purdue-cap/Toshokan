@@ -7,3 +7,5 @@ pub use cegis_config::CEGISConfigParams;
 pub use cegis_config::VerifyPointsConfig;
 mod cegis_loop;
 pub use cegis_loop::CEGISLoop;
+mod cegis_record;
+pub use cegis_record::CEGISRecorder;

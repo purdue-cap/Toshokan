@@ -1,0 +1,104 @@
+use serde::Serialize;
+use std::io::Write;
+
+#[derive(Serialize)]
+struct CEGISRecordEntry {
+    iter_nth: usize,
+    new_c_e_s: Vec<isize>,
+    new_traces: Vec<(Vec<isize>, isize)>,
+    holes: Vec<isize>
+
+}
+
+#[derive(Serialize)]
+struct CEGISRecord {
+    entries: Vec<CEGISRecordEntry>,
+    solved: bool
+}
+
+pub struct CEGISRecorder {
+    record: CEGISRecord,
+    iter_nth: Option<usize>,
+    new_c_e_s: Option<Vec<isize>>,
+    new_traces: Option<Vec<(Vec<isize>, isize)>>,
+    holes: Option<Vec<isize>>
+}
+
+quick_error! {
+    #[derive(Debug)]
+    pub enum Error {
+        IOError(err: std::io::Error) {
+            from()
+            cause(err)
+            display("{}", err)
+        }
+        SerdeJSONError(err: serde_json::Error) {
+            from()
+            cause(err)
+            display("{}", err)
+        }
+    }
+}
+
+impl CEGISRecorder {
+    pub fn new() -> Self {
+        CEGISRecorder {
+            record: CEGISRecord {
+                entries: Vec::new(),
+                solved: false
+            },
+            iter_nth: None,
+            new_c_e_s: None,
+            new_traces: None,
+            holes: None
+        }
+    }
+
+    pub fn set_iter_nth(&mut self, iter_nth: usize) {
+        self.iter_nth = Some(iter_nth);
+    }
+    
+    pub fn set_new_c_e_s(&mut self, new_c_e_s: &Vec<isize>) {
+        self.new_c_e_s = Some(new_c_e_s.clone());
+    }
+
+    pub fn set_new_traces(&mut self, new_traces: &Vec<(Vec<isize>, isize)>) {
+        self.new_traces = Some(new_traces.clone());
+    }
+
+    pub fn set_holes(&mut self, holes: &Vec<isize>) {
+        self.holes = Some(holes.clone());
+    }
+
+    pub fn set_solved(&mut self, solved: bool) {
+        self.record.solved = solved;
+    }
+
+    pub fn commit(&mut self) -> Option<()> {
+        self.record.entries.push(CEGISRecordEntry{
+            iter_nth : self.iter_nth.take()?,
+            new_c_e_s: self.new_c_e_s.take()?,
+            new_traces: self.new_traces.take()?,
+            holes: self.holes.take()?
+        });
+        Some(())
+    }
+
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        serde_json::to_string(&self.record)
+    }
+
+    pub fn to_json_pretty(&self) -> serde_json::Result<String> {
+        serde_json::to_string_pretty(&self.record)
+    }
+
+    pub fn write_json<W: Write>(&self, w: &mut W) -> Result<(), Error>{
+        w.write(self.to_json()?.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn write_json_pretty<W: Write>(&self, w: &mut W) -> Result<(), Error>{
+        w.write(self.to_json_pretty()?.as_bytes())?;
+        Ok(())
+    }
+}

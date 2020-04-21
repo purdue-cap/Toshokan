@@ -4,6 +4,7 @@ use crate::frontend::template_helpers::register_helpers;
 use crate::backend::{LogAnalyzer, HoleExtractor, LibraryTracer};
 use super::CEGISConfig;
 use super::CEGISState;
+use super::CEGISRecorder;
 use handlebars::Handlebars;
 use tempfile::{tempdir, TempDir};
 use std::cell::RefCell;
@@ -15,6 +16,7 @@ pub struct CEGISLoop<'r> {
     hb: RefCell<Handlebars<'r>>,
     config: CEGISConfig,
     state: CEGISState,
+    recorder: Option<CEGISRecorder>,
     work_dir: Option<TempDir>,
     output_dir: Option<PathBuf>
 }
@@ -32,6 +34,7 @@ impl<'r> CEGISLoop<'r> {
             hb: RefCell::new(hb),
             config: config,
             state: state,
+            recorder: None,
             work_dir: None,
             output_dir: None
         }
@@ -162,6 +165,8 @@ impl<'r> CEGISLoop<'r> {
 
     pub fn get_state_mut(&mut self) -> &mut CEGISState {&mut self.state}
 
+    pub fn get_recorder(&self) -> Option<&CEGISRecorder> {self.recorder.as_ref()}
+
     pub fn run_loop(&mut self) -> Result<Option<String>, Box<dyn std::error::Error>> {
         info!(target: "CEGISMainLoop", "Start initialization");
 
@@ -181,6 +186,12 @@ impl<'r> CEGISLoop<'r> {
         c_e_encoder.load(&self.config.get_params().c_e_encoder_src)?;
         generation_encoder.load(&self.config.get_params().generation_encoder_src)?;
 
+        if self.config.get_params().enable_record {
+            self.recorder = Some(CEGISRecorder::new());
+        } else {
+            self.recorder = None;
+        }
+
         let c_e_names_in_log : Vec<_> = self.config.get_params().c_e_names.iter().map(|s| s.as_str()).collect();
         let log_analyzer = LogAnalyzer::new(c_e_names_in_log.as_slice());
 
@@ -199,6 +210,7 @@ impl<'r> CEGISLoop<'r> {
                 &log_analyzer, &mut sketch_runner)? {
                 info!(target: "CEGISMainLoop", "Verification returned C.E.");
                 debug!(target: "CEGISMainLoop", "New C.E: {:?}", new_c_e);
+                self.recorder.as_mut().map(|r| r.set_new_c_e_s(&new_c_e));
                 self.state.add_c_e(new_c_e);
             } else {
                 // Verification passed
@@ -214,6 +226,7 @@ impl<'r> CEGISLoop<'r> {
             let traces = self.trace(base_name.as_path(), &library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
+            self.recorder.as_mut().map(|r| r.set_new_traces(&traces));
             for (args, rtn) in traces.into_iter() {
                 self.state.add_log(args, rtn);
             }
@@ -222,6 +235,7 @@ impl<'r> CEGISLoop<'r> {
                 &hole_extractor, &mut sketch_runner)? {
                 info!(target: "CEGISMainLoop", "Synthesis returned candidate");
                 debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
+                self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
                 self.state.update_holes(new_holes.as_slice());
             } else {
                 info!(target: "CEGISMainLoop", "Synthesis failed");
@@ -234,8 +248,14 @@ impl<'r> CEGISLoop<'r> {
             debug!(target: "CEGISMainLoop", "Current Trace args: {:?}", self.state.get_params().logs_i);
             debug!(target: "CEGISMainLoop", "Current Trace rtns: {:?}", self.state.get_params().logs_r);
             info!(target: "CEGISMainLoop", "Exiting iteration #{}", self.state.get_iter_count());
+            let current_iter_nth = self.state.get_iter_count();
+            self.recorder.as_mut().map(|r| {
+                r.set_iter_nth(current_iter_nth);
+                r.commit();
+            });
             self.state.incr_iteration();
         };
+        self.recorder.as_mut().map(|r| r.set_solved(solved.is_some()));
         Ok(solved)
     }
 }

@@ -34,7 +34,7 @@ impl CEGISState {
     pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, n_holes: usize, pure_function: bool) -> Self {
         CEGISState {
             params: CEGISStateParams {
-                cap_logs: 1,
+                cap_logs: 1 + n_unknowns,
                 n_logs: 0,
                 logs_i: repeat(vec![0]).take(n_f_args).collect(),
                 logs_r: vec![0],
@@ -124,7 +124,7 @@ impl CEGISState {
                 self.params.logs_r.push(log_pair.1);
                 set.insert(log_pair);
                 self.params.n_logs = set.len();
-                self.params.cap_logs = self.params.n_logs;
+                self.params.cap_logs = self.params.n_logs + self.params.n_unknowns;
 
                 Some(())
             }

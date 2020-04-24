@@ -52,12 +52,48 @@ pub fn expand_partial_array(h: &Helper,
     val_vec.append(&mut std::iter::repeat("0".to_string()).take(extra_elements as usize).collect());
     out.write(val_vec.join(", ").as_str())?;
     Ok(())
-    }
+}
+
+pub fn expand_x_d_points(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    let xd_points: Vec<Vec<String>> = h.param(0)
+                .ok_or(RenderError::new("XD array not found"))?
+                .value().as_array()
+                .ok_or(RenderError::new("XD array not an array"))?
+                .iter().map(|val| {
+                    val.as_array().ok_or(RenderError::new("Inner element not array")).map(
+                        |vec| vec.iter().map(|val| val.to_string()).collect::<Vec<String>>()
+                    )
+                }).collect::<Result<Vec<Vec<String>>, RenderError>>()?;
+    let var_names : Vec<&str> = h.params().iter().skip(1).map(
+        |val| val.value().as_str()
+    ).collect::<Option<Vec<&str>>>().ok_or(RenderError::new("Variable name arguments contains non-string"))?;
+
+    let mut point_vec: Vec<String> = Vec::new();
+    let mut idx = 0;
+    loop {
+        if let Some(joined_predicate) =
+            var_names.iter().zip(xd_points.iter()).map(|(name, values)| {
+                    values.get(idx).map(|value| format!("{} == {}", name, value))
+            }).collect::<Option<Vec<String>>>().map(|predicates| predicates.join(" && ")) {
+            point_vec.push(format!("({})", joined_predicate));
+            idx += 1;
+        } else {
+            break;
+        }
+    };
+    out.write(point_vec.join(" || ").as_str())?;
+    Ok(())
+}
 
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-array", Box::new(expand_array));
     hb.register_helper("expand-points", Box::new(expand_points));
     hb.register_helper("expand-partial-array", Box::new(expand_partial_array));
+    hb.register_helper("expand-x-d-points", Box::new(expand_x_d_points));
 }
 
 #[cfg(test)]
@@ -69,6 +105,11 @@ mod tests {
     #[derive(Serialize)]
     struct Param {
         array: Vec<i32>
+    }
+
+    #[derive(Serialize)]
+    struct XDParam {
+        array: Vec<Vec<i32>>
     }
 
     #[test]
@@ -105,6 +146,19 @@ mod tests {
 
         let template = "Array: { {{expand-partial-array array 3}} }";
         assert_eq!(hb.render_template(template, &data)?, "Array: { 1, 2, 3, 4, 5, 0, 0, 0 }");
+        Ok(())
+    }
+
+    #[test]
+    fn expands_x_d_points() -> Result<(), Box<dyn Error>> {
+        let data = XDParam { array: vec![vec![1, 2, 3], vec![4 ,5, 6]]};
+        
+        let mut hb = Handlebars::new();
+        hb.register_helper("expand-x-d-points", Box::new(expand_x_d_points));
+
+        let template = r#"assume {{expand-x-d-points array "a" "b"}};"#;
+        assert_eq!(hb.render_template(template, &data)?,
+            "assume (a == 1 && b == 4) || (a == 2 && b == 5) || (a == 3 && b == 6);");
         Ok(())
     }
 

@@ -25,6 +25,7 @@ pub struct CEGISConfigParams {
 
 pub enum VerifyPointsConfig {
     Fixed(HashSet<Vec<isize>>),
+    Permutation(HashSet<Vec<isize>>),
     Random(usize),
     RandomWithRange{
         num: usize,
@@ -70,7 +71,7 @@ impl CEGISConfig {
 
     pub fn populate_v_p_s(&self, state: &mut CEGISState) -> Option<()> {
         match self.params.v_p_config {
-            VerifyPointsConfig::Fixed(ref points) => {
+            VerifyPointsConfig::Fixed(ref points) | VerifyPointsConfig::Permutation(ref points) => {
                 for point in points {
                     state.add_verify_point(point.clone())?;
                 }

@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::io::{Write, BufRead, BufReader};
 use std::fs::File;
@@ -7,18 +7,20 @@ use super::CFlagManager;
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
 use log::{error, trace};
 
-pub struct LibraryTracer<'i, 'n, 'w> {
+pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
     impl_file: &'i Path,
-    lib_func_name: &'n str,
+    lib_func_name: &'ln str,
+    harness_func_name: &'hn str,
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>
 }
 
-impl<'i, 'n, 'w> LibraryTracer<'i, 'n, 'w> {
-    pub fn new(impl_file: &'i Path, lib_func_name: &'n str, sketch_home: &Path) -> Self {
+impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
+    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: &Path) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
             lib_func_name: lib_func_name,
+            harness_func_name: harness_func_name,
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None
         };
@@ -55,6 +57,48 @@ impl<'i, 'n, 'w> LibraryTracer<'i, 'n, 'w> {
                 None
             }
         }
+    }
+
+    pub fn build_entry_src<S: AsRef<str>>(&self, base_name: S, c_e_s: &Vec<Vec<isize>>) -> Option<PathBuf> {
+        let mut func_calls_list: Vec<String> = Vec::new();
+        let mut idx = 0;
+        loop {
+            if let Some(joined_params) =
+                c_e_s.iter().map(|values| {
+                    values.get(idx).map(|value| value.to_string())
+                }).collect::<Option<Vec<String>>>().map(|params| params.join(", ")) {
+
+                func_calls_list.push(format!(
+r#"
+    try{{
+      ANONYMOUS::{harness_name}__WrapperNospec({arg_list});
+      ANONYMOUS::{harness_name}__Wrapper({arg_list});
+    }}catch(AssumptionFailedException& afe){{  }}
+"#,
+                    arg_list = joined_params,
+                    harness_name = self.harness_func_name
+                ));
+
+                idx += 1;
+            } else {
+                break;
+            }
+        };
+
+        let entry_src_content = format!(
+r#"#include "{base_name}.h"
+#include "vops.h"
+int main(int argc, char** argv) {{
+{func_calls}
+}}
+"#,
+            func_calls = func_calls_list.join("\n"),
+            base_name = base_name.as_ref()
+        );
+
+        let output_file_name = self.work_dir?.join(format!("{}_test.cpp", base_name.as_ref()));
+        let mut output_file = File::create(&output_file_name).ok()?;
+        write!(output_file, "{}", entry_src_content).ok().and(Some(output_file_name))
     }
 
     pub fn build_tracer_bin<P: AsRef<Path>>(&self, non_main_src_files: &[P]) -> Option<()> {

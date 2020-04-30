@@ -6,7 +6,11 @@ use std::fs::File;
 use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    TermLogger::init(LevelFilter::Debug, Config::default(), TerminalMode::Mixed)?;
+    let mut log_level = LevelFilter::Debug;
+    if let Ok(_) = std::env::var("TRACE") {
+        log_level = LevelFilter::Trace;
+    }
+    TermLogger::init(log_level, Config::default(), TerminalMode::Mixed)?;
     let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/primality");
     let verification = base_data_dir.join("verificationMain.sk");
     let synthesis = base_data_dir.join("synthesisMain.sk");
@@ -22,6 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sketch_home.as_path(),
         impl_file.as_path(),
         "sqrt",
+        "main",
         1,
         1,
         VerifyPointsConfig::Fixed(v_p_set),

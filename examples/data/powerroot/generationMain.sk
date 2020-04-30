@@ -43,10 +43,9 @@ bit condition(int i, int k) {
 }
 
 
-harness void main(int x,int k){//find 2^k th root of x
-    assume {{expand-points c_e_s.[0] "x"}};
+harness void main(int x){//find 2^k th root of x
 	//k=0; x=1;
-	k=K;
+	int k=K;
 	if(k==0 || x==0) return;
 	
 	int val = x;

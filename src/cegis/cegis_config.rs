@@ -9,6 +9,7 @@ pub struct CEGISConfigParams {
     pub sketch_home: PathBuf,
     pub impl_file: PathBuf,
     pub lib_func_name: String,
+    pub harness_func_name: String,
     pub n_f_args: usize,
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
@@ -40,7 +41,7 @@ pub struct CEGISConfig {
 
 impl CEGISConfig {
     pub fn new<P: AsRef<Path>, S: AsRef<str>>(
-            sketch_bin: P, sketch_home: P, impl_file: P, lib_func_name: S,
+            sketch_bin: P, sketch_home: P, impl_file: P, lib_func_name: S, harness_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
             init_n_unknowns: usize, n_holes: usize, hole_offset: usize,
             pure_function: bool, enable_record: bool,
@@ -51,6 +52,7 @@ impl CEGISConfig {
                 sketch_home: sketch_home.as_ref().to_path_buf(),
                 impl_file: impl_file.as_ref().to_path_buf(),
                 lib_func_name: lib_func_name.as_ref().to_string(),
+                harness_func_name: harness_func_name.as_ref().to_string(),
                 n_f_args: n_f_args,
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,

@@ -136,9 +136,20 @@ impl<'r> CEGISLoop<'r> {
             -> Result<Vec<(Vec<isize>, isize)>, Box<dyn std::error::Error>> {
         let base_name_str = base_name.to_str().ok_or("Base name conversion to str failed")?;
         let main_src = PathBuf::from(format!("{}.cpp", base_name_str));
-        let other_src = [PathBuf::from(format!("{}_test.cpp", base_name_str))];
+
         info!(target: "Trace", "Building tracer source");
         library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
+
+        info!(target: "Trace", "Building tracer entry source");
+        let entry_src = library_tracer.build_entry_src(base_name_str, &self.get_state().get_params().c_e_s)
+            .ok_or("Build entry source failed")?;
+        trace!(target: "Trace", "Entry source: {}", 
+            fs::read(entry_src.as_path()).ok()
+                .and_then(|bytes| String::from_utf8(bytes).ok())
+                .unwrap_or("<Failure>".to_string())
+        );
+
+        let other_src = [entry_src];
         info!(target: "Trace", "Building tracer source successful");
 
         trace!(target: "Trace", "Tracer source: {}",
@@ -199,6 +210,7 @@ impl<'r> CEGISLoop<'r> {
 
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
             self.config.get_params().lib_func_name.as_str(),
+            self.config.get_params().harness_func_name.as_str(),
             self.config.get_params().sketch_home.as_path());
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?);
         info!(target: "CEGISMainLoop", "Initialization complete");

@@ -203,6 +203,8 @@ impl<'r> CEGISLoop<'r> {
             self.recorder = None;
         }
 
+        self.recorder.as_mut().map(|r| r.reset_clock());
+
         let c_e_names_in_log : Vec<_> = self.config.get_params().c_e_names.iter().map(|s| s.as_str()).collect();
         let log_analyzer = LogAnalyzer::new(c_e_names_in_log.as_slice());
 
@@ -268,6 +270,7 @@ impl<'r> CEGISLoop<'r> {
             self.state.incr_iteration();
         };
         self.recorder.as_mut().map(|r| r.set_solved(solved.is_some()));
+        self.recorder.as_mut().map(|r| r.commit_time());
         Ok(solved)
     }
 }

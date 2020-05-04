@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::io::Write;
+use std::time::Instant;
 
 #[derive(Serialize)]
 struct CEGISRecordEntry {
@@ -13,7 +14,8 @@ struct CEGISRecordEntry {
 #[derive(Serialize)]
 struct CEGISRecord {
     entries: Vec<CEGISRecordEntry>,
-    solved: bool
+    solved: bool,
+    wall_time: f32
 }
 
 pub struct CEGISRecorder {
@@ -21,7 +23,8 @@ pub struct CEGISRecorder {
     iter_nth: Option<usize>,
     new_c_e_s: Option<Vec<isize>>,
     new_traces: Option<Vec<(Vec<isize>, isize)>>,
-    holes: Option<Vec<isize>>
+    holes: Option<Vec<isize>>,
+    clock: Option<Instant>
 }
 
 quick_error! {
@@ -45,12 +48,14 @@ impl CEGISRecorder {
         CEGISRecorder {
             record: CEGISRecord {
                 entries: Vec::new(),
-                solved: false
+                solved: false,
+                wall_time: std::f32::NAN
             },
             iter_nth: None,
             new_c_e_s: None,
             new_traces: None,
-            holes: None
+            holes: None,
+            clock: None
         }
     }
 
@@ -81,6 +86,15 @@ impl CEGISRecorder {
             new_traces: self.new_traces.take()?,
             holes: self.holes.take()?
         });
+        Some(())
+    }
+
+    pub fn reset_clock(&mut self) -> () {
+        self.clock = Some(Instant::now());
+    }
+
+    pub fn commit_time(&mut self) -> Option<()> {
+        self.record.wall_time = self.clock?.elapsed().as_secs_f32();
         Some(())
     }
 

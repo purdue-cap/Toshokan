@@ -1,4 +1,4 @@
-pragma options "--bnd-inbits 5 --bnd-unroll-amnt 5 --bnd-cbits 3 ";
+pragma options "--bnd-inbits 5 --bnd-unroll-amnt 5 --bnd-cbits 3 --slv-nativeints";
 int K=2;
 
 int sqrt(int num){

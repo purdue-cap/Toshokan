@@ -1,0 +1,57 @@
+pragma options "--bnd-inbits 4 --bnd-inline-amnt 2 --bnd-unroll-amnt 16 --bnd-cbits 3 ";
+
+int log(int a);
+
+int pow(int a, int b){
+    int result = 1;
+    for(int i=0; i<b; i++)
+       result = result * a;
+    return result;
+}
+
+int N = 5;
+
+harness void closestTwoPower(int a_0, int a_1, int a_2, int a_3, int a_4){
+    int[N] a;
+    a[0] = a_0;
+    a[1] = a_1;
+    a[2] = a_2;
+    a[3] = a_3;
+    a[4] = a_4;
+
+
+	int[N] b;
+
+	int result = 0;
+	int bound_choice = {{holes.[0]}}%3;
+	int bound = 0;
+	if (bound_choice == 0) {
+		bound = N;
+	} else if (bound_choice == 1) {
+		bound = N-1;
+	} else if (bound_choice == 2) {
+		bound = N-2;
+	}
+	for(int i={{holes.[1]}}; i<bound; i++){
+	int exp = log(a[i]);
+	int result_choice = {{holes.[2]}}%3;
+	if (result_choice == 0)	 {
+		b[i] = exp;
+	} else if (result_choice == 1) {
+		b[i] = exp + 1;
+	} else if (result_choice == 2) {
+		b[i] = exp - 1;
+	}
+	result += pow(2, b[i]);
+	}	
+	
+	for(int i=0; i<N ; i++){
+	int r = 1;
+	for(int j=0; j<b[i]; j++){
+	 r = r * 2;
+	 }	  
+	 if(b[i]>0) assert r < a[i];
+
+	 }	  
+
+}

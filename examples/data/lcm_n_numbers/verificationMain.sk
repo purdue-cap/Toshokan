@@ -1,30 +1,32 @@
-pragma options "--bnd-inbits 4 --bnd-unroll-amnt 16 --bnd-cbits 3 --slv-nativeints";
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 64 --bnd-cbits 3 --slv-nativeints";
 int N = 5;
 
+int lcm(int a, int b){
+ return a * b / gcd(a,b);
+}
+
 int gcd(int a, int b){
-	if(a < b) return gcd(b,a);
-	int _gcd=0;
-	while (b != 0) {
-		_gcd = b;
-		b = a % b;
-		a = _gcd;
-	}
-	return _gcd;
+if(a==0) return b;
+while(b != 0){
+ if(a>b) a = a - b;
+ else b = b - a;
+}
+return a;
 }
 
 // synthesize algorithm for computing gcd of N numbers
-harness void multi_gcd(int[N] nums){
-    assume {{expand-points verify_points.[0] "nums[0]"}};
-    assume {{expand-points verify_points.[1] "nums[1]"}};
-    assume {{expand-points verify_points.[2] "nums[2]"}};
-    assume {{expand-points verify_points.[3] "nums[3]"}};
-    assume {{expand-points verify_points.[4] "nums[4]"}};
+harness void multi_lcm(int[N] nums){
+   // assume {{expand-points verify_points.[0] "nums[0]"}};
+   // assume {{expand-points verify_points.[1] "nums[1]"}};
+   // assume {{expand-points verify_points.[2] "nums[2]"}};
+   // assume {{expand-points verify_points.[3] "nums[3]"}};
+   // assume {{expand-points verify_points.[4] "nums[4]"}};
 	
 	for(int i=0; i<N; i++)
 	  if(nums[i] == 0) return;	
 	if(N<2) return;        
 
-	int result = gcd(nums[0], nums[1]);
+	int result = lcm(nums[0], nums[1]);
     
     int compare_choice = {{holes.[0]}}%3;
     int compare = 0;
@@ -49,19 +51,19 @@ harness void multi_gcd(int[N] nums){
       } else {
           arg2 = nums[i];
       }
-	  result = gcd(arg1, arg2);
+	  result = lcm(arg1, arg2);
 	}
 
 
 	for(int i=0; i<N; i++)
-	 assert nums[i] % result== 0;
+	 assert result % nums[i] == 0;
 	
-	for(int i=result+1; i <= nums[0]; i++)
+	for(int i=1; i < result; i++)
 	 {
 	  bit divisible = 1;
 	  for(int j=0; j<N; j++)
-             divisible = divisible && (nums[j] %i == 0);
-      assert !divisible;
+             divisible = divisible && (i % nums[j] == 0);
+          assert !divisible;
 	 }
 
 }

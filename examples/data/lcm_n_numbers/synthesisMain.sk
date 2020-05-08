@@ -1,0 +1,78 @@
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 64 --bnd-cbits 3 --slv-nativeints";
+int N = 5;
+
+int cap = {{cap_logs}};
+int logged = {{n_logs}};
+int[cap] i_0_arr = { {{expand-partial-array logs_i.[0] n_unknowns}} };
+int[cap] i_1_arr = { {{expand-partial-array logs_i.[1] n_unknowns}} };
+int[cap] rarr = { {{expand-partial-array logs_r n_unknowns}} };
+
+
+int[{{n_unknowns}}] unknown = ??;
+int used_unknown = 0;
+
+generator int lcm(int a, int b){
+    for (int idx = 0; idx < logged; idx ++) {
+        if (i_0_arr[idx] == a && i_1_arr[idx] == b) {
+            return rarr[idx];
+        }
+    }
+    int val = unknown[used_unknown];
+    used_unknown++;
+    if (logged < cap) {
+        i_0_arr[logged] = a;
+        i_1_arr[logged] = b;
+        rarr[logged] = val;
+        logged ++;
+    }
+    return val;
+}
+
+// synthesize algorithm for computing gcd of N numbers
+harness void multi_lcm(int[N] nums){
+    assume {{expand-x-d-points c_e_s "nums[0]" "nums[1]" "nums[2]" "nums[3]" "nums[4]"}};
+	
+	for(int i=0; i<N; i++)
+	  if(nums[i] == 0) return;	
+	if(N<2) return;        
+
+	int result = lcm(nums[0], nums[1]);
+    
+    int compare_choice = ??%3;
+    int compare = 0;
+    if (compare_choice == 0) {
+        compare = N;
+    } else if (compare_choice == 1) {
+        compare = N-1;
+    } else if (compare_choice == 2) {
+        compare = N-2;
+    }
+    
+	for(int i =??; i<compare; i++){
+      int arg1;
+      int arg2;
+      if (??) {
+          arg1 = result;
+      } else {
+          arg1 = nums[i];
+      }
+      if (??) {
+          arg2 = result;
+      } else {
+          arg2 = nums[i];
+      }
+	  result = lcm(arg1, arg2);
+	}
+
+
+	for(int i=0; i<N; i++)
+	 assert result % nums[i] == 0;
+	
+	for(int i=1; i < result; i++)
+	 {
+	  bit divisible = 1;
+	  for(int j=0; j<N; j++)
+             divisible = divisible && (i % nums[j] == 0);
+          assert !divisible;
+	 }
+}

@@ -119,7 +119,7 @@ int main(int argc, char** argv) {{
 
     fn match_log_line<S: AsRef<str>>(&self, line: S) -> Option<(Vec<isize>, isize)> {
         trace!(target: "LibraryTracer", "Read trace log: {}", line.as_ref());
-        let log_regex = Regex::new(format!(r"{}\(([\d, ]+)\) = (\d+)", self.lib_func_name).as_str()).ok()?;
+        let log_regex = Regex::new(format!(r"{}\(([-\d, ]+)\) = (-?\d+)", self.lib_func_name).as_str()).ok()?;
         trace!(target: "LibraryTracer", "Regex: {:?}", log_regex);
         let caps = log_regex.captures(line.as_ref())?;
         trace!(target: "LibraryTracer", "Captures: {:?}", caps);

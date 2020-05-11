@@ -98,6 +98,10 @@ impl CEGISRecorder {
         Some(())
     }
 
+    pub fn get_time(&self) -> f32 {
+        self.record.wall_time
+    }
+
     pub fn to_json(&self) -> serde_json::Result<String> {
         serde_json::to_string(&self.record)
     }

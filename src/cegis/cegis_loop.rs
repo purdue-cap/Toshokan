@@ -271,6 +271,8 @@ impl<'r> CEGISLoop<'r> {
         };
         self.recorder.as_mut().map(|r| r.set_solved(solved.is_some()));
         self.recorder.as_mut().map(|r| r.commit_time());
+        self.recorder.as_ref().map(|r| info!(target:"CEGISMainLoop", "Total elapsed time: {}", r.get_time()));
+        info!(target:"CEGISMainLoop", "Total iterations run: {}", self.state.get_iter_count() + 1);
         Ok(solved)
     }
 }

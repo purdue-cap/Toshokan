@@ -10,30 +10,7 @@ fn main() {
         .trim().split(" ").collect();
     let mut build_tracer = cc::Build::new();
     build_tracer.cpp(true).file("src/backend/cpp/build_tracer.cpp").compile("build_tracer");
-    let mut lib_list = vec![
-        "clangAST",
-        "clangASTMatchers",
-        "clangAnalysis",
-        "clangBasic",
-        "clangDriver",
-        "clangEdit",
-        "clangFrontend",
-        "clangFrontendTool",
-        "clangLex",
-        "clangParse",
-        "clangSema",
-        "clangEdit",
-        "clangRewrite",
-        "clangRewriteFrontend",
-        "clangStaticAnalyzerFrontend",
-        "clangStaticAnalyzerCheckers",
-        "clangStaticAnalyzerCore",
-        "clangCrossTU",
-        "clangIndex",
-        "clangSerialization",
-        "clangToolingCore",
-        "clangTooling",
-        "clangFormat"];
+    let mut lib_list = vec![ "clang-cpp" ];
     for f in llvm_flags {
         lib_list.push(&f[2..]);
     }

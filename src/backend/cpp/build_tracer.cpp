@@ -132,7 +132,7 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                     StringRef file) override {
         TheRewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
-        return llvm::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName);
+        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName);
     }
 
     private:
@@ -145,8 +145,8 @@ class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
     public:
     TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out) : LibFuncName(name), OutStream(out) {}
 
-    FrontendAction* create() {
-        return new TracerBuilderFrontendAction(LibFuncName, OutStream);
+    std::unique_ptr<FrontendAction> create() {
+        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream);
     }
 
     private:

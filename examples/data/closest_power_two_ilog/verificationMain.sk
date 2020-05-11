@@ -17,12 +17,6 @@ int pow(int a, int b){
 int N = 5;
 
 harness void closestTwoPower(int[N] a){
-    assume {{expand-points verify_points.[0] "a[0]"}};
-    assume {{expand-points verify_points.[1] "a[1]"}};
-    assume {{expand-points verify_points.[2] "a[2]"}};
-    assume {{expand-points verify_points.[3] "a[3]"}};
-    assume {{expand-points verify_points.[4] "a[4]"}};
-
 	int[N] b;
 
 	int result = 0;

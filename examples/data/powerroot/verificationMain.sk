@@ -60,7 +60,6 @@ bit condition(int i, int k) {
 
 
 harness void main(int x){//find 2^k th root of x
-    assume {{expand-points verify_points.[0] "x"}};
 	//k=0; x=1;
 	int k=K;
 	if(k==0 || x==0) return;

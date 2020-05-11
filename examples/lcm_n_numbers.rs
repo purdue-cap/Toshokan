@@ -18,9 +18,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let impl_file = base_data_dir.join("impl.cpp");
     let sketch_bin = PathBuf::from("sketchsynth");
     let sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
-    let v_p_set : HashSet<_> = (0..8).map(
-        |n| std::iter::repeat(n).take(5).collect::<Vec<_>>()
-    ).collect();
     let config = CEGISConfig::new(
         sketch_bin.as_path(),
         sketch_home.as_path(),
@@ -29,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "multi_gcd",
         2,
         5,
-        VerifyPointsConfig::Permutation(v_p_set),
+        VerifyPointsConfig::Permutation(HashSet::new()),
         10,
         4,
         1,

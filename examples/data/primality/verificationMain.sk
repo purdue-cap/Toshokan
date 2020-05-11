@@ -64,6 +64,5 @@ bit primality_spec(int p){
 }
 
 harness void main(int p) {
-    assume {{expand-points verify_points.[0] "p"}};
     assert primality(p) == primality_spec(p);
 }

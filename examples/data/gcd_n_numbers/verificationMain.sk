@@ -14,11 +14,6 @@ int gcd(int a, int b){
 
 // synthesize algorithm for computing gcd of N numbers
 harness void multi_gcd(int[N] nums){
-    assume {{expand-points verify_points.[0] "nums[0]"}};
-    assume {{expand-points verify_points.[1] "nums[1]"}};
-    assume {{expand-points verify_points.[2] "nums[2]"}};
-    assume {{expand-points verify_points.[3] "nums[3]"}};
-    assume {{expand-points verify_points.[4] "nums[4]"}};
 	
 	for(int i=0; i<N; i++)
 	  if(nums[i] == 0) return;	

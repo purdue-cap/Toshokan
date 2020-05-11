@@ -10,7 +10,7 @@ int[cap] rarr = { {{expand-partial-array logs_r n_unknowns}} };
 int[{{n_unknowns}}] unknown = ??;
 int used_unknown = 0;
 
-generator int sqrt(int i){
+int sqrt(int i){
     for (int idx = 0; idx < logged; idx ++) {
         if (iarr[idx] == i) {
             return rarr[idx];

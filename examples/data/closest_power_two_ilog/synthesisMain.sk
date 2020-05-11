@@ -9,7 +9,7 @@ int[cap] rarr = { {{expand-partial-array logs_r n_unknowns}} };
 int[{{n_unknowns}}] unknown = ??;
 int used_unknown = 0;
 
-generator int log(int i){
+int log(int i){
     for (int idx = 0; idx < logged; idx ++) {
         if (iarr[idx] == i) {
             return rarr[idx];
@@ -35,6 +35,7 @@ int pow(int a, int b){
 int N = 5;
 
 harness void closestTwoPower(int[N] a){
+    assume {{expand-x-d-points c_e_s "a[0]" "a[1]" "a[2]" "a[3]" "a[4]"}};
 
 	int[N] b;
 

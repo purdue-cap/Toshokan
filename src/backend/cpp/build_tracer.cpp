@@ -12,10 +12,15 @@
 #include "clang/Tooling/Tooling.h"
 #include "clang/Tooling/CompilationDatabase.h"
 
+#include "inja.hpp"
+
+
 namespace TracerBuilder {
 
 using namespace clang;
 using namespace clang::tooling;
+
+using json = nlohmann::json;
 
 using std::string;
 using std::stringstream;
@@ -35,62 +40,53 @@ class TracerBuilderVisitor : public RecursiveASTVisitor<TracerBuilderVisitor> {
             impl_name << LibFuncName << "_impl";
 
             // Build actual parameter list
-            stringstream arg_list;
+            vector<string> arg_name_list;
+            vector<string> arg_type_list;
             for (unsigned i = 0; i < f->getNumParams() - 1; i++) {
-                arg_list << f->getParamDecl(i)->getName().str();
-                if (i != f->getNumParams() - 2) {
-                    arg_list << ", ";
-                }
+                arg_name_list.push_back(f->getParamDecl(i)->getName().str());
+                arg_type_list.push_back(f->getParamDecl(i)->getType().getAsString());
             }
-
-            // Build impl function call
-            stringstream impl_call;
-            impl_call << impl_name.str() << "(" << arg_list.str() << ")";
 
             // Get the returning paramter
-            const auto* rtn_param = f->getParamDecl(f->getNumParams() - 1);
+            const auto* rtn_arg = f->getParamDecl(f->getNumParams() - 1);
+            auto rtn_arg_name = rtn_arg->getName().str();
+            auto rtn_type_name = rtn_arg->getType().getNonReferenceType().getAsString();
 
-            // Construct log str
-            stringstream log_str;
-            log_str << '"' << LibFuncName << "(";
-            for (unsigned i = 0; i < f->getNumParams() - 1; i++) {
-                log_str << "%d"; // TODO: Support more types than integer here
-                if (i != f->getNumParams() - 2) {
-                    log_str << ", ";
-                }
-            }
-            log_str << ") = %d\\n" << '"';
-
-            // Construct log statement
-            stringstream log_statement;
-            log_statement << "fprintf(stderr, " << log_str.str() << ", "
-            << arg_list.str() << ", " << rtn_param->getName().str() << ")";
-
-
-            // Build Body
-            stringstream body;
-            body << "{\n"
-            << "  " << rtn_param->getName().str() << " = " << impl_call.str() << ";\n"
-            << "  " << log_statement.str() << ";\n"
-            << "}";
-
-            // Construct declaration
-            stringstream decl;
-            decl << rtn_param->getType().getNonReferenceType().getAsString()
-            << " " << impl_name.str() << "(";
-            for (unsigned i = 0; i < f->getNumParams() - 1; i++) {
-                decl << f->getParamDecl(i)->getType().getAsString();
-                if (i != f->getNumParams() - 2) {
-                    decl << ", ";
-                }
-            }
-            decl << ");\n";
-
+            json data;
+            data["lib_func_name"] = LibFuncName;
+            data["arg_list"] = arg_name_list;
+            data["rtn_arg"] = rtn_arg_name;
+            data["arg_list_rendered"] = inja::render(
+                R"({% for arg in arg_list %}{{ arg }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
+                data
+            );
+            data["arg_fmt_rendered"] = inja::render(
+                R"({% for arg in arg_list %}%d{% if not loop.is_last %}, {% endif %}{% endfor %})",
+                data
+            );
+            data["arg_types"] = arg_type_list;
+            data["rtn_type"] = rtn_type_name;
+            data["arg_types_rendered"] = inja::render(
+                R"({% for type in arg_types %}{{ type }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
+                data
+            );
+            string body_template(
+R"({
+    {{ rtn_arg }} = {{ lib_func_name }}_impl({{ arg_list_rendered }});
+    fprintf("{{ lib_func_name }}({{ arg_fmt_rendered }}) = %d", {{ arg_list_rendered }}, {{ rtn_arg }});
+}
+)"
+            );
+            string decl_template(
+R"(
+{{ rtn_type }} {{ lib_func_name }}_impl({{ arg_types_rendered }});
+)"
+            );
 
             auto range = f->getBody()->getSourceRange();
-            TheRewriter.ReplaceText(range, body.str());
+            TheRewriter.ReplaceText(range, inja::render(body_template, data));
             auto startOfFile = SM.getLocForStartOfFile(SM.getMainFileID());
-            TheRewriter.InsertText(startOfFile, decl.str());
+            TheRewriter.InsertText(startOfFile, inja::render(decl_template, data));
         }
         return true;
     }
@@ -109,8 +105,7 @@ class TracerBuilderASTConsumer : public ASTConsumer {
     bool HandleTopLevelDecl(DeclGroupRef DR) override {
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
             // Traverse the declaration using our AST visitor.
-            Visitor.TraverseDecl(*b);
-        }
+            Visitor.TraverseDecl(*b); }
         return true;
     }
 
@@ -157,6 +152,7 @@ class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
 int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out) {
     string source_path_list[1] = {input_file};
     auto dir_path = llvm::sys::path::parent_path(input_file);
+    llvm::outs() << dir_path;
     string error_msg;
     auto db = CompilationDatabase::loadFromDirectory(dir_path, error_msg);
     if (db == nullptr) {

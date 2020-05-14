@@ -6,6 +6,8 @@
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Rewrite/Core/Rewriter.h"
@@ -19,6 +21,7 @@ namespace TracerBuilder {
 
 using namespace clang;
 using namespace clang::tooling;
+using namespace clang::ast_matchers;
 
 using json = nlohmann::json;
 
@@ -26,29 +29,34 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
-class TracerBuilderVisitor : public RecursiveASTVisitor<TracerBuilderVisitor> {
+class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
     public:
-    TracerBuilderVisitor(Rewriter &R, string &name) : TheRewriter(R), LibFuncName(name) {}
+    ImplFuncInjector(Rewriter &R, string &name) : TheRewriter(R), LibFuncName(name) {}
 
     bool VisitFunctionDecl(FunctionDecl *f) {
         auto &SM = TheRewriter.getSourceMgr();
         if (f->hasBody()
             && f->getNameAsString() == LibFuncName
             && SM.isInMainFile(f->getBeginLoc())) {
-            // Construct impl function name
-            stringstream impl_name;
-            impl_name << LibFuncName << "_impl";
 
-            // Build actual parameter list
             vector<string> arg_name_list;
             vector<string> arg_type_list;
-            for (unsigned i = 0; i < f->getNumParams() - 1; i++) {
-                arg_name_list.push_back(f->getParamDecl(i)->getName().str());
-                arg_type_list.push_back(f->getParamDecl(i)->getType().getAsString());
+            vector<string> arg_decl_list;
+            const ParmVarDecl* rtn_arg;
+            for (const auto* arg : f->parameters()) {
+                auto arg_name = arg->getName().str();
+                if (arg_name == "_out") {
+                    rtn_arg = arg;
+                    continue;
+                }
+                if (arg_name.find("__ANONYMOUS_") != string::npos) {
+                    continue;
+                }
+                arg_name_list.push_back(arg_name);
+                arg_type_list.push_back(arg->getType().getAsString());
             }
 
             // Get the returning paramter
-            const auto* rtn_arg = f->getParamDecl(f->getNumParams() - 1);
             auto rtn_arg_name = rtn_arg->getName().str();
             auto rtn_type_name = rtn_arg->getType().getNonReferenceType().getAsString();
 
@@ -96,21 +104,54 @@ R"(
     string &LibFuncName;
 };
 
+const StatementMatcher assumption_matcher =
+ifStmt(hasThen(has(
+    exprWithCleanups(has(
+        cxxThrowExpr(has(
+            cxxConstructExpr(
+                hasDeclaration(cxxConstructorDecl(
+                    hasName("AssumptionFailedException")
+                ))
+            )
+        ))
+    ))
+))).bind("toBeRemoved");
+
+class CleanUpCallback : public MatchFinder::MatchCallback {
+    public: 
+    CleanUpCallback(Rewriter &R) : TheRewriter(R) {}
+    void run(const MatchFinder::MatchResult& result) {
+        const Stmt* stmt = result.Nodes.getNodeAs<Stmt>("toBeRemoved");
+        auto &SM = TheRewriter.getSourceMgr();
+        if (SM.isInMainFile(stmt->getBeginLoc())) {
+            TheRewriter.RemoveText(stmt->getSourceRange());
+        }
+    }
+    private:
+    Rewriter &TheRewriter;
+};
+
 class TracerBuilderASTConsumer : public ASTConsumer {
     public:
-    TracerBuilderASTConsumer(Rewriter &R, string &name) : Visitor(R, name) {}
+    TracerBuilderASTConsumer(Rewriter &R, string &name) : impl_func_injector(R, name), cleanup_cb(R) {}
 
     // Override the method that gets called for each parsed top-level
     // declaration.
     bool HandleTopLevelDecl(DeclGroupRef DR) override {
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
-            // Traverse the declaration using our AST visitor.
-            Visitor.TraverseDecl(*b); }
+            impl_func_injector.TraverseDecl(*b);
+        }
+        MatchFinder finder;
+        finder.addMatcher(assumption_matcher, &cleanup_cb);
+        for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
+            finder.matchAST((*b)->getASTContext());
+        }
         return true;
     }
 
     private:
-    TracerBuilderVisitor Visitor;
+    ImplFuncInjector impl_func_injector;
+    CleanUpCallback cleanup_cb;
 };
 
 class TracerBuilderFrontendAction : public ASTFrontendAction {
@@ -152,7 +193,6 @@ class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
 int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out) {
     string source_path_list[1] = {input_file};
     auto dir_path = llvm::sys::path::parent_path(input_file);
-    llvm::outs() << dir_path;
     string error_msg;
     auto db = CompilationDatabase::loadFromDirectory(dir_path, error_msg);
     if (db == nullptr) {

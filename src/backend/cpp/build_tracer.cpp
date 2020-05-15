@@ -104,7 +104,7 @@ R"(
     string &LibFuncName;
 };
 
-const StatementMatcher assumption_matcher =
+const StatementMatcher assumption_removal_matcher =
 ifStmt(hasThen(has(
     exprWithCleanups(has(
         cxxThrowExpr(has(
@@ -117,14 +117,34 @@ ifStmt(hasThen(has(
     ))
 ))).bind("toBeRemoved");
 
+const StatementMatcher assertion_removal_matcher = 
+parenExpr(has(
+    conditionalOperator(hasFalseExpression(
+        callExpr(
+            callee(functionDecl(
+                hasName("__assert_fail")
+            ))
+        )
+    ))
+)).bind("toBeRemoved");
+
 class CleanUpCallback : public MatchFinder::MatchCallback {
     public: 
     CleanUpCallback(Rewriter &R) : TheRewriter(R) {}
     void run(const MatchFinder::MatchResult& result) {
         const Stmt* stmt = result.Nodes.getNodeAs<Stmt>("toBeRemoved");
         auto &SM = TheRewriter.getSourceMgr();
-        if (SM.isInMainFile(stmt->getBeginLoc())) {
-            TheRewriter.RemoveText(stmt->getSourceRange());
+
+        auto begin_loc = stmt->getBeginLoc();
+        auto end_loc = stmt->getEndLoc();
+        SourceRange range(begin_loc, end_loc);
+        if (begin_loc.isMacroID()) {
+            auto expansion_range = SM.getImmediateExpansionRange(begin_loc);
+            range = expansion_range.getAsRange();
+        }
+
+        if (SM.isInMainFile(range.getBegin())) {
+            TheRewriter.RemoveText(range);
         }
     }
     private:
@@ -142,7 +162,8 @@ class TracerBuilderASTConsumer : public ASTConsumer {
             impl_func_injector.TraverseDecl(*b);
         }
         MatchFinder finder;
-        finder.addMatcher(assumption_matcher, &cleanup_cb);
+        finder.addMatcher(assumption_removal_matcher, &cleanup_cb);
+        finder.addMatcher(assertion_removal_matcher, &cleanup_cb);
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
             finder.matchAST((*b)->getASTContext());
         }

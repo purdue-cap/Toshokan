@@ -81,7 +81,7 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             string body_template(
 R"({
     {{ rtn_arg }} = {{ lib_func_name }}_impl({{ arg_list_rendered }});
-    fprintf(stderr, "{{ lib_func_name }}({{ arg_fmt_rendered }}) = %d", {{ arg_list_rendered }}, {{ rtn_arg }});
+    fprintf(stderr, "{{ lib_func_name }}({{ arg_fmt_rendered }}) = %d\n", {{ arg_list_rendered }}, {{ rtn_arg }});
 }
 )"
             );

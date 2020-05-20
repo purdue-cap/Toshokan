@@ -2,6 +2,7 @@ use std::process::{Command, Output};
 use std::ffi::{OsStr, OsString};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use regex::Regex;
 use tempfile::NamedTempFile;
 use log::{debug, trace};
 
@@ -60,6 +61,10 @@ impl SketchRunner{
         self.be_flags.push(opt.as_ref().to_os_string());
         self
     }
+    
+    pub fn get_fe_flags(&self) -> &Vec<OsString> {&self.fe_flags}
+
+    pub fn get_be_flags(&self) -> &Vec<OsString> {&self.be_flags}
 
     pub fn fe_output<P: AsRef<Path>>(&mut self, input_file:P) -> io::Result<Output> {
         self.frontend_cmd.args(&self.fe_flags);
@@ -107,6 +112,15 @@ impl SketchRunner{
             self.be_flag(&flag);
         }
         self
+    }
+
+    pub fn extract_be_verify_flags<S: AsRef<str>>(&self, gen_output: S) -> Option<Vec<OsString>> {
+        let regex = Regex::new(r"^\[SATBackend\] Launching: _sketch_dummy (.*)")
+            .expect("Hard coded regex should not fail.");
+        let dummy_args = regex.captures(gen_output.as_ref())?.get(1)?.as_str()
+            .trim().split_whitespace().collect::<Vec<_>>();
+        let flags = dummy_args.iter().rev().skip(3).rev().map(|s| OsString::from(s)).collect::<Vec<_>>();
+        Some(flags)
     }
 
     pub fn fe_flag_synthesize(&mut self) -> &mut Self {
@@ -176,6 +190,14 @@ impl SketchRunner{
         })
     }
 
+    pub fn generate_file_and_setup_be<P: AsRef<Path>>(&mut self, input_file: P) -> io::Result<PathBuf> {
+        let result = self.generate_file(input_file)?;
+        let flags = self.extract_be_verify_flags(&result.1)
+            .ok_or(io::Error::new(io::ErrorKind::InvalidData, "No flags found in generation output"))?;
+        self.set_be_verify_flags(&flags);
+        Ok(result.0)
+    }
+
     pub fn verify_str<S: AsRef<str>>(&mut self, input: S) -> VerificationResult {
         match NamedTempFile::new() {
             Ok(mut temp_file) => {
@@ -222,6 +244,14 @@ impl SketchRunner{
                 }
             })
         })
+    }
+
+    pub fn generate_str_and_setup_be<S: AsRef<str>>(&mut self, input: S) -> io::Result<PathBuf> {
+        let result = self.generate_str(input)?;
+        let flags = self.extract_be_verify_flags(&result.1)
+            .ok_or(io::Error::new(io::ErrorKind::InvalidData, "No flags found in generation output"))?;
+        self.set_be_verify_flags(&flags);
+        Ok(result.0)
     }
 }
 

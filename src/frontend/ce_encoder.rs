@@ -1,6 +1,7 @@
 use handlebars::Handlebars;
 use std::cell::RefCell;
-use super::Encoder;
+use std::path::Path;
+use super::{Encoder, EncodeError};
 
 pub struct CEEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -26,6 +27,13 @@ impl<'h, 'r> CEEncoder<'h, 'r> {
 impl<'h, 'r> Encoder<'r> for CEEncoder<'h, 'r> {
     fn name(&self) -> &'static str { self.name }
     fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
+
+    fn rewrite_template_to_str(&self) -> Result<String, EncodeError> {
+        unimplemented!("Rewrite for CEEncoder not implemented yet.");
+    }
+    fn rewrite_template_to_file<P: AsRef<Path>>(&self, _file_name: P) -> Result<(), EncodeError> {
+        unimplemented!("Rewrite for CEEncoder not implemented yet.");
+    }
 }
 
 #[cfg(test)]
@@ -36,7 +44,7 @@ mod tests {
     
     #[test]
     fn renders_c_e_s() -> Result<(), Box<dyn Error>> {
-        let mut state = CEGISState::new(1, 1, 10, 5, true);
+        let mut state = CEGISState::new(1, 1, 10, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CEEncoder::new(&handlebars);
         encoder.load_str("c_e_2 = {{c_e_s.[0].[2]}}")?;

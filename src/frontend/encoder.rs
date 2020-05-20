@@ -17,11 +17,14 @@ pub trait Encoder<'r> {
     fn name(&self) -> &'static str;
     fn handlebars(&self) -> &RefCell<Handlebars<'r>>;
 
+    fn rewrite_template_to_str(&self) -> Result<String, EncodeError>;
+    fn rewrite_template_to_file<P: AsRef<Path>>(&self, file_path: P) -> Result<(), EncodeError>;
+
     fn load(&mut self, src: &EncoderSource) -> Result<(), EncodeError> {
         match src {
             EncoderSource::LoadFromFile(p) => self.load_file(p.as_path()),
             EncoderSource::LoadFromStr(s) => self.load_str(s.as_str()),
-            _ => Err(EncodeError::SourceNotSupported)
+            EncoderSource::Rewrite => self.load_from_rewrite(),
         }
     }
 
@@ -33,6 +36,10 @@ pub trait Encoder<'r> {
     fn load_file<P: AsRef<Path>>(&mut self, template_file: P) -> Result<(), EncodeError>{
         Ok(self.handlebars().try_borrow_mut()?
             .register_template_file(self.name(), template_file)?)
+    }
+
+    fn load_from_rewrite(&mut self) -> Result<(), EncodeError> {
+        self.load_str(self.rewrite_template_to_str()?.as_str())
     }
 
     fn render(&self, state: &CEGISState) -> Result<String, EncodeError> {

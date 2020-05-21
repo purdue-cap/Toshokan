@@ -87,8 +87,8 @@ impl CEGISConfig {
     pub fn get_input_tmp_path(&self) -> Option<&Path> {self.input_tmp_path.as_ref().map(|p| p.as_path())}
 
     pub fn populate_be_config(&mut self, runner: &mut SketchRunner) {
-        if let Some(ref path) = self.params.input_tmp_file {
-            self.set_input_tmp_path(path.clone());
+        if let Some(path) = self.params.input_tmp_file.clone() {
+            self.set_input_tmp_path(path);
         }
         if let Some(ref flags) = self.params.be_verify_flags {
             runner.set_be_verify_flags(flags);

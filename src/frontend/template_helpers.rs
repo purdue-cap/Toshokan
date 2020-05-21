@@ -16,7 +16,7 @@ pub fn expand_array(h: &Helper,
     Ok(())
 }
 
-pub fn expand_points(h: &Helper,
+pub fn expand_points_to_assume(h: &Helper,
                     _: &Handlebars,
                     _: &Context,
                     _: &mut RenderContext,
@@ -32,7 +32,11 @@ pub fn expand_points(h: &Helper,
     let assign_vec : Vec<String> = val_vec.iter()
                 .map(|val| format!("{} == {}", var_name, val))
                 .collect();
-    out.write(assign_vec.join(" || ").as_str())?;
+    if !val_vec.is_empty() {
+        out.write("assume ")?;
+        out.write(assign_vec.join(" || ").as_str())?;
+        out.write(";")?;
+    }
     Ok(())
 }
 
@@ -54,7 +58,7 @@ pub fn expand_partial_array(h: &Helper,
     Ok(())
 }
 
-pub fn expand_x_d_points(h: &Helper,
+pub fn expand_x_d_points_to_assume(h: &Helper,
                     _: &Handlebars,
                     _: &Context,
                     _: &mut RenderContext,
@@ -85,15 +89,19 @@ pub fn expand_x_d_points(h: &Helper,
             break;
         }
     };
-    out.write(point_vec.join(" || ").as_str())?;
+    if !point_vec.is_empty() {
+        out.write("assume ")?;
+        out.write(point_vec.join(" || ").as_str())?;
+        out.write(";")?;
+    }
     Ok(())
 }
 
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-array", Box::new(expand_array));
-    hb.register_helper("expand-points", Box::new(expand_points));
+    hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
     hb.register_helper("expand-partial-array", Box::new(expand_partial_array));
-    hb.register_helper("expand-x-d-points", Box::new(expand_x_d_points));
+    hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
 }
 
 #[cfg(test)]
@@ -125,17 +133,31 @@ mod tests {
     }
 
     #[test]
-    fn expands_points() -> Result<(), Box<dyn Error>> {
+    fn expands_points_to_assume() -> Result<(), Box<dyn Error>> {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-points", Box::new(expand_points));
+        hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
 
-        let template = r#"assume {{expand-points array "p"}};"#;
+        let template = r#"{{expand-points-to-assume array "p"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "assume p == 1 || p == 2 || p == 3 || p == 4 || p == 5;");
         Ok(())
     }
+
+    #[test]
+    fn expands_nothing_with_empty_points() -> Result<(), Box<dyn Error>> {
+        let data = Param { array: vec![] };
+        
+        let mut hb = Handlebars::new();
+        hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
+
+        let template = r#"{{expand-points-to-assume array "p"}}"#;
+        assert_eq!(hb.render_template(template, &data)?,
+            "");
+        Ok(())
+    }
+
 
     #[test]
     fn expands_partial_arrays() -> Result<(), Box<dyn Error>> {
@@ -150,18 +172,30 @@ mod tests {
     }
 
     #[test]
-    fn expands_x_d_points() -> Result<(), Box<dyn Error>> {
+    fn expands_x_d_points_to_assume() -> Result<(), Box<dyn Error>> {
         let data = XDParam { array: vec![vec![1, 2, 3], vec![4 ,5, 6]]};
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-x-d-points", Box::new(expand_x_d_points));
+        hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
 
-        let template = r#"assume {{expand-x-d-points array "a" "b"}};"#;
+        let template = r#"{{expand-x-d-points-to-assume array "a" "b"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "assume (a == 1 && b == 4) || (a == 2 && b == 5) || (a == 3 && b == 6);");
         Ok(())
     }
 
+    #[test]
+    fn expands_nothing_with_empty_x_d_points() -> Result<(), Box<dyn Error>> {
+        let data = XDParam { array: vec![vec![], vec![]]};
+        
+        let mut hb = Handlebars::new();
+        hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
+
+        let template = r#"{{expand-x-d-points-to-assume array "a" "b"}}"#;
+        assert_eq!(hb.render_template(template, &data)?,
+            "");
+        Ok(())
+    }
     #[test]
     fn registers_helpers() -> Result<(), Box<dyn Error>> {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };

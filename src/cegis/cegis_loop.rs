@@ -128,7 +128,7 @@ impl<'r> CEGISLoop<'r> {
             Err(err) => {Err(Box::new(err))},
             Ok(input_tmp) => {
                 info!(target: "Generation", "Generated input.tmp path: {}", input_tmp.to_str().unwrap_or("<Failure>"));
-                info!(target: "Generation", "Extracted backend flags: {:?}", runner.get_be_flags());
+                debug!(target: "Generation", "Extracted backend flags: {:?}", runner.get_be_flags());
                 trace!(target: "Generation", "input.tmp content: {}", 
                 input_tmp.to_str()
                 .and_then(|s| fs::read(&s).ok())
@@ -179,12 +179,6 @@ impl<'r> CEGISLoop<'r> {
         Ok(library_tracer.collect_traces().ok_or("Trace collection failed")?)
     }
 
-    fn clear_output(&self) -> Result<(), Box<dyn std::error::Error>> {
-        fs::remove_dir_all(self.output_dir.as_ref().ok_or("Output dir unset")?)?;
-        fs::create_dir(self.output_dir.as_ref().ok_or("Output dir unset")?.as_path())?;
-        Ok(())
-    }
-
     pub fn get_state(&self) -> &CEGISState {&self.state}
 
     pub fn get_state_mut(&mut self) -> &mut CEGISState {&mut self.state}
@@ -230,6 +224,10 @@ impl<'r> CEGISLoop<'r> {
         cand_encoder.load(&self.config.get_params().cand_encoder_src)?;
         c_e_encoder.load(&self.config.get_params().c_e_encoder_src)?;
 
+        let h_names = cand_encoder.get_hole_names().ok_or("Failed to get hole names from input.tmp")?;
+        debug!(target:"CEGISMainLoop", "Hole names: {:?}", h_names);
+        self.state.set_h_names(h_names);
+
         if self.config.get_params().enable_record {
             self.recorder = Some(CEGISRecorder::new());
         } else {
@@ -250,22 +248,9 @@ impl<'r> CEGISLoop<'r> {
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?);
         info!(target: "CEGISMainLoop", "Initialization complete");
 
+        let mut base_path : Result<PathBuf, &str> = Err("Base name uninitialized");
         let solved = loop {
             info!(target: "CEGISMainLoop", "Entering iteration #{}", self.state.get_iter_count());
-
-            let base_name : PathBuf;
-            info!(target: "CEGISMainLoop", "Synthesizing");
-            if let Some((new_holes, new_base_name)) = self.synthesize(&c_e_encoder,
-                &hole_extractor, &mut sketch_runner)? {
-                info!(target: "CEGISMainLoop", "Synthesis returned candidate");
-                debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
-                self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
-                self.state.update_holes(new_holes);
-                base_name = new_base_name;
-            } else {
-                info!(target: "CEGISMainLoop", "Synthesis failed");
-                break None;
-            }
 
             info!(target: "CEGISMainLoop", "Verifying");
             if let Some(new_c_e) = self.verify(&cand_encoder,
@@ -278,18 +263,56 @@ impl<'r> CEGISLoop<'r> {
                 // Verification passed
                 info!(target: "CEGISMainLoop", "Verification successful, returning solution");
                 debug!(target: "CEGISMainLoop", "Final holes: {:?}", self.state.get_params().holes);
-                let result = fs::read_to_string(format!("{}.cpp", base_name.to_str().ok_or("Base name conversion to str failed")?))?;
+                // Build code for final output
+                info!(target: "CEGISMainLoop", "Building tracer code as final output");
+                let base_path_buff = base_path?;
+                library_tracer.set_base_name(base_path_buff.file_name().ok_or("Base path does not have file name")?
+                    .to_str().ok_or("Base name conversion to str failed")?);
+                let tracer_src = library_tracer.build_tracer_src(
+                    format!("{}.cpp", base_path_buff.to_str().ok_or("Base name conversion to str failed")?))
+                    .ok_or("Build tracer source failed")?;
+                let result = fs::read_to_string(tracer_src)?;
                 break Some(result);
             }
+
+            if self.state.get_iter_count() == 0 {
+                info!(target: "CEGISMainLoop", "Iter 0: Pre-run synthesis before tracing to generate runnable candidate");
+                info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
+                if let Some((new_holes, new_base_path)) = self.synthesize(&c_e_encoder,
+                    &hole_extractor, &mut sketch_runner)? {
+                    info!(target: "CEGISMainLoop", "Synthesis(Pre-run) returned candidate");
+                    debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
+                    self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
+                    self.state.update_holes(new_holes);
+                    base_path = Ok(new_base_path);
+                } else {
+                    info!(target: "CEGISMainLoop", "Synthesis(Pre-run) failed");
+                    break None;
+                }
+            }
+
             info!(target: "CEGISMainLoop", "Tracing");
-            let traces = self.trace(base_name.as_path(), &library_tracer)?;
+            let traces = self.trace(base_path?.as_path(), &mut library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             self.recorder.as_mut().map(|r| r.set_new_traces(&traces));
             for (args, rtn) in traces.into_iter() {
                 self.state.add_log(args, rtn);
             }
-            self.clear_output()?;
+
+            info!(target: "CEGISMainLoop", "Synthesizing");
+            if let Some((new_holes, new_base_path)) = self.synthesize(&c_e_encoder,
+                &hole_extractor, &mut sketch_runner)? {
+                info!(target: "CEGISMainLoop", "Synthesis returned candidate");
+                debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
+                self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
+                self.state.update_holes(new_holes);
+                base_path = Ok(new_base_path);
+            } else {
+                info!(target: "CEGISMainLoop", "Synthesis failed");
+                break None;
+            }
+
             debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_params().c_e_s);
             debug!(target: "CEGISMainLoop", "Current Holes: {:?}", self.state.get_params().holes);
             debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_params().n_logs);

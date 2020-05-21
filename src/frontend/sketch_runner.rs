@@ -13,7 +13,8 @@ pub struct SketchRunner {
     backend_cmd: Command,
     fe_flags: Vec<OsString>,
     be_flags: Vec<OsString>,
-    output_dir: PathBuf
+    output_dir: PathBuf,
+    generation_dir: PathBuf
 }
 
 pub enum VerificationResult {
@@ -23,15 +24,15 @@ pub enum VerificationResult {
 }
 
 pub enum SynthesisResult {
-    Candidate,
+    Candidate(PathBuf), // Generated base file name
     Failure,
     ExecutionErr(io::Error)
 }
 
-pub type GenerationResult = io::Result<(PathBuf, String)>; // Generated base file name
+pub type GenerationResult = io::Result<(PathBuf, String)>; // Generated input tmp file path 
 
 impl SketchRunner{
-    pub fn new<P: AsRef<Path>>(frontend_path: P, backend_path:P, output_dir: P) -> Self{
+    pub fn new<P: AsRef<Path>>(frontend_path: P, backend_path:P, output_dir: P, generation_dir: P) -> Self{
         SketchRunner{
             frontend_path: frontend_path.as_ref().as_os_str().to_os_string(),
             backend_path: backend_path.as_ref().as_os_str().to_os_string(),
@@ -39,7 +40,8 @@ impl SketchRunner{
             backend_cmd: Command::new(backend_path.as_ref().as_os_str()),
             fe_flags: Vec::<OsString>::new(),
             be_flags: Vec::<OsString>::new(),
-            output_dir: output_dir.as_ref().to_path_buf()
+            output_dir: output_dir.as_ref().to_path_buf(),
+            generation_dir: generation_dir.as_ref().to_path_buf()
         }
     }
     pub fn fe_clear(&mut self) -> &mut Self {
@@ -131,10 +133,10 @@ impl SketchRunner{
     }
 
     pub fn fe_flag_generate(&mut self) -> &mut Self {
-        let output_dir = self.output_dir.clone();
+        let generation_dir = self.generation_dir.clone();
         self.fe_clear().fe_flag("--fe-keep-tmp")
             .fe_flag("--fe-cegis-path").fe_flag("_sketch_dummy")
-            .fe_flag("--fe-tempdir").fe_flag(output_dir.join("./"))
+            .fe_flag("--fe-tempdir").fe_flag(generation_dir.join("./"))
             .fe_flag("--debug-cex").fe_flag("-V").fe_flag("3")
     }
 
@@ -161,11 +163,17 @@ impl SketchRunner{
 
     pub fn synthesize_file<P: AsRef<Path>>(&mut self, input_file:P) -> SynthesisResult {
         self.fe_flag_synthesize();
-        match self.fe_output(input_file) {
+        match self.fe_output(input_file.as_ref()) {
             Ok(output) => {
                 if let Some(code) = output.status.code() {
                     if code == 0 {
-                        SynthesisResult::Candidate
+                        if let Some(base_name) = input_file.as_ref().file_name() {
+                            SynthesisResult::Candidate(self.output_dir.join(base_name))
+                        } else {
+                            SynthesisResult::ExecutionErr(
+                                io::Error::new(io::ErrorKind::InvalidInput, "Input file has no base file name"))
+                        }
+                        
                     } else {
                         SynthesisResult::Failure
                     }
@@ -182,7 +190,7 @@ impl SketchRunner{
         self.fe_output(input_file.as_ref()).and_then(|output| {
             let base_name = input_file.as_ref().file_name()
                 .ok_or(io::Error::new(io::ErrorKind::InvalidInput, "Input file has no base file name"))?;
-            let tmp_path = self.output_dir.join("tmp").join(base_name).join("input0.tmp");
+            let tmp_path = self.generation_dir.join("tmp").join(base_name).join("input0.tmp");
             match String::from_utf8(output.stdout) {
                 Ok(decoded) => Ok((tmp_path, decoded)),
                 Err(error) => Err(io::Error::new(io::ErrorKind::Other, error))

@@ -17,5 +17,7 @@ mod generation_encoder;
 pub use generation_encoder::GenerationEncoder;
 mod encode_error;
 pub use encode_error::EncodeError;
+mod rewrite_controller;
+pub use rewrite_controller::RewriteController;
 
 pub mod template_helpers;

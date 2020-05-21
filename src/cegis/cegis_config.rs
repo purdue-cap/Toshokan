@@ -1,11 +1,13 @@
-use crate::frontend::EncoderSource;
+use crate::frontend::{SketchRunner, EncoderSource};
 use std::path::{Path, PathBuf};
 use std::collections::HashSet;
+use std::ffi::OsString;
 use rand::Rng;
 use super::CEGISState;
 
 pub struct CEGISConfigParams {
-    pub sketch_bin: PathBuf,
+    pub sketch_fe_bin: PathBuf,
+    pub sketch_be_bin: PathBuf,
     pub sketch_home: PathBuf,
     pub impl_file: PathBuf,
     pub lib_func_name: String,
@@ -14,11 +16,12 @@ pub struct CEGISConfigParams {
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
-    pub n_holes: usize,
     pub hole_offset: usize,
     pub pure_function: bool,
     pub enable_record: bool,
     pub cand_encoder_src: EncoderSource,
+    pub input_tmp_file: Option<PathBuf>,
+    pub be_verify_flags: Option<Vec<OsString>>,
     pub c_e_encoder_src: EncoderSource,
     pub generation_encoder_src: EncoderSource,
     pub c_e_names: Vec<String>,
@@ -32,23 +35,27 @@ pub enum VerifyPointsConfig {
         num: usize,
         begin: usize,
         end: usize
-    }
+    },
+    NoSpec
 }
 
 pub struct CEGISConfig {
-    params: CEGISConfigParams
+    params: CEGISConfigParams,
+    input_tmp_path: Option<PathBuf>
 }
 
 impl CEGISConfig {
     pub fn new<P: AsRef<Path>, S: AsRef<str>>(
-            sketch_bin: P, sketch_home: P, impl_file: P, lib_func_name: S, harness_func_name: S,
+            sketch_fe_bin: P, sketch_be_bin: P, sketch_home: P, impl_file: P,
+            lib_func_name: S, harness_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
-            init_n_unknowns: usize, n_holes: usize, hole_offset: usize,
+            init_n_unknowns: usize, hole_offset: usize,
             pure_function: bool, enable_record: bool,
-            cand: P, c_e: P, generation: P, c_e_names: &[&str]) -> Self {
+            synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str]) -> Self {
         CEGISConfig {
             params: CEGISConfigParams {
-                sketch_bin: sketch_bin.as_ref().to_path_buf(),
+                sketch_fe_bin: sketch_fe_bin.as_ref().to_path_buf(),
+                sketch_be_bin: sketch_be_bin.as_ref().to_path_buf(),
                 sketch_home: sketch_home.as_ref().to_path_buf(),
                 impl_file: impl_file.as_ref().to_path_buf(),
                 lib_func_name: lib_func_name.as_ref().to_string(),
@@ -57,19 +64,36 @@ impl CEGISConfig {
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
-                n_holes: n_holes,
                 hole_offset: hole_offset,
                 pure_function: pure_function,
                 enable_record: enable_record,
-                cand_encoder_src: EncoderSource::LoadFromFile(cand.as_ref().to_path_buf()),
-                c_e_encoder_src: EncoderSource::LoadFromFile(c_e.as_ref().to_path_buf()),
-                generation_encoder_src: EncoderSource::LoadFromFile(generation.as_ref().to_path_buf()),
+                cand_encoder_src: EncoderSource::Rewrite,
+                input_tmp_file: None,
+                be_verify_flags: None,
+                c_e_encoder_src: EncoderSource::LoadFromFile(synthesis_sk.as_ref().to_path_buf()),
+                generation_encoder_src: EncoderSource::LoadFromFile(verify_generation_sk.as_ref().to_path_buf()),
                 c_e_names: c_e_names.iter().map(|s| s.to_string()).collect()
-            }
+            },
+            input_tmp_path: None
         }
     }
 
     pub fn get_params(&self) -> &CEGISConfigParams {&self.params}
+
+    pub fn is_be_config_unresolved(&self) -> bool {self.params.input_tmp_file.is_none() || self.params.be_verify_flags.is_none()}
+
+    pub fn set_input_tmp_path(&mut self, path: PathBuf) {self.input_tmp_path = Some(path)}
+
+    pub fn get_input_tmp_path(&self) -> Option<&Path> {self.input_tmp_path.as_ref().map(|p| p.as_path())}
+
+    pub fn populate_be_config(&mut self, runner: &mut SketchRunner) {
+        if let Some(ref path) = self.params.input_tmp_file {
+            self.set_input_tmp_path(path.clone());
+        }
+        if let Some(ref flags) = self.params.be_verify_flags {
+            runner.set_be_verify_flags(flags);
+        }
+    }
 
     pub fn populate_v_p_s(&self, state: &mut CEGISState) -> Option<()> {
         match self.params.v_p_config {
@@ -97,9 +121,11 @@ impl CEGISConfig {
                         }).collect()
                     )?;
                 }
-            }
+            },
+            _ => {}
 
         };
         Some(())
     }
+
 }

@@ -4,7 +4,7 @@ use std::io::Write;
 use std::fs::File;
 use std::cell::RefCell;
 
-use super::EncodeError;
+use super::{EncodeError, RewriteController};
 use crate::cegis::{CEGISState, CEGISStateParams};
 
 pub enum EncoderSource {
@@ -17,6 +17,7 @@ pub trait Encoder<'r> {
     fn name(&self) -> &'static str;
     fn handlebars(&self) -> &RefCell<Handlebars<'r>>;
 
+    fn setup_rewrite(&mut self, controller: &RewriteController) -> Result<(), EncodeError>;
     fn rewrite_template_to_str(&self) -> Result<String, EncodeError>;
     fn rewrite_template_to_file<P: AsRef<Path>>(&self, file_path: P) -> Result<(), EncodeError>;
 

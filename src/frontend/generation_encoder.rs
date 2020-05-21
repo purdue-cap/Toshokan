@@ -1,7 +1,6 @@
 use handlebars::Handlebars;
 use std::cell::RefCell;
-use super::Encoder;
-use super::EncodeError;
+use super::{Encoder, EncodeError, RewriteController};
 use std::path::Path;
 
 pub struct GenerationEncoder<'h, 'r> {
@@ -28,7 +27,8 @@ impl<'h, 'r> GenerationEncoder<'h, 'r> {
 impl<'h, 'r> Encoder<'r> for GenerationEncoder<'h, 'r> {
     fn name(&self) -> &'static str { self.name }
     fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
-
+    
+    fn setup_rewrite(&mut self, _controller: &RewriteController) -> Result<(), EncodeError> { Ok(()) }
     fn rewrite_template_to_str(&self) -> Result<String, EncodeError> {
         unimplemented!("Rewrite for GenerationEncoder not implemented yet.");
     }

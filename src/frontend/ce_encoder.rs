@@ -1,7 +1,7 @@
 use handlebars::Handlebars;
 use std::cell::RefCell;
 use std::path::Path;
-use super::{Encoder, EncodeError};
+use super::{Encoder, EncodeError, RewriteController};
 
 pub struct CEEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -28,6 +28,7 @@ impl<'h, 'r> Encoder<'r> for CEEncoder<'h, 'r> {
     fn name(&self) -> &'static str { self.name }
     fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
 
+    fn setup_rewrite(&mut self, _controller: &RewriteController) -> Result<(), EncodeError> { Ok(()) }
     fn rewrite_template_to_str(&self) -> Result<String, EncodeError> {
         unimplemented!("Rewrite for CEEncoder not implemented yet.");
     }

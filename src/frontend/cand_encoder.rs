@@ -4,7 +4,7 @@ use std::path::Path;
 use std::fs;
 use std::io::Write;
 use regex::Regex;
-use super::{Encoder, EncodeError};
+use super::{Encoder, EncodeError, RewriteController};
 
 pub struct CandEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -43,6 +43,14 @@ impl<'h, 'r> Encoder<'r> for CandEncoder<'h, 'r> {
     fn name(&self) -> &'static str { self.name }
     fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
 
+    fn setup_rewrite(&mut self, controller: &RewriteController) -> Result<(), EncodeError> {
+        if controller.enable_rewrite_cand_encoder() {
+            self.load_input_tmp_from_file(controller.get_input_tmp_path().ok_or(
+                EncodeError::RewriteError("No input tmp file path present in RewriteController")
+            )?)?;
+        }
+        Ok(())
+    }
     fn rewrite_template_to_str(&self) -> Result<String, EncodeError> {
         let regex = Regex::new(r"<(?P<name>H__[_\d]+)(  \d+>|>)").expect("Hard coded regex should not fail");
         Ok(regex.replace_all(self.input_tmp.as_ref()

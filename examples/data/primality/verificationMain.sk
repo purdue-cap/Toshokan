@@ -19,37 +19,12 @@ int sqrt(int num){
     return low;
 }
 
-bit condition(int p, int i) {
-    int factor = {{holes.[0]}}%2;
-    int addor = {{holes.[1]}}%2;
-    int arg;
-    if ({{holes.[2]}}) {
-        arg = factor*p + addor;
-    } else {
-        arg = factor*p - addor;
-    }
-    int rtn = sqrt(arg);
-
-    int comp = {{holes.[3]}}%4;
-
-    if (comp == 0) {
-        return i < rtn;
-    }
-    if (comp == 1) {
-        return i > rtn;
-    }
-    if (comp == 2) {
-        return i <= rtn;
-    }
-    if (comp == 3) {
-        return i >= rtn;
-    }
-    return false;
-}
-
 bit primality(int p) {
 	if(p<=1) return 0;
-	for(int i=2;condition(p, i);i++){
+    
+	int temp = sqrt({| (??%2)*p (+|-) (??%2) |});
+	
+	for(int i=2;{| i (< | > | <= | >=) temp |};i++){
 		if(p%i == 0) return 0;
 	}
 	return 1;

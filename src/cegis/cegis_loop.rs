@@ -82,7 +82,7 @@ impl<'r> CEGISLoop<'r> {
         match output {
             SynthesisResult::Failure => {Ok(None)},
             SynthesisResult::ExecutionErr(err) => {Err(Box::new(err))},
-            SynthesisResult::Candidate(base_name) => {
+            SynthesisResult::Candidate(base_path) => {
                 let holes_file = self.output_dir.as_ref()
                     .ok_or("Output dir unset")?.join("holes.xml");
                 
@@ -90,23 +90,23 @@ impl<'r> CEGISLoop<'r> {
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string()));
 
-                info!(target: "Synthesis", "Generated Code Base Name: {}", base_name.to_str().unwrap_or("<Failure>"));
+                info!(target: "Synthesis", "Generated Code Base Path: {}", base_path.to_str().unwrap_or("<Failure>"));
                 trace!(target: "Synthesis", "Main file: {}", 
-                base_name.to_str()
+                base_path.to_str()
                 .map(|s| format!("{}.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string())
                 );
                 trace!(target: "Synthesis", "Harness file: {}", 
-                base_name.to_str()
+                base_path.to_str()
                 .map(|s| format!("{}_test.cpp", s))
                 .and_then(|s| fs::read(&s).ok())
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string())
                 );
 
-                Ok(Some((hole_extractor.read_holes_from_file(holes_file)?, base_name)))
+                Ok(Some((hole_extractor.read_holes_from_file(holes_file)?, base_path)))
             }
         }
     }
@@ -142,16 +142,20 @@ impl<'r> CEGISLoop<'r> {
 
     }
 
-    fn trace(&self, base_name: &Path, library_tracer: &LibraryTracer)
+    fn trace(&self, base_path: &Path, library_tracer: &mut LibraryTracer)
             -> Result<Vec<(Vec<isize>, isize)>, Box<dyn std::error::Error>> {
-        let base_name_str = base_name.to_str().ok_or("Base name conversion to str failed")?;
-        let main_src = PathBuf::from(format!("{}.cpp", base_name_str));
+        let base_name = base_path.file_name().ok_or("Get base name from base path failed")?
+            .to_str().ok_or("Base name conversion to str failed")?;
+        let main_src = PathBuf::from(format!("{}.cpp", base_path.to_str().ok_or("Base path conversion to str failed")?));
+
+        info!(target: "Trace", "Current base name: {}", base_name);
+        library_tracer.set_base_name(&base_name);
 
         info!(target: "Trace", "Building tracer source");
-        library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
+        let tracer_src = library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
 
         info!(target: "Trace", "Building tracer entry source");
-        let entry_src = library_tracer.build_entry_src(base_name_str, &self.get_state().get_params().c_e_s)
+        let entry_src = library_tracer.build_entry_src(&self.get_state().get_params().c_e_s)
             .ok_or("Build entry source failed")?;
         trace!(target: "Trace", "Entry source: {}", 
             fs::read(entry_src.as_path()).ok()
@@ -163,8 +167,7 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Trace", "Building tracer source successful");
 
         trace!(target: "Trace", "Tracer source: {}",
-            self.output_dir.as_ref().map(|dir| dir.join("tracer.cpp"))
-                .and_then(|p| fs::read(&p).ok())
+            fs::read(tracer_src.as_path()).ok()
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .unwrap_or("<Failure>".to_string())
         );

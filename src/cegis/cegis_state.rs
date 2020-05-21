@@ -68,18 +68,24 @@ impl CEGISState {
 
     pub fn get_iter_count(&self) -> usize {self.iter_count}
 
+    pub fn set_h_names(&mut self, h_names: HashSet<String>) {
+        self.params.holes = h_names.iter().map(|name| (name.clone(), 0)).collect();
+        self.h_names = h_names;
+    }
+
     pub fn get_h_names(&self) -> &HashSet<String> {&self.h_names}
 
     pub fn incr_iteration(&mut self) {self.iter_count += 1}
 
     pub fn update_hole<S: AsRef<str>>(&mut self, h_name: S, value: isize) -> Option<isize> {
-        self.h_names.insert(h_name.as_ref().to_string());
         self.params.holes.insert(h_name.as_ref().to_string(), value)
     }
 
-    pub fn update_holes(&mut self, holes: HashMap<String, isize>) {
-        self.h_names.extend(holes.keys().map(|s| s.clone()));
-        self.params.holes.extend(holes);
+    pub fn update_holes<S: AsRef<str>>(&mut self, holes: HashMap<S, isize>) -> Option<()> {
+        for (k, v) in holes.into_iter() {
+            self.update_hole(k, v)?;
+        }
+        Some(())
     }
 
     pub fn update_n_unknowns(&mut self, new_unknowns: usize) {

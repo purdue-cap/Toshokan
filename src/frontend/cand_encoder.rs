@@ -3,8 +3,28 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::fs;
 use std::io::Write;
+use std::collections::HashSet;
 use regex::Regex;
 use super::{Encoder, EncodeError, RewriteController};
+
+pub static HOLE_REGEX: &'static str = r#"(?x)
+(?:
+    SPVAR \s+\d+\s* \$ .*? \$ \s*|
+    MINVAR \s*
+)?
+<
+    \s*
+    (?P<name>H__\d+[_\d]*)
+    \s*
+    (?:
+        \s\d+\s*
+        (?:\*|\+)?|
+        \+|
+        \$
+    )?
+    \s*
+>"#;
+
 
 pub struct CandEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -37,6 +57,12 @@ impl<'h, 'r> CandEncoder<'h, 'r> {
         self.input_tmp = Some(fs::read_to_string(path)?);
         Ok(())
     }
+
+    pub fn get_hole_names(&self) -> Option<HashSet<String>> {
+        let regex = Regex::new(HOLE_REGEX).expect("Hard coded regex should not fail");
+        regex.captures_iter(self.input_tmp.as_ref()?.as_str()).map(|cap|
+            cap.name("name").map(|m| m.as_str().to_string())).collect()
+    }
 }
 
 impl<'h, 'r> Encoder<'r> for CandEncoder<'h, 'r> {
@@ -52,7 +78,7 @@ impl<'h, 'r> Encoder<'r> for CandEncoder<'h, 'r> {
         Ok(())
     }
     fn rewrite_template_to_str(&self) -> Result<String, EncodeError> {
-        let regex = Regex::new(r"<(?P<name>H__[_\d]+)(  \d+>|>)").expect("Hard coded regex should not fail");
+        let regex = Regex::new(HOLE_REGEX).expect("Hard coded regex should not fail");
         Ok(regex.replace_all(self.input_tmp.as_ref()
                             .ok_or(EncodeError::RewriteError("No input tmp file loaded"))?
                             .as_str(), "{{holes.${name}}}").into_owned())
@@ -86,11 +112,16 @@ mod tests {
         let mut state = CEGISState::new(1, 1, 10, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CandEncoder::new(&handlebars);
-        encoder.load_input_tmp_from_str("<H__0  1> == <H__1>");
+        encoder.load_input_tmp_from_str(
+            "<H__0  1> + <H__1> + <H__2 1 *> + <H__3 +> + MINVAR <H__4> + SPVAR 3 $ H__3 $ < H__5 $>");
         encoder.load_from_rewrite()?;
-        state.update_hole("H__0", 2);
+        state.update_hole("H__0", 1);
         state.update_hole("H__1", 2);
-        assert_eq!(encoder.render(&state)?, "2 == 2");
+        state.update_hole("H__2", 3);
+        state.update_hole("H__3", 4);
+        state.update_hole("H__4", 5);
+        state.update_hole("H__5", 6);
+        assert_eq!(encoder.render(&state)?, "1 + 2 + 3 + 4 + 5 + 6");
         Ok(())
     }
 

@@ -263,15 +263,9 @@ impl<'r> CEGISLoop<'r> {
                 // Verification passed
                 info!(target: "CEGISMainLoop", "Verification successful, returning solution");
                 debug!(target: "CEGISMainLoop", "Final holes: {:?}", self.state.get_params().holes);
-                // Build code for final output
-                info!(target: "CEGISMainLoop", "Building tracer code as final output");
-                let base_path_buff = base_path?;
-                library_tracer.set_base_name(base_path_buff.file_name().ok_or("Base path does not have file name")?
-                    .to_str().ok_or("Base name conversion to str failed")?);
-                let tracer_src = library_tracer.build_tracer_src(
-                    format!("{}.cpp", base_path_buff.to_str().ok_or("Base name conversion to str failed")?))
-                    .ok_or("Build tracer source failed")?;
-                let result = fs::read_to_string(tracer_src)?;
+                // Read code for final output
+                info!(target: "CEGISMainLoop", "Reading synthesized cpp code as final output");
+                let result = fs::read_to_string(format!("{}.cpp", base_path?.to_str().ok_or("Base name conversion to str failed")?))?;
                 break Some(result);
             }
 

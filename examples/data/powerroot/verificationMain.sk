@@ -20,42 +20,17 @@ int sqrt(int num){
 }
 
 int twokroot(int num,int k){
-	if(k==2){
-		if(num <1) return 0;
-		else if(num < 16) return 1;
-		else return 2;
-	}
-	else{
-		if(num <1) return 0;
-		else return 1;
-	}
-}
-
-bit condition(int i, int k) {
-    int factor = {{holes.[0]}};
-    int addor = {{holes.[1]}};
-    int comparator;
-    if ({{holes.[2]}}) {
-        comparator = factor*k + addor;
-    } else {
-        comparator = factor*k - addor;
+	if(num==0) return 0;
+    if (num==1) return 1;
+    for(int i=2;i<num;i++){
+		int kpow=i;
+		for(int j=0;j<k;j++){
+			kpow = (kpow*kpow);
+			if(kpow > num) return i-1;
+		}
+		
     }
-
-    int comp = {{holes.[3]}}%4;
-
-    if (comp == 0) {
-        return i < comparator;
-    }
-    if (comp == 1) {
-        return i > comparator;
-    }
-    if (comp == 2) {
-        return i <= comparator;
-    }
-    if (comp == 3) {
-        return i >= comparator;
-    }
-    return false;
+    return 1;
 }
 
 
@@ -65,7 +40,7 @@ harness void main(int x){//find 2^k th root of x
 	if(k==0 || x==0) return;
 	
 	int val = x;
-	for(int i={{holes.[4]}};condition(i, k);i++){
+	for(int i=??;{| i (< | > | <= | >=) {| (??)*k (+|-) (??) |} |};i++){
 		if(val != 1 && val != 0){
 			val = sqrt(val);
 		}

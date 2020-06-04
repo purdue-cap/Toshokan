@@ -14,9 +14,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let synthesis = base_data_dir.join("synthesisMain.sk");
     let verification = base_data_dir.join("verificationMain.sk");
     let impl_file = base_data_dir.join("impl.cpp");
-    let sketch_fe_bin = PathBuf::from("sketchsynth");
-    let sketch_be_bin = PathBuf::from("/usr/share/sketchsynth/bin/cegis");
-    let sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
+    let mut sketch_fe_bin = PathBuf::from("sketchsynth");
+    if let Ok(env_path) = std::env::var("SKETCH_FE") {
+        sketch_fe_bin = PathBuf::from(env_path);
+    }
+    let mut sketch_be_bin = PathBuf::from("/usr/share/sketchsynth/bin/cegis");
+    if let Ok(env_path) = std::env::var("SKETCH_BE") {
+        sketch_be_bin = PathBuf::from(env_path);
+    }
+    let mut sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
+    if let Ok(env_path) = std::env::var("SKETCH_HOME") {
+        sketch_home = PathBuf::from(env_path);
+    }
     let config = CEGISConfig::new(
         sketch_fe_bin.as_path(),
         sketch_be_bin.as_path(),

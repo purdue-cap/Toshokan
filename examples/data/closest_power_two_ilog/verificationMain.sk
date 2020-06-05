@@ -1,4 +1,4 @@
-pragma options "--bnd-inbits 4 --bnd-inline-amnt 2 --bnd-unroll-amnt 16 --bnd-cbits 3 ";
+pragma options "--bnd-inbits 4 --bnd-inline-amnt 2 --bnd-unroll-amnt 16 --bnd-cbits 3 --slv-nativeints";
 
 int log(int a){
  if(a == 0) return 0;

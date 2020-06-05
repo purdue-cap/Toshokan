@@ -90,6 +90,7 @@ impl SketchRunner{
 
     pub fn be_output<P: AsRef<Path>>(&mut self, input_file:P) -> io::Result<Output> {
         self.backend_cmd.args(&self.be_flags);
+        self.backend_cmd.arg("-o").arg(self.generation_dir.join("solution"));
         self.backend_cmd.arg(input_file.as_ref());
         debug!(target: "SketchRunner", "Sketch Backend command: {:?}", self.backend_cmd);
         let result = self.backend_cmd.output();

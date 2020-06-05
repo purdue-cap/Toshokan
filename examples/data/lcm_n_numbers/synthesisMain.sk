@@ -29,7 +29,7 @@ int lcm(int a, int b){
 }
 
 // synthesize algorithm for computing gcd of N numbers
-harness void multi_gcd(int nums_0, int nums_1, int nums_2, int nums_3, int nums_4){
+harness void multi_lcm(int nums_0, int nums_1, int nums_2, int nums_3, int nums_4){
     {{expand-x-d-points-to-assume c_e_s "nums_0" "nums_1" "nums_2" "nums_3" "nums_4"}}
     int[N] nums;
     nums[0] = nums_0;

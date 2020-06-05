@@ -1,7 +1,6 @@
 extern crate libpartlibspec;
 use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig};
 use std::path::PathBuf;
-use std::collections::HashSet;
 use std::fs::File;
 use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
 
@@ -14,28 +13,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/closest_power_two_ilog");
     let verification = base_data_dir.join("verificationMain.sk");
     let synthesis = base_data_dir.join("synthesisMain.sk");
-    let generation = base_data_dir.join("generationMain.sk");
     let impl_file = base_data_dir.join("impl.cpp");
-    let sketch_bin = PathBuf::from("sketchsynth");
-    let sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
+    let mut sketch_fe_bin = PathBuf::from("sketchsynth");
+    if let Ok(env_path) = std::env::var("SKETCH_FE") {
+        sketch_fe_bin = PathBuf::from(env_path);
+    }
+    let mut sketch_be_bin = PathBuf::from("/usr/share/sketchsynth/bin/cegis");
+    if let Ok(env_path) = std::env::var("SKETCH_BE") {
+        sketch_be_bin = PathBuf::from(env_path);
+    }
+    let mut sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
+    if let Ok(env_path) = std::env::var("SKETCH_HOME") {
+        sketch_home = PathBuf::from(env_path);
+    }
     let config = CEGISConfig::new(
-        sketch_bin.as_path(),
+        sketch_fe_bin.as_path(),
+        sketch_be_bin.as_path(),
         sketch_home.as_path(),
         impl_file.as_path(),
         "log",
         "closestTwoPower",
         1,
         5,
-        VerifyPointsConfig::Fixed(HashSet::new()),
+        VerifyPointsConfig::NoSpec,
         10,
-        3,
         1,
         true,
         true,
-        verification.as_path(),
         synthesis.as_path(),
-        generation.as_path(),
-        &["a_1_1_idx_0_0","a_1_1_idx_1_0","a_1_1_idx_2_0","a_1_1_idx_3_0","a_1_1_idx_4_0"]);
+        verification.as_path(),
+        &["a_0_5_5_0","a_1_6_6_0","a_2_7_7_0","a_3_8_8_0","a_4_9_9_0"]);
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

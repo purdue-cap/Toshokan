@@ -73,12 +73,23 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                 }
 
                 arg_name_list.push_back(arg_name);
-                arg_type_list.push_back(arg_type.getAsString(printingPolicy));
+                auto type_name = arg_type.getAsString(printingPolicy);
+                // Workaround for resolving _Bool to bool
+                if (type_name == "_Bool") {
+                    type_name = "bool";
+                }
+                arg_type_list.push_back(type_name);
             }
 
             // Get the returning paramter
             auto rtn_arg_name = rtn_arg->getName().str();
             auto rtn_type = rtn_arg->getType().getNonReferenceType();
+
+            // Returning type must be traversed for JSON conversion as well
+            if (!buildJSONConversionForType(rtn_type)) {
+                return false;
+            }
+
             auto rtn_type_name = rtn_type.getAsString(printingPolicy);
 
             // Workaround for resolving _Bool to bool

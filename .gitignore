@@ -6,5 +6,7 @@ Cargo.lock
 
 *.o
 src/backend/cpp/build_tracer
+src/backend/cpp/test.cpp
 
 *.record.json
+test_*/

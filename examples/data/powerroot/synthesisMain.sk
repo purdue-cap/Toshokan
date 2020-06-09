@@ -1,10 +1,10 @@
 pragma options "--bnd-inbits 5 --bnd-unroll-amnt 5 --bnd-cbits 3 --slv-nativeints";
 int K=2;
 
-int cap = {{cap_logs}};
-int logged = {{n_logs}};
-int[cap] iarr = { {{expand-partial-array logs_i.[0] n_unknowns}} };
-int[cap] rarr = { {{expand-partial-array logs_r n_unknowns}} };
+int cap = {{get-cap-logs logs n_unknowns}};
+int logged = {{get-n-logs logs}};
+int[cap] iarr = { {{expand-to-arg-array logs 0 n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array logs n_unknowns}} };
 
 
 int[{{n_unknowns}}] unknown = ??;

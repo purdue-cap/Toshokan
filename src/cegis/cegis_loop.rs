@@ -6,6 +6,7 @@ use crate::backend::{LogAnalyzer, HoleExtractor, LibraryTracer};
 use super::CEGISConfig;
 use super::CEGISState;
 use super::CEGISRecorder;
+use super::TraceLog;
 use handlebars::Handlebars;
 use tempfile::{tempdir, TempDir};
 use std::cell::RefCell;
@@ -143,7 +144,7 @@ impl<'r> CEGISLoop<'r> {
     }
 
     fn trace(&self, base_path: &Path, library_tracer: &mut LibraryTracer)
-            -> Result<Vec<(Vec<isize>, isize)>, Box<dyn std::error::Error>> {
+            -> Result<Vec<TraceLog>, Box<dyn std::error::Error>> {
         let base_name = base_path.file_name().ok_or("Get base name from base path failed")?
             .to_str().ok_or("Base name conversion to str failed")?;
         let main_src = PathBuf::from(format!("{}.cpp", base_path.to_str().ok_or("Base path conversion to str failed")?));
@@ -176,7 +177,7 @@ impl<'r> CEGISLoop<'r> {
         library_tracer.build_tracer_bin(&other_src).ok_or("Build tracer binary failed")?;
         info!(target: "Trace", "Building tracer binary successful");
         info!(target: "Trace", "Running tracer");
-        Ok(library_tracer.collect_traces().ok_or("Trace collection failed")?)
+        Ok(library_tracer.collect_traces()?)
     }
 
     pub fn get_state(&self) -> &CEGISState {&self.state}
@@ -244,8 +245,9 @@ impl<'r> CEGISLoop<'r> {
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
             self.config.get_params().lib_func_name.as_str(),
             self.config.get_params().harness_func_name.as_str(),
-            self.config.get_params().sketch_home.as_path());
-        library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?);
+            self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()));
+        library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)
+            .ok_or("Prepare work dir for library tracer failed")?;
         info!(target: "CEGISMainLoop", "Initialization complete");
 
         let mut base_path : Result<PathBuf, &str> = Err("Base name uninitialized");
@@ -290,8 +292,8 @@ impl<'r> CEGISLoop<'r> {
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             self.recorder.as_mut().map(|r| r.set_new_traces(&traces));
-            for (args, rtn) in traces.into_iter() {
-                self.state.add_log(args, rtn);
+            for trace in traces.into_iter() {
+                self.state.add_log(trace);
             }
 
             info!(target: "CEGISMainLoop", "Synthesizing");
@@ -309,9 +311,8 @@ impl<'r> CEGISLoop<'r> {
 
             debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_params().c_e_s);
             debug!(target: "CEGISMainLoop", "Current Holes: {:?}", self.state.get_params().holes);
-            debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_params().n_logs);
-            debug!(target: "CEGISMainLoop", "Current Trace args: {:?}", self.state.get_params().logs_i);
-            debug!(target: "CEGISMainLoop", "Current Trace rtns: {:?}", self.state.get_params().logs_r);
+            debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_params().logs.len());
+            trace!(target: "CEGISMainLoop", "Current Traces: {:?}", self.state.get_params().logs);
             info!(target: "CEGISMainLoop", "Exiting iteration #{}", self.state.get_iter_count());
             let current_iter_nth = self.state.get_iter_count();
             self.recorder.as_mut().map(|r| {

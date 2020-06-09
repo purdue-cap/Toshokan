@@ -2,12 +2,13 @@ use serde::Serialize;
 use std::io::Write;
 use std::time::Instant;
 use std::collections::HashMap;
+use super::TraceLog;
 
 #[derive(Serialize)]
 struct CEGISRecordEntry {
     iter_nth: usize,
     new_c_e_s: Vec<isize>,
-    new_traces: Vec<(Vec<isize>, isize)>,
+    new_traces: Vec<TraceLog>,
     holes: HashMap<String, isize>
 
 }
@@ -23,7 +24,7 @@ pub struct CEGISRecorder {
     record: CEGISRecord,
     iter_nth: Option<usize>,
     new_c_e_s: Option<Vec<isize>>,
-    new_traces: Option<Vec<(Vec<isize>, isize)>>,
+    new_traces: Option<Vec<TraceLog>>,
     holes: Option<HashMap<String, isize>>,
     clock: Option<Instant>
 }
@@ -68,7 +69,7 @@ impl CEGISRecorder {
         self.new_c_e_s = Some(new_c_e_s.clone());
     }
 
-    pub fn set_new_traces(&mut self, new_traces: &Vec<(Vec<isize>, isize)>) {
+    pub fn set_new_traces(&mut self, new_traces: &Vec<TraceLog>) {
         self.new_traces = Some(new_traces.clone());
     }
 

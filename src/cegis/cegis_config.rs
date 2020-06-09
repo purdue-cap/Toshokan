@@ -8,7 +8,7 @@ use super::CEGISState;
 pub struct CEGISConfigParams {
     pub sketch_fe_bin: PathBuf,
     pub sketch_be_bin: PathBuf,
-    pub sketch_home: PathBuf,
+    pub sketch_home: Option<PathBuf>,
     pub impl_file: PathBuf,
     pub lib_func_name: String,
     pub harness_func_name: String,
@@ -46,7 +46,7 @@ pub struct CEGISConfig {
 
 impl CEGISConfig {
     pub fn new<P: AsRef<Path>, S: AsRef<str>>(
-            sketch_fe_bin: P, sketch_be_bin: P, sketch_home: P, impl_file: P,
+            sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
             lib_func_name: S, harness_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
             init_n_unknowns: usize, hole_offset: usize,
@@ -56,7 +56,7 @@ impl CEGISConfig {
             params: CEGISConfigParams {
                 sketch_fe_bin: sketch_fe_bin.as_ref().to_path_buf(),
                 sketch_be_bin: sketch_be_bin.as_ref().to_path_buf(),
-                sketch_home: sketch_home.as_ref().to_path_buf(),
+                sketch_home: sketch_home.as_ref().map(|p| p.as_ref().to_path_buf()),
                 impl_file: impl_file.as_ref().to_path_buf(),
                 lib_func_name: lib_func_name.as_ref().to_string(),
                 harness_func_name: harness_func_name.as_ref().to_string(),

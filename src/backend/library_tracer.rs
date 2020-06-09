@@ -2,9 +2,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::io::{Write, BufRead, BufReader};
 use std::fs::File;
-use regex::Regex;
-use super::CFlagManager;
+use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
+use crate::cegis::TraceLog;
 use log::{error, trace};
 
 pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
@@ -16,8 +16,18 @@ pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
     current_base_name: Option<String>
 }
 
+pub fn parse_log_from_json<S: AsRef<str>>(line: S) -> Result<TraceLog, TraceError> {
+    trace!(target: "LibraryTracer", "Read trace log: {}", line.as_ref());
+    let trace_log = serde_json::from_str(line.as_ref())?;
+    trace!(target: "LibraryTracer", "result: {:?}", trace_log);
+    Ok(trace_log)
+}
+
+static JSON_HPP: &'static str = include_str!("cpp/nlohmann/json.hpp");
+static VOPS_H: &'static str = include_str!("cpp/vops.h");
+
 impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
-    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: &Path) -> Self {
+    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: Option<&Path>) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
             lib_func_name: lib_func_name,
@@ -26,12 +36,23 @@ impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
             work_dir: None,
             current_base_name: None
         };
-        tracer.flag_manager.add_include_path(sketch_home.join("include"));
+        if let Some(p) = sketch_home {
+            tracer.flag_manager.add_include_path(p.join("include"));
+        }
         tracer
     }
 
-    pub fn set_work_dir(&mut self, work_dir: &'w Path) {
+    pub fn set_work_dir(&mut self, work_dir: &'w Path) -> Option<()> {
         self.work_dir = Some(work_dir);
+        self.add_static_file_to_work_dir("json.hpp", JSON_HPP)?;
+        self.add_static_file_to_work_dir("vops.h", VOPS_H)?;
+        Some(())
+    }
+
+    pub fn add_static_file_to_work_dir(&self, filename: &'static str, content: &'static str) -> Option<()> {
+        let mut file = File::create(self.work_dir?.join(filename)).ok()?;
+        write!(&mut file, "{}", content).ok()?;
+        Some(())
     }
 
     pub fn set_base_name<S: AsRef<str>>(&mut self, base_name: S) {
@@ -123,23 +144,13 @@ int main(int argc, char** argv) {{
         }
     }
 
-    fn match_log_line<S: AsRef<str>>(&self, line: S) -> Option<(Vec<isize>, isize)> {
-        trace!(target: "LibraryTracer", "Read trace log: {}", line.as_ref());
-        let log_regex = Regex::new(format!(r"{}\(([-\d, ]+)\) = (-?\d+)", self.lib_func_name).as_str()).ok()?;
-        trace!(target: "LibraryTracer", "Regex: {:?}", log_regex);
-        let caps = log_regex.captures(line.as_ref())?;
-        trace!(target: "LibraryTracer", "Captures: {:?}", caps);
-        let args = caps.get(1)?.as_str().split(",")
-            .map(|arg| arg.trim()).map(|arg| arg.parse::<isize>().ok())
-            .collect::<Option<Vec<_>>>()?;
-        let rtn = caps.get(2)?.as_str().trim().parse::<isize>().ok()?;
-        trace!(target: "LibraryTracer", "result: {:?}", (&args, &rtn));
-        Some((args, rtn))
-    }
-
-    pub fn collect_traces(&self) -> Option<Vec<(Vec<isize>, isize)>> {
-        let mut tracing_cmd = Command::new(self.work_dir?.join(format!("{}_tracer", self.current_base_name.as_ref()?)));
-        let tracing_output = tracing_cmd.output().ok()?;
+    pub fn collect_traces(&self) -> Result<Vec<TraceLog>, TraceError> {
+        let mut tracing_cmd = Command::new(self.work_dir.ok_or(
+                TraceError::OtherError("Work Directory not set")
+            )?.join(format!("{}_tracer", self.current_base_name.as_ref().ok_or(
+                TraceError::OtherError("Base Name not set")
+            )?)));
+        let tracing_output = tracing_cmd.output()?;
         trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", tracing_output.status.clone());
         trace!(target: "LibraryTracer", "Sketch tracing_output.stdout: {}",
             String::from_utf8(tracing_output.stdout.clone()).ok()
@@ -152,14 +163,28 @@ int main(int argc, char** argv) {{
         let err_reader = BufReader::new(tracing_output.stderr.as_slice());
         let mut logs = Vec::new();
         for line_result in err_reader.lines() {
-            if let Ok(line) = line_result {
-                if let Some(log) = self.match_log_line(line) {
-                    logs.push(log);
-                }
-            }
+            let line = line_result?;
+            let log = parse_log_from_json(line)?;
+            logs.push(log);
         }
-        Some(logs)
+        Ok(logs)
     }
 }
 
-// TODO: Unit tests
+// TODO: More Unit tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error;
+    #[test]
+    fn parses_json_log_line() -> Result<(), Box<dyn Error>> {
+        let json_str = r#"{"args":[5],"rtn":2}"#;
+        let fixture = TraceLog {
+            args: vec![json!(5)],
+            rtn: json!(2)
+        };
+        let result = parse_log_from_json(json_str)?;
+        assert_eq!(result, fixture);
+        Ok(())
+    }
+}

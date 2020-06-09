@@ -1,18 +1,32 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use std::iter::repeat;
 use std::collections::HashSet;
 use std::collections::HashMap;
+use serde_json::Value;
+use std::hash::{Hash, Hasher};
 
 #[derive(Serialize)]
 pub struct CEGISStateParams {
-    pub cap_logs: usize,
-    pub n_logs: usize,
-    pub logs_i: Vec<Vec<isize>>,
-    pub logs_r: Vec<isize>,
+    pub logs: Vec<TraceLog>,
     pub n_unknowns: usize,
     pub c_e_s: Vec<Vec<isize>>,
     pub holes: HashMap<String, isize>,
     pub verify_points: Vec<Vec<isize>>
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct TraceLog {
+    pub args: Vec<Value>,
+    pub rtn: Value
+}
+
+impl Hash for TraceLog {
+    fn hash<H: Hasher>(&self, state:&mut H) {
+        for value in self.args.iter() {
+            value.to_string().hash(state);
+        }
+        self.rtn.to_string().hash(state);
+    }
 }
 
 pub struct CEGISState {
@@ -27,7 +41,7 @@ pub struct CEGISState {
 }
 
 enum LibFuncLog {
-    Pure(HashSet<(Vec<isize>, isize)>),
+    Pure(HashSet<TraceLog>),
     NonPure
 }
 
@@ -35,10 +49,7 @@ impl CEGISState {
     pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, pure_function: bool) -> Self {
         CEGISState {
             params: CEGISStateParams {
-                cap_logs: 1 + n_unknowns,
-                n_logs: 0,
-                logs_i: repeat(vec![0]).take(n_f_args).collect(),
-                logs_r: vec![0],
+                logs: vec![],
                 n_unknowns: n_unknowns,
                 c_e_s: repeat(Vec::<isize>::new()).take(n_input).collect(),
                 holes: HashMap::new(),
@@ -103,28 +114,20 @@ impl CEGISState {
         Some(())
     }
 
-    pub fn add_log(&mut self, i: Vec<isize>, r: isize) -> Option<()> {
+    pub fn add_log(&mut self, log: TraceLog) -> Option<()> {
         match self.log_set {
             LibFuncLog::NonPure => {unimplemented!();},
             LibFuncLog::Pure(ref mut set) => {
-                let log_pair = (i, r);
-                if set.contains(&log_pair) {
+                if set.contains(&log) {
                     return Some(());
                 }
 
-                for (index_i, value_i) in log_pair.0.iter().enumerate() {
-                    if self.params.n_logs == 0 {
-                        self.params.logs_i.get_mut(index_i)?.clear();
-                    }
-                    self.params.logs_i.get_mut(index_i)?.push(*value_i);
+                set.insert(log.clone());
+                self.params.logs.push(log);
+
+                if self.params.logs.len() != set.len() {
+                    return None;
                 }
-                if self.params.n_logs == 0 {
-                    self.params.logs_r.clear();
-                }
-                self.params.logs_r.push(log_pair.1);
-                set.insert(log_pair);
-                self.params.n_logs = set.len();
-                self.params.cap_logs = self.params.n_logs + self.params.n_unknowns;
 
                 Some(())
             }

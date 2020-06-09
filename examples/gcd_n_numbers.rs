@@ -22,14 +22,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_path) = std::env::var("SKETCH_BE") {
         sketch_be_bin = PathBuf::from(env_path);
     }
-    let mut sketch_home = PathBuf::from("/usr/share/sketchsynth/runtime/");
+    let mut sketch_home = None;
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
-        sketch_home = PathBuf::from(env_path);
+        sketch_home = Some(PathBuf::from(env_path));
     }
     let config = CEGISConfig::new(
         sketch_fe_bin.as_path(),
         sketch_be_bin.as_path(),
-        sketch_home.as_path(),
+        sketch_home.as_ref().map(|p| p.as_path()),
         impl_file.as_path(),
         "gcd",
         "multi_gcd",

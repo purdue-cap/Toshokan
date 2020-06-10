@@ -6,6 +6,7 @@
 
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
+#include "clang/AST/Comment.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -38,6 +39,34 @@ QualType getBaseType(QualType type) {
     }
     return base_type;
 }
+
+const StatementMatcher copyarr_out_call_matcher =
+callExpr(
+    allOf(
+        callee(namedDecl(hasName("CopyArr"))),
+        hasArgument(0, declRefExpr(to(namedDecl(hasName("_out"))))),
+        hasArgument(1, integerLiteral(equals(0))),
+        hasArgument(2, integerLiteral().bind("lenLiteral"))
+    )
+).bind("copyArrCall");
+
+class CopyArrLookUpCallback : public MatchFinder::MatchCallback {
+    public: 
+    CopyArrLookUpCallback() : foundResult(nullptr), arrayLengthStr() {}
+    void run(const MatchFinder::MatchResult& result) {
+        foundResult = result.Nodes.getNodeAs<CallExpr>("copyArrCall");
+        arrayLengthStr = result.Nodes.getNodeAs<IntegerLiteral>("lenLiteral")->getValue().toString(10, true);
+    }
+
+    const CallExpr* getFoundResult() {return foundResult;}
+    const string& getArrayLengthStr(){return arrayLengthStr;}
+
+    private:
+    const CallExpr* foundResult;
+    string arrayLengthStr;
+
+};
+
 
 class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
     public:
@@ -85,6 +114,25 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             auto rtn_arg_name = rtn_arg->getName().str();
             auto rtn_type = rtn_arg->getType().getNonReferenceType();
 
+            bool out_is_array = rtn_type->isPointerType();
+            string array_length_str;
+
+            if (out_is_array) {
+                // Returning an array, looking for CopyArr call to get array length
+                CopyArrLookUpCallback callback;
+                MatchFinder finder;
+                DeclarationMatcher subtree_matcher = hasDescendant(copyarr_out_call_matcher);
+                finder.addMatcher(subtree_matcher, &callback);
+                finder.match(*f, f->getASTContext());
+                if (callback.getFoundResult() == nullptr) {
+                    return false;
+                }
+                array_length_str = callback.getArrayLengthStr();
+
+                rtn_type = rtn_type->getPointeeType();
+
+            }
+
             // Returning type must be traversed for JSON conversion as well
             if (!buildJSONConversionForType(rtn_type)) {
                 return false;
@@ -95,6 +143,10 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             // Workaround for resolving _Bool to bool
             if (rtn_type_name == "_Bool") {
                 rtn_type_name = "bool";
+            }
+
+            if (out_is_array) {
+                rtn_type_name = "std::vector<" + rtn_type_name + ">";
             }
 
             json data;
@@ -111,7 +163,26 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                 R"({% for type in arg_types %}{{ type }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
                 data
             );
-            string body_template(
+            string body_template;
+
+            if (out_is_array) {
+                data["array_length"] = array_length_str;
+                body_template = 
+R"({
+    {{ rtn_type }} rtn_vec = {{ lib_func_name }}_impl({{ arg_list_rendered }});
+    for (int i = 0; i < {{ array_length }}; i++) {
+        {{ rtn_arg }}[i] = rtn_vec[i];
+    }
+    json log;
+    std::vector<json> args;{% for arg in arg_list %}
+    args.push_back(json({{ arg }}));{% endfor %}
+    log["args"] = args;
+    log["rtn"] = rtn_vec;
+    std::cerr << log << std::endl;
+}
+)";
+            } else {
+                body_template = 
 R"({
     {{ rtn_arg }} = {{ lib_func_name }}_impl({{ arg_list_rendered }});
     json log;
@@ -121,8 +192,8 @@ R"({
     log["rtn"] = {{ rtn_arg }};
     std::cerr << log << std::endl;
 }
-)"
-            );
+)";
+            }
             string decl_template(
 R"(
 {{ rtn_type }} {{ lib_func_name }}_impl({{ arg_types_rendered }});

@@ -96,6 +96,40 @@ pub fn expand_to_rtn_array(h: &Helper,
     Ok(())
 }
 
+pub fn expand_to_ith_rtn_array(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting parameters: logs, index_of_arg, optional(n_unknown)
+    let logs_array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?;
+    let index_of_arg = h.param(1)
+        .ok_or(RenderError::new("Second parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
+        as usize;
+    let mut n_unknown = 0;
+    if let Some(param_2) = h.param(2) {
+        n_unknown = param_2.value().as_u64()
+            .ok_or(RenderError::new("Third parameter not an unsigned int"))?
+            as usize;
+    }
+    let mut rtn_array = logs_array.into_iter().map(|j|
+        j.as_object()
+        .and_then(|obj| obj.get("rtn"))
+        .and_then(|args_v| args_v.as_array())
+        .and_then(|args| args.get(index_of_arg))
+        .map(|arg_v| arg_v.to_string())
+    ).collect::<Option<Vec<_>>>()
+        .ok_or(RenderError::new("Arg array parse failed"))?;
+    rtn_array.append(&mut std::iter::repeat("0".to_string()).take(n_unknown).collect());
+    out.write(rtn_array.join(", ").as_str())?;
+    Ok(())
+}
+
 
 
 pub fn expand_points_to_assume(h: &Helper,
@@ -166,6 +200,7 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
+    hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
     hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
     hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
 }
@@ -266,6 +301,33 @@ mod tests {
 
         let template = "rtn: {{expand-to-rtn-array logs 2}}";
         assert_eq!(hb.render_template(template, &data)?, "rtn: 1, 2, 5, 0, 0");
+
+        Ok(())
+    }
+
+    #[test]
+    fn expands_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+                TraceLog {
+                    args: vec![json!(1), json!(2)],
+                    rtn: json!(vec![1, 2])
+                },
+                TraceLog {
+                    args: vec![json!(5), json!(2)],
+                    rtn: json!(vec![2, 5])
+                },
+                TraceLog {
+                    args: vec![json!(25), json!(26)],
+                    rtn: json!(vec![25, 26])
+                }
+            ]
+        };
+        let mut hb = Handlebars::new();
+        hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
+
+        let template = "rtn_1: {{expand-to-ith-rtn-array logs 1 2}}";
+        assert_eq!(hb.render_template(template, &data)?, "rtn_1: 2, 5, 26, 0, 0");
 
         Ok(())
     }

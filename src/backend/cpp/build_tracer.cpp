@@ -31,6 +31,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 using std::unordered_set;
+using string_set = unordered_set<string>;
 
 QualType getBaseType(QualType type) {
     auto base_type = type.getNonReferenceType();
@@ -70,9 +71,10 @@ class CopyArrLookUpCallback : public MatchFinder::MatchCallback {
 
 class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
     public:
-    ImplFuncInjector(Rewriter &R, string &name) : TheRewriter(R), LibFuncName(name), printingPolicy(LangOptions()) {
-        printingPolicy.SuppressTagKeyword = true;
-    }
+    ImplFuncInjector(Rewriter &R, string &name, string_set states = string_set())
+        : TheRewriter(R), LibFuncName(name), StateArgNames(std::move(states)), printingPolicy(LangOptions()) {
+            printingPolicy.SuppressTagKeyword = true;
+        }
 
     bool VisitFunctionDecl(FunctionDecl *f) {
         auto &SM = TheRewriter.getSourceMgr();
@@ -83,7 +85,8 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             vector<string> arg_name_list;
             vector<string> arg_type_list;
             vector<string> arg_decl_list;
-            const ParmVarDecl* rtn_arg;
+            const ParmVarDecl* rtn_arg = nullptr;
+            vector<const ParmVarDecl*> state_args;
             for (const auto* arg : f->parameters()) {
                 auto arg_name = arg->getName().str();
                 if (arg_name == "_out") {
@@ -93,12 +96,15 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                 if (arg_name.find("__ANONYMOUS_") != string::npos) {
                     continue;
                 }
-
                 auto arg_type = arg->getType();
                 auto base_type = getBaseType(arg_type);
 
                 if (!buildJSONConversionForType(base_type)) {
                     return false;
+                }
+
+                if (StateArgNames.find(arg_name) != StateArgNames.end()) {
+                    state_args.push_back(arg);
                 }
 
                 arg_name_list.push_back(arg_name);
@@ -163,6 +169,21 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                 R"({% for type in arg_types %}{{ type }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
                 data
             );
+
+            if (!state_args.empty()) {
+                data["state_arg_names"] = StateArgNames;
+                data["state_log_stmt_rendered"] = inja::render(
+R"(
+    json updated_states;{% for state in state_arg_names %}
+    updated_states["{{ state }}"] = {{ state }};{% endfor %}
+    log["updated_states"] = updated_states;
+)",
+                    data
+                );
+            } else {
+                data["state_log_stmt_rendered"] = "";
+            }
+
             string body_template;
 
             if (out_is_array) {
@@ -178,6 +199,7 @@ R"({
     args.push_back(json({{ arg }}));{% endfor %}
     log["args"] = args;
     log["rtn"] = rtn_vec;
+    {{ state_log_stmt_rendered }}
     std::cerr << log << std::endl;
 }
 )";
@@ -190,6 +212,7 @@ R"({
     args.push_back(json({{ arg }}));{% endfor %}
     log["args"] = args;
     log["rtn"] = {{ rtn_arg }};
+    {{ state_log_stmt_rendered }}
     std::cerr << log << std::endl;
 }
 )";
@@ -233,6 +256,7 @@ R"(
     private:
     Rewriter &TheRewriter;
     string &LibFuncName;
+    string_set StateArgNames;
     vector<string> JSONConvertorDecls;
     vector<string> JSONConvertorImpls;
     unordered_set<string> doneType;
@@ -443,7 +467,8 @@ class UsingDirectiveCleanUpCallback : public MatchFinder::MatchCallback {
 
 class TracerBuilderASTConsumer : public ASTConsumer {
     public:
-    TracerBuilderASTConsumer(Rewriter &R, string &name) : impl_func_injector(R, name), stmt_cleanup_cb(R), using_cleanup_cb(R) {}
+    TracerBuilderASTConsumer(Rewriter &R, string &name, string_set state = string_set())
+        : impl_func_injector(R, name, std::move(state)), stmt_cleanup_cb(R), using_cleanup_cb(R) {}
 
     // Override the method that gets called for each parsed top-level
     // declaration.
@@ -471,7 +496,8 @@ class TracerBuilderASTConsumer : public ASTConsumer {
 
 class TracerBuilderFrontendAction : public ASTFrontendAction {
     public:
-    TracerBuilderFrontendAction(string &name, llvm::raw_ostream &out): LibFuncName(name), OutStream(out) {}
+    TracerBuilderFrontendAction(string &name, llvm::raw_ostream &out, string_set states = string_set())
+        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out) {}
 
     void EndSourceFileAction() override {
         SourceManager &SM = TheRewriter.getSourceMgr();
@@ -483,29 +509,32 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                     StringRef file) override {
         TheRewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
-        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName);
+        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName, StateArgNames);
     }
 
     private:
     Rewriter TheRewriter;
     string &LibFuncName;
+    string_set StateArgNames;
     llvm::raw_ostream &OutStream;
 };
 
 class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
     public:
-    TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out) : LibFuncName(name), OutStream(out) {}
+    TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out, string_set states = string_set())
+        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out) {}
 
     std::unique_ptr<FrontendAction> create() {
-        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream);
+        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream, StateArgNames);
     }
 
     private:
     string LibFuncName;
+    string_set StateArgNames;
     llvm::raw_ostream &OutStream;
 };
 
-int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out) {
+int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out, string_set states = string_set()) {
     string source_path_list[1] = {input_file};
     auto dir_path = llvm::sys::path::parent_path(input_file);
     string error_msg;
@@ -515,17 +544,17 @@ int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &ou
         return 1;
     }
     ClangTool tool(*db, source_path_list);
-    TracerBuilderFrontendActionFactory factory(lib_func_name, out);
+    TracerBuilderFrontendActionFactory factory(lib_func_name, out, std::move(states));
     return tool.run(&factory);
 }
 
-int BuildTracer(string& lib_func_name, string& input_file, string& output_file) {
+int BuildTracer(string& lib_func_name, string& input_file, string& output_file, string_set states = string_set()) {
     std::error_code EC;
     llvm::raw_fd_ostream out_stream(output_file, EC);
     if (EC) {
         return EC.value();
     }
-    return BuildTracer(lib_func_name, input_file, out_stream);
+    return BuildTracer(lib_func_name, input_file, out_stream, std::move(states));
 }
 
 } // namespace TracerBuilder
@@ -555,8 +584,11 @@ int main(int argc, const char **argv) {
     string func_name(argv[2]);
 
     if (argc >= 4) {
-        string output_file(argv[3]);
-        return BuildTracer(func_name, input_file, output_file);
+        string_set states;
+        for (int i = 3; i < argc; i ++) {
+            states.insert(string(argv[i]));
+        }
+        return BuildTracer(func_name, input_file, llvm::outs(), std::move(states));
     } else {
         return BuildTracer(func_name, input_file, llvm::outs());
     }

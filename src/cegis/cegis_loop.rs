@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use std::fs;
 use std::collections::HashMap;
 use log::{trace, debug, info, warn};
+use regex::Regex;
 
 pub struct CEGISLoop<'r> {
     hb: RefCell<Handlebars<'r>>,
@@ -22,6 +23,15 @@ pub struct CEGISLoop<'r> {
     recorder: Option<CEGISRecorder>,
     work_dir: Option<TempDir>,
     output_dir: Option<PathBuf>
+}
+
+fn validate_filled_template(path: &Path) -> Option<()> {
+    let unfilled_var = Regex::new(r"\{\{.*\}\}").expect("Hard coded regex should not fail");
+    let content = fs::read_to_string(path).ok()?;
+    match unfilled_var.find(content.as_str()) {
+        Some(_) => None,
+        None => Some(())
+    }
 }
 
 impl<'r> CEGISLoop<'r> {
@@ -54,6 +64,7 @@ impl<'r> CEGISLoop<'r> {
             fs::read(&verification_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
             .unwrap_or("<Failure>".to_string()));
+        validate_filled_template(verification_sk.as_path()).ok_or("Verification Sketch not completed filled")?;
         info!(target: "Verification", "Running sketch");
         let output = runner.verify_file(&verification_sk);
         match output {
@@ -78,6 +89,7 @@ impl<'r> CEGISLoop<'r> {
             fs::read(&synthesis_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
             .unwrap_or("<Failure>".to_string()));
+        validate_filled_template(synthesis_sk.as_path()).ok_or("Synthesis Sketch not completed filled")?;
         info!(target: "Synthesis", "Running sketch");
         let output = runner.synthesize_file(&synthesis_sk);
         match output {
@@ -123,6 +135,7 @@ impl<'r> CEGISLoop<'r> {
             fs::read(&generation_sk).ok()
             .and_then(|bytes| String::from_utf8(bytes).ok())
             .unwrap_or("<Failure>".to_string()));
+        validate_filled_template(generation_sk.as_path()).ok_or("Generation Sketch not completed filled")?;
         info!(target: "Generation", "Running sketch");
         let output = runner.generate_file_and_setup_be(&generation_sk);
         match output {

@@ -17,7 +17,8 @@ struct CEGISRecordEntry {
 struct CEGISRecord {
     entries: Vec<CEGISRecordEntry>,
     solved: bool,
-    wall_time: f32
+    wall_time: f32,
+    total_iter: usize
 }
 
 pub struct CEGISRecorder {
@@ -51,7 +52,8 @@ impl CEGISRecorder {
             record: CEGISRecord {
                 entries: Vec::new(),
                 solved: false,
-                wall_time: std::f32::NAN
+                wall_time: std::f32::NAN,
+                total_iter: 0
             },
             iter_nth: None,
             new_c_e_s: None,
@@ -75,6 +77,10 @@ impl CEGISRecorder {
 
     pub fn set_holes(&mut self, holes: &HashMap<String, isize>) {
         self.holes = Some(holes.clone());
+    }
+
+    pub fn set_total_iter(&mut self, total_iter: usize) {
+        self.record.total_iter = total_iter;
     }
 
     pub fn set_solved(&mut self, solved: bool) {

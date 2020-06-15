@@ -43,11 +43,20 @@ QualType getBaseType(QualType type) {
 
 const StatementMatcher copyarr_out_call_matcher =
 callExpr(
-    allOf(
-        callee(namedDecl(hasName("CopyArr"))),
-        hasArgument(0, declRefExpr(to(namedDecl(hasName("_out"))))),
-        hasArgument(1, integerLiteral(equals(0))),
-        hasArgument(2, integerLiteral().bind("lenLiteral"))
+    anyOf(
+        allOf(
+            callee(namedDecl(hasName("CopyArr"))),
+            hasArgument(0, declRefExpr(to(namedDecl(hasName("_out"))))),
+            hasArgument(1, integerLiteral(equals(0))),
+            hasArgument(2, integerLiteral().bind("lenLiteral"))
+        ),
+        allOf(
+            callee(namedDecl(hasName("CopyArr"))),
+            hasArgument(0, declRefExpr(to(namedDecl(hasName("_out"))))),
+            hasArgument(1, declRefExpr()),
+            hasArgument(2, integerLiteral()),
+            hasArgument(3, integerLiteral().bind("lenLiteral"))
+        )
     )
 ).bind("copyArrCall");
 

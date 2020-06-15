@@ -1,0 +1,58 @@
+pragma options "--bnd-inline-amnt 1 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt 4";
+int N = 3;
+
+int[N] sorti(int[N] input){
+	return sorti_proxy(input[0], input[1], input[2]);
+}
+
+int[N] sorti_proxy(int input_0, int input_1, int input_2) {
+   int[N] input = {input_0, input_1, input_2};
+   int[N] ind = 0;
+   for(int i=0; i<N; ++i) ind[i] = i;
+   int[N] done = 0;
+   int k=0;
+   for(int i=0; i<N; ++i){
+      for(int j=i+1; j<N; ++j){
+         if( input[ind[j]]< input[ind[i]]){
+            int tmp2 = ind[j];
+            ind[j] = ind[i];
+            ind[i] = tmp2;
+         }
+      }
+   }
+   return ind;
+}
+
+harness void main(int start_0, int start_1, int start_2, 
+                int finish_0, int finish_1, int finish_2,
+                int sel_0, int sel_1, int sel_2 ) {
+
+    int[N] start = {start_0, start_1, start_2};
+    int[N] finish = {finish_0, finish_1, finish_2};
+    bit[N] sel = {sel_0 != 0, sel_1 != 0, sel_2 != 0};
+
+	if(N<2) return;
+	if(sel == 0) return;
+	for(int i=0;i<N;i++) if(finish[i] >= start[i]) return;
+
+	int[N] si = sorti({|start|finish|});
+	int cf = 0;
+	int timeb = 0;
+	for(int i=0;i<N;i++){
+		if(sel[i]){
+			if(start[si[i]] < cf) return;
+			cf = finish[si[i]];
+			timeb = timeb + finish[i] - start[i];
+		}
+	}
+	
+	int time =finish[si[??]] - start[si[??]];
+	int f = finish[si[??]];
+	for(int i=??;{|i  (< | <= | > | >=) N |};i = (??*i+??)){
+		if({| start[si[i]] (<|<=|>|>=) f|}){
+			time = time + finish[si[i]] - start[si[i]];//linexp(3, {time,finish[si[i]],start[si[i]]});
+			f=finish[si[i]];
+		}
+	}
+	assert(timeb >= time);
+}

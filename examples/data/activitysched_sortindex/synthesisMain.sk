@@ -1,0 +1,80 @@
+pragma options "--bnd-inline-amnt 1 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt {{get-unroll-amnt logs 4}}";
+int N = 3;
+
+int cap = {{get-cap-logs logs n_unknowns}};
+int logged = {{get-n-logs logs}};
+int[cap] i_0_arr = { {{expand-to-arg-array logs 0 n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array logs 1 n_unknowns}} };
+int[cap] i_2_arr = { {{expand-to-arg-array logs 2 n_unknowns}} };
+int[cap] r_0_arr = { {{expand-to-ith-rtn-array logs 0 n_unknowns}} };
+int[cap] r_1_arr = { {{expand-to-ith-rtn-array logs 1 n_unknowns}} };
+int[cap] r_2_arr = { {{expand-to-ith-rtn-array logs 2 n_unknowns}} };
+
+
+int[{{n_unknowns}}] unknown_0 = ??;
+int[{{n_unknowns}}] unknown_1 = ??;
+int[{{n_unknowns}}] unknown_2 = ??;
+int used_unknown = 0;
+
+int[N] sorti(int[N] input){
+	return sorti_proxy(input[0], input[1], input[2]);
+}
+
+int[N] sorti_proxy(int input_0, int input_1, int input_2) {
+   
+   for (int idx = 0; idx < logged; idx ++) {
+       if (i_0_arr[idx] == input_0 && i_1_arr[idx] == input_1 && i_2_arr[idx] == input_2 ) {
+		   int[N] ind = {r_0_arr[idx], r_1_arr[idx], r_2_arr[idx]};
+           return ind;
+       }
+   }
+   int val_0 = unknown_0[used_unknown];
+   int val_1 = unknown_1[used_unknown];
+   int val_2 = unknown_2[used_unknown];
+   used_unknown++;
+   if (logged < cap) {
+	   i_0_arr[logged] = input_0;
+	   i_1_arr[logged] = input_1;
+	   i_2_arr[logged] = input_2;
+	   r_0_arr[logged] = val_0;
+	   r_1_arr[logged] = val_1;
+	   r_2_arr[logged] = val_2;
+       logged ++;
+   }
+   int[N] ind = {val_0, val_1, val_2};
+   return ind;
+}
+
+harness void main(int start_0, int start_1, int start_2, 
+                int finish_0, int finish_1, int finish_2,
+                int sel_0, int sel_1, int sel_2 ) {
+    {{expand-x-d-points-to-assume c_e_s "start_0" "start_1" "start_2" "finish_0" "finish_1" "finish_2" "sel_0" "sel_1" "sel_2" }}
+    int[N] start = {start_0, start_1, start_2};
+    int[N] finish = {finish_0, finish_1, finish_2};
+    bit[N] sel = {sel_0 != 0, sel_1 != 0, sel_2 != 0};
+
+	if(N<2) return;
+	if(sel == 0) return;
+	for(int i=0;i<N;i++) if(finish[i] >= start[i]) return;
+
+	int[N] si = sorti({|start|finish|});
+	int cf = 0;
+	int timeb = 0;
+	for(int i=0;i<N;i++){
+		if(sel[i]){
+			if(start[si[i]] < cf) return;
+			cf = finish[si[i]];
+			timeb = timeb + finish[i] - start[i];
+		}
+	}
+	
+	int time =finish[si[??]] - start[si[??]];
+	int f = finish[si[??]];
+	for(int i=??;{|i  (< | <= | > | >=) N |};i = (??*i+??)){
+		if({| start[si[i]] (<|<=|>|>=) f|}){
+			time = time + finish[si[i]] - start[si[i]];//linexp(3, {time,finish[si[i]],start[si[i]]});
+			f=finish[si[i]];
+		}
+	}
+	assert(timeb >= time);
+}

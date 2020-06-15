@@ -16,6 +16,26 @@ pub fn get_n_logs(h: &Helper,
     Ok(())
 }
 
+pub fn get_unroll_amnt(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting parameters: logs, default_unroll_amnt
+    let logs_array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?;
+    let unroll_amnt = h.param(1)
+        .ok_or(RenderError::new("Second parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
+        as usize;
+    out.write(format!("{}", std::cmp::max(logs_array.len(), unroll_amnt)).as_str())?;
+    Ok(())
+}
+
+
 pub fn get_cap_logs(h: &Helper,
                     _: &Handlebars,
                     _: &Context,
@@ -197,6 +217,7 @@ pub fn expand_x_d_points_to_assume(h: &Helper,
 
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
+    hb.register_helper("get-unroll-amnt", Box::new(get_unroll_amnt));
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
@@ -232,10 +253,22 @@ mod tests {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
         let mut hb = Handlebars::new();
-        hb.register_helper("get-n-logs", Box::new(get_n_logs));
+        register_helpers(&mut hb);
 
         let template = "n_logs: {{get-n-logs array}}";
         assert_eq!(hb.render_template(template, &data)?, "n_logs: 5");
+        Ok(())
+    }
+
+    #[test]
+    fn gets_unroll_amnt() -> Result<(), Box<dyn Error>> {
+        let data = Param { array: vec![1, 2, 3, 4 ,5] };
+        
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "unroll_amnts: {{get-unroll-amnt array 3}}, {{get-unroll-amnt array 10}}";
+        assert_eq!(hb.render_template(template, &data)?, "unroll_amnts: 5, 10");
         Ok(())
     }
 
@@ -244,7 +277,7 @@ mod tests {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
         let mut hb = Handlebars::new();
-        hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
+        register_helpers(&mut hb);
 
         let template = "n_logs: {{get-cap-logs array 10}}";
         assert_eq!(hb.render_template(template, &data)?, "n_logs: 15");
@@ -270,7 +303,7 @@ mod tests {
             ]
         };
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
+        register_helpers(&mut hb);
 
         let template = "args: {{expand-to-arg-array logs 0 2}}";
         assert_eq!(hb.render_template(template, &data)?, "args: 1, 5, 25, 0, 0");
@@ -297,7 +330,7 @@ mod tests {
             ]
         };
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
+        register_helpers(&mut hb);
 
         let template = "rtn: {{expand-to-rtn-array logs 2}}";
         assert_eq!(hb.render_template(template, &data)?, "rtn: 1, 2, 5, 0, 0");
@@ -324,7 +357,7 @@ mod tests {
             ]
         };
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
+        register_helpers(&mut hb);
 
         let template = "rtn_1: {{expand-to-ith-rtn-array logs 1 2}}";
         assert_eq!(hb.render_template(template, &data)?, "rtn_1: 2, 5, 26, 0, 0");
@@ -337,7 +370,7 @@ mod tests {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
+        register_helpers(&mut hb);
 
         let template = r#"{{expand-points-to-assume array "p"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
@@ -350,7 +383,7 @@ mod tests {
         let data = Param { array: vec![] };
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
+        register_helpers(&mut hb);
 
         let template = r#"{{expand-points-to-assume array "p"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
@@ -363,7 +396,7 @@ mod tests {
         let data = XDParam { array: vec![vec![1, 2, 3], vec![4 ,5, 6]]};
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
+        register_helpers(&mut hb);
 
         let template = r#"{{expand-x-d-points-to-assume array "a" "b"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
@@ -376,24 +409,11 @@ mod tests {
         let data = XDParam { array: vec![vec![], vec![]]};
         
         let mut hb = Handlebars::new();
-        hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
+        register_helpers(&mut hb);
 
         let template = r#"{{expand-x-d-points-to-assume array "a" "b"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "");
         Ok(())
     }
-    #[test]
-    fn registers_helpers() -> Result<(), Box<dyn Error>> {
-        let data = Param { array: vec![1, 2, 3, 4 ,5] };
-        
-        let mut hb = Handlebars::new();
-        register_helpers(&mut hb);
-
-        let template = r#"Array: { {{expand-array array}} }, assume {{expand-points array "p"}};"#;
-        assert_eq!(hb.render_template(template, &data)?,
-            "Array: { 1, 2, 3, 4, 5 }, assume p == 1 || p == 2 || p == 3 || p == 4 || p == 5;");
-        Ok(())
-    }
-
 }

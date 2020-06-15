@@ -353,16 +353,17 @@ struct nlohmann::adl_serializer<{{ type_name }}*>{
 R"(
 void nlohmann::adl_serializer<{{ type_name }}>::to_json(json &j, const {{ type_name }} &data){
     std::vector<{{ array_element_type_name }}> vec;
-    for (int i; i < data.length; i++) {
+    for (int i = 0; i < data.length; i++) {
         vec.push_back(data.A[i]);
     }
-    j = vec;
+    j = { { "A" , vec }, { "length", data.length }, { "@class_name", "{{ type_name }}" } };  
 }
 void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_name }} *data){
     if (data == nullptr) {
         j = nullptr;
     } else {
         j = *data;
+        j["@address"] = (unsigned long long)data;
     }
 }
 )";
@@ -371,16 +372,16 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
 R"(
 void nlohmann::adl_serializer<{{ type_name }}>::to_json(json &j, const {{ type_name }} &data){
     j = { {% for field_name in field_names %}
-        {"{{ field_name }}", data.{{ field_name }} }{%if not loop.is_last%},{% endif %}{% endfor %}
+        {"{{ field_name }}", data.{{ field_name }} },{% endfor %}
+        { "@class_name", "{{ type_name }}"  }
     };
 }
 void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_name }} *data){
     if (data == nullptr) {
         j = nullptr;
     } else {
-        j = { {% for field_name in field_names %}
-            {"{{ field_name }}", data->{{ field_name }} }{%if not loop.is_last%},{% endif %}{% endfor %}
-        };
+        j = *data;
+        j["@address"] = (unsigned long long)data;
     }
 }
 )";

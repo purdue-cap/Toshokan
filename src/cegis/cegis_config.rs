@@ -25,12 +25,14 @@ pub struct CEGISConfigParams {
     pub excluded_holes: HashSet<ExcludedHole>,
     pub pure_function: bool,
     pub enable_record: bool,
+    pub keep_tmp: bool,
     pub cand_encoder_src: EncoderSource,
     pub input_tmp_file: Option<PathBuf>,
     pub be_verify_flags: Option<Vec<OsString>>,
     pub c_e_encoder_src: EncoderSource,
     pub generation_encoder_src: EncoderSource,
     pub c_e_names: Vec<String>,
+    pub trace_timeout: Option<f32>
 }
 
 pub enum VerifyPointsConfig {
@@ -56,8 +58,9 @@ impl CEGISConfig {
             lib_func_name: S, harness_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
             init_n_unknowns: usize, excluded_holes: I,
-            pure_function: bool, enable_record: bool,
-            synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str]) -> Self {
+            pure_function: bool, enable_record: bool, keep_tmp: bool,
+            synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str],
+            trace_timeout: Option<f32>) -> Self {
         CEGISConfig {
             params: CEGISConfigParams {
                 sketch_fe_bin: sketch_fe_bin.as_ref().to_path_buf(),
@@ -73,12 +76,14 @@ impl CEGISConfig {
                 excluded_holes: excluded_holes.collect(),
                 pure_function: pure_function,
                 enable_record: enable_record,
+                keep_tmp: keep_tmp,
                 cand_encoder_src: EncoderSource::Rewrite,
                 input_tmp_file: None,
                 be_verify_flags: None,
                 c_e_encoder_src: EncoderSource::LoadFromFile(synthesis_sk.as_ref().to_path_buf()),
                 generation_encoder_src: EncoderSource::LoadFromFile(verify_generation_sk.as_ref().to_path_buf()),
-                c_e_names: c_e_names.iter().map(|s| s.to_string()).collect()
+                c_e_names: c_e_names.iter().map(|s| s.to_string()).collect(),
+                trace_timeout: trace_timeout
             },
             input_tmp_path: None
         }

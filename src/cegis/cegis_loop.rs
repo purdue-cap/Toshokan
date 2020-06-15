@@ -8,7 +8,7 @@ use super::CEGISState;
 use super::CEGISRecorder;
 use super::TraceLog;
 use handlebars::Handlebars;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -21,7 +21,7 @@ pub struct CEGISLoop<'r> {
     config: CEGISConfig,
     state: CEGISState,
     recorder: Option<CEGISRecorder>,
-    work_dir: Option<TempDir>,
+    work_dir: Option<PathBuf>,
     output_dir: Option<PathBuf>
 }
 
@@ -56,7 +56,7 @@ impl<'r> CEGISLoop<'r> {
         log_analyzer: &LogAnalyzer, runner: &mut SketchRunner)
             -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
         info!(target: "Verification", "Filling sketch template");
-        let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+        let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("verification_{}", self.state.get_iter_count())));
         cand.render_to_file(&self.state, &verification_sk)?;
         trace!(target: "Verification", "Sketch template {}:\n{}",
@@ -81,7 +81,7 @@ impl<'r> CEGISLoop<'r> {
         hole_extractor: &mut HoleExtractor, runner: &mut SketchRunner)
             -> Result<Option<(HashMap<String, isize>, PathBuf)>, Box<dyn std::error::Error>> {
         info!(target: "Synthesis", "Filling sketch template");
-        let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+        let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
         c_e.render_to_file(&self.state, &synthesis_sk)?;
         trace!(target: "Synthesis", "Sketch template {}:\n{}",
@@ -127,7 +127,7 @@ impl<'r> CEGISLoop<'r> {
     fn generate(&self, generation: &GenerationEncoder, runner: &mut SketchRunner) 
             -> Result<PathBuf, Box<dyn std::error::Error>> {
         info!(target: "Generation", "Filling sketch template");
-        let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.path().join(
+        let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from("generation"));
         generation.render_to_file(&self.state, &generation_sk)?;
         trace!(target: "Generation", "Sketch template {}:\n{}",
@@ -202,15 +202,20 @@ impl<'r> CEGISLoop<'r> {
     pub fn run_loop(&mut self) -> Result<Option<String>, Box<dyn std::error::Error>> {
         info!(target: "CEGISMainLoop", "Start initialization");
 
-        self.work_dir = Some(tempdir()?);
+        let temp_dir_obj = tempdir()?;
+        if self.config.get_params().keep_tmp {
+            self.work_dir = Some(temp_dir_obj.into_path());
+        } else {
+            self.work_dir = Some(temp_dir_obj.path().to_path_buf());
+        }
         info!(target: "CEGISMainLoop", "Working directory: {:?}", self.work_dir);
-        self.output_dir = Some(self.work_dir.as_ref().ok_or("Work dir unset")?.path().join("output"));
+        self.output_dir = Some(self.work_dir.as_ref().ok_or("Work dir unset")?.join("output"));
         fs::create_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)?;
         let mut sketch_runner = SketchRunner::new(
             self.config.get_params().sketch_fe_bin.as_path(),
             self.config.get_params().sketch_be_bin.as_path(),
             self.output_dir.as_ref().ok_or("Output dir unset")?,
-            self.work_dir.as_ref().ok_or("Work dir unset")?.path()
+            self.work_dir.as_ref().ok_or("Work dir unset")?
         );
         let mut rewrite_controller = RewriteController::new(&self.config);
 
@@ -260,7 +265,7 @@ impl<'r> CEGISLoop<'r> {
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
             self.config.get_params().lib_func_name.as_str(),
             self.config.get_params().harness_func_name.as_str(),
-            self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()));
+            self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout);
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)
             .ok_or("Prepare work dir for library tracer failed")?;
         info!(target: "CEGISMainLoop", "Initialization complete");

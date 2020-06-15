@@ -1,11 +1,12 @@
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::io::{Write, BufRead, BufReader};
+use std::process::{Command, Stdio};
+use std::{thread, time};
+use std::io::{Read, Write, BufRead, BufReader};
 use std::fs::File;
 use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
 use crate::cegis::TraceLog;
-use log::{error, trace};
+use log::{error, trace, warn};
 
 pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
     impl_file: &'i Path,
@@ -13,7 +14,8 @@ pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
     harness_func_name: &'hn str,
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>,
-    current_base_name: Option<String>
+    current_base_name: Option<String>,
+    trace_timeout: Option<f32>
 }
 
 pub fn parse_log_from_json<S: AsRef<str>>(line: S) -> Result<TraceLog, TraceError> {
@@ -27,14 +29,15 @@ static JSON_HPP: &'static str = include_str!("cpp/nlohmann/json.hpp");
 static VOPS_H: &'static str = include_str!("cpp/vops.h");
 
 impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
-    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: Option<&Path>) -> Self {
+    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: Option<&Path>, trace_timeout: Option<f32>) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
             lib_func_name: lib_func_name,
             harness_func_name: harness_func_name,
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None,
-            current_base_name: None
+            current_base_name: None,
+            trace_timeout: trace_timeout
         };
         if let Some(p) = sketch_home {
             tracer.flag_manager.add_include_path(p.join("include"));
@@ -150,17 +153,59 @@ int main(int argc, char** argv) {{
             )?.join(format!("{}_tracer", self.current_base_name.as_ref().ok_or(
                 TraceError::OtherError("Base Name not set")
             )?)));
-        let tracing_output = tracing_cmd.output()?;
-        trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", tracing_output.status.clone());
+        tracing_cmd.stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let mut child = tracing_cmd.spawn()?;
+        let mut stdout: Vec<u8>;
+        let mut stderr: Vec<u8>;
+        if let Some(timeout) = self.trace_timeout {
+            stdout = Vec::new();
+            stderr = Vec::new();
+            let timeout_duration = time::Duration::from_secs_f32(timeout);
+            trace!(target: "LibraryTracer", "Tracing with timeout: {:?}", timeout_duration);
+            let wall_start = time::Instant::now();
+            loop {
+                match child.try_wait() {
+                    Ok(Some(status)) => {
+                        trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", status.clone());
+                        break;
+                    },
+                    Ok(None) => {
+                        let elapsed = time::Instant::now() - wall_start;
+                        if  elapsed >= timeout_duration {
+                            warn!(target: "LibraryTracer", "Tracing timed out!");
+                            child.kill()?;
+                            break;
+                        }
+                        thread::sleep(time::Duration::from_millis(100));
+                    },
+                    Err(e) => {
+                        return Err(TraceError::IOError(e));
+                    }
+                }
+            };
+            child.stdout.as_mut().ok_or(
+                TraceError::OtherError("Stdout not found")
+            )?.read_to_end(&mut stdout)?;
+            child.stderr.as_mut().ok_or(
+                TraceError::OtherError("Stderr not found")
+            )?.read_to_end(&mut stderr)?;
+        } else {
+            let output = child.wait_with_output()?;
+            trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", output.status.clone());
+            stdout = output.stdout;
+            stderr = output.stderr;
+        }
         trace!(target: "LibraryTracer", "Sketch tracing_output.stdout: {}",
-            String::from_utf8(tracing_output.stdout.clone()).ok()
+            String::from_utf8(stdout.clone()).ok()
             .unwrap_or("<Failure>".to_string())
         );
         trace!(target: "LibraryTracer", "Sketch tracing_output.stderr: {}",
-            String::from_utf8(tracing_output.stderr.clone()).ok()
+            String::from_utf8(stderr.clone()).ok()
             .unwrap_or("<Failure>".to_string())
         );
-        let err_reader = BufReader::new(tracing_output.stderr.as_slice());
+        let err_reader = BufReader::new(stderr.as_slice());
         let mut logs = Vec::new();
         for line_result in err_reader.lines() {
             let line = line_result?;

@@ -40,9 +40,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vec![ExcludedHole::Name("H__0".to_string())].into_iter(),
         true,
         true,
+        log_level == LevelFilter::Trace,
         synthesis.as_path(),
         verification.as_path(),
-        &["p_1_1_0"]);
+        &["p_1_1_0"], None);
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

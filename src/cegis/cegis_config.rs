@@ -5,6 +5,12 @@ use std::ffi::OsString;
 use rand::Rng;
 use super::CEGISState;
 
+#[derive(Eq, PartialEq, Hash, Clone)]
+pub enum ExcludedHole {
+    Name(String),
+    Position(isize, isize)
+}
+
 pub struct CEGISConfigParams {
     pub sketch_fe_bin: PathBuf,
     pub sketch_be_bin: PathBuf,
@@ -16,7 +22,7 @@ pub struct CEGISConfigParams {
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
-    pub hole_offset: usize,
+    pub excluded_holes: HashSet<ExcludedHole>,
     pub pure_function: bool,
     pub enable_record: bool,
     pub cand_encoder_src: EncoderSource,
@@ -45,11 +51,11 @@ pub struct CEGISConfig {
 }
 
 impl CEGISConfig {
-    pub fn new<P: AsRef<Path>, S: AsRef<str>>(
+    pub fn new<P: AsRef<Path>, S: AsRef<str>, I: Iterator<Item=ExcludedHole>>(
             sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
             lib_func_name: S, harness_func_name: S,
             n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
-            init_n_unknowns: usize, hole_offset: usize,
+            init_n_unknowns: usize, excluded_holes: I,
             pure_function: bool, enable_record: bool,
             synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str]) -> Self {
         CEGISConfig {
@@ -64,7 +70,7 @@ impl CEGISConfig {
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
-                hole_offset: hole_offset,
+                excluded_holes: excluded_holes.collect(),
                 pure_function: pure_function,
                 enable_record: enable_record,
                 cand_encoder_src: EncoderSource::Rewrite,

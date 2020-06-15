@@ -6,6 +6,7 @@ mod cegis_config;
 pub use cegis_config::CEGISConfig;
 pub use cegis_config::CEGISConfigParams;
 pub use cegis_config::VerifyPointsConfig;
+pub use cegis_config::ExcludedHole;
 mod cegis_loop;
 pub use cegis_loop::CEGISLoop;
 mod cegis_record;

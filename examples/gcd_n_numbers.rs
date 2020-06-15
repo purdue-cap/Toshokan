@@ -1,5 +1,5 @@
 extern crate libpartlibspec;
-use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig};
+use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole};
 use std::path::PathBuf;
 use std::fs::File;
 use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         5,
         VerifyPointsConfig::NoSpec,
         10,
-        1,
+        vec![ExcludedHole::Name("H__0".to_string())].into_iter(),
         true,
         true,
         synthesis.as_path(),

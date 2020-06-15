@@ -2,39 +2,33 @@ use quick_xml::{Reader, Error};
 use quick_xml::events::{Event, BytesStart};
 use std::io::BufRead;
 use std::path::Path;
-use regex::Regex;
 use std::collections::{HashMap, HashSet};
+use crate::cegis::ExcludedHole;
 
 pub struct HoleExtractor {
-    hole_offset: usize,
+    excluded_holes: HashSet<ExcludedHole>,
     hole_names: HashSet<String>,
     hole_name_mapping: Option<HashMap<String, String>>
 }
 
 impl HoleExtractor {
-    pub fn new(hole_offset: usize, h_names: HashSet<String>) -> Self {
+    pub fn new<I>(excluded_holes: I, h_names: HashSet<String>) -> Self 
+    where
+        I: Iterator<Item=ExcludedHole>
+    {
         HoleExtractor {
-            hole_offset: hole_offset,
+            excluded_holes: excluded_holes.collect(),
             hole_names: h_names,
             hole_name_mapping: None
         }
     }
 
     fn map_hole_name<S: AsRef<str>>(&self, name: S) -> Option<String> {
-        let hole_regex = Regex::new(r"H__(\d+)([\d_]*)").expect("Hard coded regex should not fail");
-        let caps = hole_regex.captures(name.as_ref())?;
-        let hole_index = caps.get(1)?.as_str().parse::<usize>().ok()?;
-        if hole_index < self.hole_offset {
-            None
+        if let Some(ref mapping) = self.hole_name_mapping {
+            mapping.get(name.as_ref()).cloned().or(Some(name.as_ref().to_string()))
         } else {
-            let plain_name = format!("H__{}{}", hole_index - self.hole_offset, caps.get(2)?.as_str());
-            if let Some(ref mapping) = self.hole_name_mapping {
-                mapping.get(&plain_name).map(|s| s.clone()).or(Some(plain_name))
-            } else {
-                Some(plain_name)
-            }
+            Some(name.as_ref().to_string())
         }
-
     }
 
     fn extract_hole_from_element(&self, holes: &mut HashMap<String, isize>, element: &BytesStart) -> Option<()> {
@@ -47,6 +41,13 @@ impl HoleExtractor {
         if e_type.as_ref() != b"int" { return None; }
 
         let e_name = std::str::from_utf8(attrs.get(b"name".as_ref())?).ok()?;
+        let e_line_num = std::str::from_utf8(attrs.get(b"line".as_ref())?).ok()?.parse::<isize>().ok()?;
+        let e_col_num = std::str::from_utf8(attrs.get(b"col".as_ref())?).ok()?.parse::<isize>().ok()?;
+        if self.excluded_holes.contains(&ExcludedHole::Name(e_name.to_string())) ||
+            self.excluded_holes.contains(&ExcludedHole::Position(e_line_num, e_col_num)) {
+            return None;
+        }
+
         let h_name = self.map_hole_name(&e_name)?;
 
         let e_value = std::str::from_utf8(attrs.get(b"value".as_ref())?).ok()?
@@ -184,7 +185,9 @@ mod tests {
             "H__2_1_0",
             "H__4_1_0_0",
             "H__1_1_0_0_0_0"].into_iter().map(|s| s.to_string()).collect();
-        let mut extractor = HoleExtractor::new(1, hole_names);
+        let mut extractor = HoleExtractor::new(vec![
+            ExcludedHole::Name("H__0".to_string())
+        ].into_iter(), hole_names);
         let holes = extractor.read_holes_from_str(&xml_str)?;
         let mut holes_fixture = HashMap::<String, isize>::new();
         holes_fixture.insert("H__2_1_0_0_0_0_1_0_0_0_0".to_string(), 0);
@@ -247,7 +250,9 @@ mod tests {
             "H__3_2", "H__3_2_1_1",
             "H__0_2_0", "H__2_2_3_3_3",
             "H__3_2_1_1_1_1", "H__2_2_3"].into_iter().map(|s| s.to_string()).collect();
-        let mut extractor = HoleExtractor::new(1, hole_names);
+        let mut extractor = HoleExtractor::new(vec![
+            ExcludedHole::Position(1, -1)
+        ].into_iter(), hole_names);
         let holes = extractor.read_holes_from_str(&xml_str)?;
         let mut holes_fixture = HashMap::<String, isize>::new();
         holes_fixture.insert("H__0_2_0_0".to_string(), 1);

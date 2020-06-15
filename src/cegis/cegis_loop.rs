@@ -253,7 +253,9 @@ impl<'r> CEGISLoop<'r> {
         let c_e_names_in_log : Vec<_> = self.config.get_params().c_e_names.iter().map(|s| s.as_str()).collect();
         let log_analyzer = LogAnalyzer::new(c_e_names_in_log.as_slice());
 
-        let mut hole_extractor = HoleExtractor::new(self.config.get_params().hole_offset, self.state.get_h_names().clone());
+        let mut hole_extractor = HoleExtractor::new(
+            self.config.get_params().excluded_holes.iter().cloned(),
+            self.state.get_h_names().clone());
 
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
             self.config.get_params().lib_func_name.as_str(),

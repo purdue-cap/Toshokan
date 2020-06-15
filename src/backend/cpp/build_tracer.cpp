@@ -467,14 +467,15 @@ class UsingDirectiveCleanUpCallback : public MatchFinder::MatchCallback {
 
 class TracerBuilderASTConsumer : public ASTConsumer {
     public:
-    TracerBuilderASTConsumer(Rewriter &R, string &name, string_set state = string_set())
-        : impl_func_injector(R, name, std::move(state)), stmt_cleanup_cb(R), using_cleanup_cb(R) {}
+    TracerBuilderASTConsumer(Rewriter &R, string &name, bool &done, string_set state = string_set())
+        : impl_func_injector(R, name, std::move(state)), stmt_cleanup_cb(R), using_cleanup_cb(R), done(done) {}
 
     // Override the method that gets called for each parsed top-level
     // declaration.
     bool HandleTopLevelDecl(DeclGroupRef DR) override {
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
             if (!impl_func_injector.TraverseDecl(*b)) {
+                done = false;
                 return false;
             }
         }
@@ -485,6 +486,7 @@ class TracerBuilderASTConsumer : public ASTConsumer {
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
             finder.matchAST((*b)->getASTContext());
         }
+        done = true;
         return true;
     }
 
@@ -492,12 +494,13 @@ class TracerBuilderASTConsumer : public ASTConsumer {
     ImplFuncInjector impl_func_injector;
     StmtCleanUpCallback stmt_cleanup_cb;
     UsingDirectiveCleanUpCallback using_cleanup_cb;
+    bool& done;
 };
 
 class TracerBuilderFrontendAction : public ASTFrontendAction {
     public:
-    TracerBuilderFrontendAction(string &name, llvm::raw_ostream &out, string_set states = string_set())
-        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out) {}
+    TracerBuilderFrontendAction(string &name, llvm::raw_ostream &out, bool& done, string_set states = string_set())
+        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out), done(done) {}
 
     void EndSourceFileAction() override {
         SourceManager &SM = TheRewriter.getSourceMgr();
@@ -509,7 +512,7 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                     StringRef file) override {
         TheRewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
-        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName, StateArgNames);
+        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName, done, StateArgNames);
     }
 
     private:
@@ -517,21 +520,23 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
     string &LibFuncName;
     string_set StateArgNames;
     llvm::raw_ostream &OutStream;
+    bool& done;
 };
 
 class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
     public:
-    TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out, string_set states = string_set())
-        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out) {}
+    TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out, bool& done, string_set states = string_set())
+        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out), done(done) {}
 
     std::unique_ptr<FrontendAction> create() {
-        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream, StateArgNames);
+        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream, done, StateArgNames);
     }
 
     private:
     string LibFuncName;
     string_set StateArgNames;
     llvm::raw_ostream &OutStream;
+    bool& done;
 };
 
 int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out, string_set states = string_set()) {
@@ -544,8 +549,16 @@ int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &ou
         return 1;
     }
     ClangTool tool(*db, source_path_list);
-    TracerBuilderFrontendActionFactory factory(lib_func_name, out, std::move(states));
-    return tool.run(&factory);
+    bool done;
+    TracerBuilderFrontendActionFactory factory(lib_func_name, out, done, std::move(states));
+    int rtn_code = tool.run(&factory);
+    if (rtn_code != 0){
+        return rtn_code;
+    } else if (done) {
+        return 0;
+    } else {
+        return 3;
+    }
 }
 
 int BuildTracer(string& lib_func_name, string& input_file, string& output_file, string_set states = string_set()) {

@@ -61,7 +61,7 @@ pub fn expand_to_arg_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, index_of_arg, optional(n_unknown)
+    // Expecting parameters: logs, index_of_arg, optional(enforce_obj), optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -72,12 +72,25 @@ pub fn expand_to_arg_array(h: &Helper,
         .ok_or(RenderError::new("Second parameter not an unsigned int"))?
         as usize;
     let mut n_unknown = 0;
-    if let Some(param_2) = h.param(2) {
-        n_unknown = param_2.value().as_u64()
-            .ok_or(RenderError::new("Third parameter not an unsigned int"))?
-            as usize;
-    }
     let mut has_obj = false;
+    if let Some(param_2) = h.param(2) {
+        match param_2.value() {
+            Value::Number(param_number) => {
+                n_unknown = param_number.as_u64()
+                    .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
+                    as usize;
+            },
+            Value::Bool(param_bool) => {
+                has_obj = *param_bool;
+                if let Some(param_3) = h.param(3) {
+                    n_unknown = param_3.value().as_u64()
+                        .ok_or(RenderError::new("Fourth parameter not an unsigned int"))?
+                        as usize;
+                }
+            },
+            _ => { return Err(RenderError::new("Third parameter not an unsigned int or bool"));}
+        }
+    }
     let mut arg_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("args"))
@@ -131,18 +144,31 @@ pub fn expand_to_rtn_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, optional(n_unknown)
+    // Expecting parameters: logs, optional(enforce_obj), optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
         .ok_or(RenderError::new("First parameter not array"))?;
     let mut n_unknown = 0;
-    if let Some(param_1) = h.param(1) {
-        n_unknown = param_1.value().as_u64()
-            .ok_or(RenderError::new("Second parameter not an unsigned int"))?
-            as usize;
-    }
     let mut has_obj = false;
+    if let Some(param_1) = h.param(1) {
+        match param_1.value() {
+            Value::Number(param_number) => {
+                n_unknown = param_number.as_u64()
+                    .ok_or(RenderError::new("Second parameter not an unsigned int or bool"))?
+                    as usize;
+            },
+            Value::Bool(param_bool) => {
+                has_obj = *param_bool;
+                if let Some(param_2) = h.param(2) {
+                    n_unknown = param_2.value().as_u64()
+                        .ok_or(RenderError::new("Third parameter not an unsigned int"))?
+                        as usize;
+                }
+            },
+            _ => { return Err(RenderError::new("Second parameter not an unsigned int or bool"));}
+        }
+    }
     let mut rtn_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("rtn"))
@@ -162,7 +188,7 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, index_of_arg, optional(n_unknown)
+    // Expecting parameters: logs, index_of_rtn, optional(enforce_obj) optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -173,12 +199,25 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
         .ok_or(RenderError::new("Second parameter not an unsigned int"))?
         as usize;
     let mut n_unknown = 0;
-    if let Some(param_2) = h.param(2) {
-        n_unknown = param_2.value().as_u64()
-            .ok_or(RenderError::new("Third parameter not an unsigned int"))?
-            as usize;
-    }
     let mut has_obj = false;
+    if let Some(param_2) = h.param(2) {
+        match param_2.value() {
+            Value::Number(param_number) => {
+                n_unknown = param_number.as_u64()
+                    .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
+                    as usize;
+            },
+            Value::Bool(param_bool) => {
+                has_obj = *param_bool;
+                if let Some(param_3) = h.param(3) {
+                    n_unknown = param_3.value().as_u64()
+                        .ok_or(RenderError::new("Fourth parameter not an unsigned int"))?
+                        as usize;
+                }
+            },
+            _ => { return Err(RenderError::new("Third parameter not an unsigned int or bool"));}
+        }
+    }
     let mut rtn_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("rtn"))
@@ -430,6 +469,21 @@ mod tests {
     }
 
     #[test]
+    fn expands_empty_objects_to_arg_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "args: {{expand-to-arg-array logs 0 true 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "args: null, null");
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
@@ -514,6 +568,21 @@ mod tests {
     }
 
     #[test]
+    fn expands_empty_objects_to_rtn_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "rtn: {{expand-to-rtn-array logs true 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "rtn: null, null");
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
@@ -591,6 +660,21 @@ mod tests {
         let template = "rtn: {{expand-to-ith-rtn-array logs 1 2}}";
         assert_eq!(hb.render_template(template, &data)?,
             "rtn: new vector@std( a=0, b=1 ), new vector@std( a=0, b=2 ), new vector@std( a=0, b=3 ), null, null");
+        Ok(())
+    }
+
+    #[test]
+    fn expands_empty_objects_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "rtn: {{expand-to-ith-rtn-array logs 0 true 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "rtn: null, null");
         Ok(())
     }
 

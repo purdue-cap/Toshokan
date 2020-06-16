@@ -1,0 +1,68 @@
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
+int n =2;
+int gk =3;
+int BASE = 5;
+struct mat{
+    int R_0_0;
+    int R_0_1;
+    int R_1_0;
+    int R_1_1;
+	int k;
+}
+
+bit mat_equals(mat A, mat B) {
+	return A.k == B.k &&
+			A.R_0_0 == B.R_0_0 &&
+			A.R_0_1 == B.R_0_1 &&
+			A.R_1_0 == B.R_1_0 &&
+			A.R_1_1 == B.R_1_1;
+}
+
+mat matmul(mat A,mat B){
+    int [n][n] R_rv;
+    int [n][n] R_A = { {A.R_0_0, A.R_0_1}, {A.R_1_0, A.R_1_1} };
+    int [n][n] R_B = { {B.R_0_0, B.R_0_1}, {B.R_1_0, B.R_1_1} };
+	for(int i=0;i<n;i++){
+		for(int j=0;j<n;j++){
+			R_rv[i][j]=0;
+			for (int k=0;k<n;k++){
+				R_rv[i][j] = (R_rv[i][j] + (R_A[i][k] * R_B[k][j])%BASE)%BASE;
+			}
+		}
+	}
+    
+	mat rv = new mat(R_0_0 = R_rv[0][0],R_0_1 = R_rv[0][1],R_1_0 = R_rv[1][0],R_1_1 = R_rv[1][1], k = 1);
+	return rv;
+}
+
+harness void main(int T_0_0,int T_0_1,int T_1_0,int T_1_1,
+    int p_0, int p_1, int p_2) {
+    int [n][n] T = { {T_0_0, T_0_1}, {T_1_0, T_1_1} };
+    bit [gk] p = {p_0 != 0, p_1 != 0, p_2 != 0};
+
+	int pval = 0;
+	int p2i =1;
+	for(int i=0;i<gk;i++){
+		if(p[i]) pval = pval + p2i ;
+		p2i = p2i *2;
+	}
+
+	mat A = new mat(R_0_0=T[0][0],R_0_1=T[0][1],R_1_0=T[1][0],R_1_1=T[1][1],k=1);
+	mat res = new mat(R_0_0=T[0][0],R_0_1=T[0][1],R_1_0=T[1][0],R_1_1=T[1][1],k=0);
+	for(int i=0;i<pval;i++){
+		res = matmul(res,A);
+	}
+	
+	mat res1 = new mat(R_0_0=T[0][0],R_0_1=T[0][1],R_1_0=T[1][0],R_1_1=T[1][1],k=0);
+	mat tmp = new mat(R_0_0=T[0][0],R_0_1=T[0][1],R_1_0=T[1][0],R_1_1=T[1][1],k=1);//A
+	for(int i=??;{| i (< | > | <= | >=) {| (??)*gk (+|-) (??) |} |};i={| i (+|-) ??|} ){
+		if(p[i]) res1 = matmul({| res1 | tmp | A |},{| res1 | tmp | A |});
+		tmp = matmul({| tmp | A |},{| tmp | A |});
+	}
+
+	assert(res1.R_0_0 == res.R_0_0);
+	assert(res1.R_0_1 == res.R_0_1);
+	assert(res1.R_1_0 == res.R_1_0);
+	assert(res1.R_1_1 == res.R_1_1);
+	assert(res1.k == res.k);
+}

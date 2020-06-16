@@ -32,7 +32,7 @@ pub fn get_unroll_amnt(h: &Helper,
         .value().as_u64()
         .ok_or(RenderError::new("Second parameter not an unsigned int"))?
         as usize;
-    out.write(format!("{}", std::cmp::max(logs_array.len(), unroll_amnt)).as_str())?;
+    out.write(format!("{}", std::cmp::max(logs_array.len() + 1, unroll_amnt)).as_str())?;
     Ok(())
 }
 

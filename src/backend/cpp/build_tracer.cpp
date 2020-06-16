@@ -127,7 +127,7 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
 
             // Get the returning paramter
             auto rtn_arg_name = rtn_arg->getName().str();
-            auto rtn_type = rtn_arg->getType().getNonReferenceType();
+            auto rtn_type = rtn_arg->getType();
 
             bool out_is_array = rtn_type->isPointerType();
             string array_length_str;
@@ -148,8 +148,9 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
 
             }
 
+            rtn_type = rtn_type.getNonReferenceType();
             // Returning type must be traversed for JSON conversion as well
-            if (!buildJSONConversionForType(rtn_type)) {
+            if (!buildJSONConversionForType(getBaseType(rtn_type))) {
                 return false;
             }
 

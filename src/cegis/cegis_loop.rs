@@ -54,7 +54,7 @@ impl<'r> CEGISLoop<'r> {
 
     fn verify(&self, cand: &CandEncoder, 
         log_analyzer: &LogAnalyzer, runner: &mut SketchRunner)
-            -> Result<Option<Vec<isize>>, Box<dyn std::error::Error>> {
+            -> Result<(Option<Vec<isize>>, PathBuf), Box<dyn std::error::Error>> {
         info!(target: "Verification", "Filling sketch template");
         let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("verification_{}", self.state.get_iter_count())));
@@ -68,18 +68,18 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Verification", "Running sketch");
         let output = runner.verify_file(&verification_sk);
         match output {
-            VerificationResult::Pass => {Ok(None)},
+            VerificationResult::Pass => {Ok((None, verification_sk))},
             VerificationResult::ExecutionErr(err) => {Err(Box::new(err))},
             VerificationResult::CounterExample(exec_log) => {
                 trace!(target:"Verification", "Sketch execution log: {}", exec_log);
-                Ok(Some(log_analyzer.read_c_e_s_from_str(exec_log.as_str())?))
+                Ok((Some(log_analyzer.read_c_e_s_from_str(exec_log.as_str())?), verification_sk))
             }
         }
     }
 
     fn synthesize(&self, c_e: &CEEncoder,
         hole_extractor: &mut HoleExtractor, runner: &mut SketchRunner)
-            -> Result<Option<(HashMap<String, isize>, PathBuf)>, Box<dyn std::error::Error>> {
+            -> Result<(Option<(HashMap<String, isize>, PathBuf)>, PathBuf), Box<dyn std::error::Error>> {
         info!(target: "Synthesis", "Filling sketch template");
         let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
@@ -93,7 +93,7 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Synthesis", "Running sketch");
         let output = runner.synthesize_file(&synthesis_sk);
         match output {
-            SynthesisResult::Failure => {Ok(None)},
+            SynthesisResult::Failure => {Ok((None, synthesis_sk))},
             SynthesisResult::ExecutionErr(err) => {Err(Box::new(err))},
             SynthesisResult::Candidate(base_path) => {
                 let holes_file = self.output_dir.as_ref()
@@ -119,7 +119,7 @@ impl<'r> CEGISLoop<'r> {
                 .unwrap_or("<Failure>".to_string())
                 );
 
-                Ok(Some((hole_extractor.read_holes_from_file(holes_file)?, base_path)))
+                Ok(((Some((hole_extractor.read_holes_from_file(holes_file)?, base_path))), synthesis_sk))
             }
         }
     }
@@ -275,8 +275,10 @@ impl<'r> CEGISLoop<'r> {
             info!(target: "CEGISMainLoop", "Entering iteration #{}", self.state.get_iter_count());
 
             info!(target: "CEGISMainLoop", "Verifying");
-            if let Some(new_c_e) = self.verify(&cand_encoder,
-                &log_analyzer, &mut sketch_runner)? {
+            let (verify_result, last_verification) = self.verify(&cand_encoder,
+                &log_analyzer, &mut sketch_runner)?;
+            self.recorder.as_mut().map(|r| r.set_last_verification(&last_verification));
+            if let Some(new_c_e) = verify_result{
                 info!(target: "CEGISMainLoop", "Verification returned C.E.");
                 debug!(target: "CEGISMainLoop", "New C.E: {:?}", new_c_e);
                 self.recorder.as_mut().map(|r| r.set_new_c_e_s(&new_c_e));
@@ -294,8 +296,10 @@ impl<'r> CEGISLoop<'r> {
             if self.state.get_iter_count() == 0 {
                 info!(target: "CEGISMainLoop", "Iter 0: Pre-run synthesis before tracing to generate runnable candidate");
                 info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
-                if let Some((new_holes, new_base_path)) = self.synthesize(&c_e_encoder,
-                    &mut hole_extractor, &mut sketch_runner)? {
+                let (synthesize_result, last_synthesis) = self.synthesize(&c_e_encoder,
+                    &mut hole_extractor, &mut sketch_runner)?;
+                self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                if let Some((new_holes, new_base_path)) = synthesize_result {
                     info!(target: "CEGISMainLoop", "Synthesis(Pre-run) returned candidate");
                     debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
                     self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
@@ -317,8 +321,10 @@ impl<'r> CEGISLoop<'r> {
             }
 
             info!(target: "CEGISMainLoop", "Synthesizing");
-            if let Some((new_holes, new_base_path)) = self.synthesize(&c_e_encoder,
-                &mut hole_extractor, &mut sketch_runner)? {
+            let (synthesize_result, last_synthesis) = self.synthesize(&c_e_encoder,
+                &mut hole_extractor, &mut sketch_runner)?;
+            self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+            if let Some((new_holes, new_base_path)) = synthesize_result {
                 info!(target: "CEGISMainLoop", "Synthesis returned candidate");
                 debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
                 self.recorder.as_mut().map(|r| r.set_holes(&new_holes));
@@ -346,6 +352,9 @@ impl<'r> CEGISLoop<'r> {
         self.recorder.as_mut().map(|r| r.set_total_iter(final_iter_count));
         self.recorder.as_mut().map(|r| r.commit_time());
         self.recorder.as_ref().map(|r| info!(target:"CEGISMainLoop", "Total elapsed time: {}", r.get_time()));
+        if solved.is_none() || self.config.get_params().keep_tmp {
+            self.recorder.as_mut().map(|r| r.commit_last_files());
+        }
         info!(target:"CEGISMainLoop", "Total iterations run: {}", self.state.get_iter_count() + 1);
         Ok(solved)
     }

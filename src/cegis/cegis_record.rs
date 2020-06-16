@@ -3,6 +3,7 @@ use std::io::Write;
 use std::time::Instant;
 use std::collections::HashMap;
 use super::TraceLog;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 struct CEGISRecordEntry {
@@ -18,7 +19,11 @@ struct CEGISRecord {
     entries: Vec<CEGISRecordEntry>,
     solved: bool,
     wall_time: f32,
-    total_iter: usize
+    total_iter: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_synthesis: Option<PathBuf>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_verification: Option<PathBuf>
 }
 
 pub struct CEGISRecorder {
@@ -27,7 +32,9 @@ pub struct CEGISRecorder {
     new_c_e_s: Option<Vec<isize>>,
     new_traces: Option<Vec<TraceLog>>,
     holes: Option<HashMap<String, isize>>,
-    clock: Option<Instant>
+    clock: Option<Instant>,
+    last_synthesis: Option<PathBuf>,
+    last_verification: Option<PathBuf>
 }
 
 quick_error! {
@@ -53,13 +60,17 @@ impl CEGISRecorder {
                 entries: Vec::new(),
                 solved: false,
                 wall_time: std::f32::NAN,
-                total_iter: 0
+                total_iter: 0,
+                last_synthesis: None,
+                last_verification: None
             },
             iter_nth: None,
             new_c_e_s: None,
             new_traces: None,
             holes: None,
-            clock: None
+            clock: None,
+            last_synthesis: None,
+            last_verification: None
         }
     }
 
@@ -86,6 +97,10 @@ impl CEGISRecorder {
     pub fn set_solved(&mut self, solved: bool) {
         self.record.solved = solved;
     }
+
+    pub fn set_last_synthesis(&mut self, p:&Path) {self.last_synthesis = Some(p.to_path_buf())}
+
+    pub fn set_last_verification(&mut self, p:&Path) {self.last_verification = Some(p.to_path_buf())}
 
     pub fn commit(&mut self) -> Option<()> {
         self.record.entries.push(CEGISRecordEntry{
@@ -126,5 +141,10 @@ impl CEGISRecorder {
     pub fn write_json_pretty<W: Write>(&self, w: &mut W) -> Result<(), Error>{
         w.write(self.to_json_pretty()?.as_bytes())?;
         Ok(())
+    }
+
+    pub fn commit_last_files(&mut self) {
+        self.record.last_synthesis = self.last_synthesis.clone();
+        self.record.last_verification = self.last_verification.clone();
     }
 }

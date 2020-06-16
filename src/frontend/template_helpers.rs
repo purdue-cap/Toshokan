@@ -1,6 +1,7 @@
 use handlebars::{Helper, Handlebars, Context,
                 RenderContext, Output,
                 HelperResult, RenderError};
+use serde_json::value::Value;
 
 pub fn get_n_logs(h: &Helper,
                     _: &Handlebars,
@@ -76,17 +77,53 @@ pub fn expand_to_arg_array(h: &Helper,
             .ok_or(RenderError::new("Third parameter not an unsigned int"))?
             as usize;
     }
+    let mut has_obj = false;
     let mut arg_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("args"))
         .and_then(|args_v| args_v.as_array())
         .and_then(|args| args.get(index_of_arg))
-        .map(|arg_v| arg_v.to_string())
+        .and_then(|arg_v| {
+            has_obj = has_obj || arg_v.is_object();
+            format_value(arg_v)
+        })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    arg_array.append(&mut std::iter::repeat("0".to_string()).take(n_unknown).collect());
+    arg_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
     out.write(arg_array.join(", ").as_str())?;
     Ok(())
+}
+
+pub fn format_value(val: &Value) -> Option<String> {
+    match val {
+        Value::Array(ref val_vec) => {
+            val_vec.iter().map(
+                |v| format_value(v)
+            ).collect::<Option<Vec<_>>>()
+            .map(|str_vec| format!( "{{ {} }}",str_vec.join(", ")))
+        },
+        Value::Object(ref val_map) => {
+            let full_name = val_map.get("@class_name")?.as_str()?;
+            let split_name = full_name.split("::").collect::<Vec<_>>();
+            let ns_name = split_name.get(0)?;
+            let struct_name = split_name.get(1)?;
+            let sketch_name : String;
+            if *ns_name == "ANONYMOUS" {
+                sketch_name = struct_name.to_string();
+            } else {
+                sketch_name = format!("{}@{}", struct_name, ns_name);
+            }
+            val_map.iter()
+            .filter(|(k, _v)| !k.starts_with("@"))
+            .map(|(k, v)| format_value(v)
+                .map(|format_result| format!("{}={}", k, format_result))
+            ).collect::<Option<Vec<_>>>()
+            .map(|str_vec| format!( "new {}( {} )", sketch_name, str_vec.join(", ")))
+        },
+        _ => {
+            Some(val.to_string())
+        }
+    }
 }
 
 pub fn expand_to_rtn_array(h: &Helper,
@@ -105,14 +142,18 @@ pub fn expand_to_rtn_array(h: &Helper,
             .ok_or(RenderError::new("Second parameter not an unsigned int"))?
             as usize;
     }
-    let mut arg_array = logs_array.into_iter().map(|j|
+    let mut has_obj = false;
+    let mut rtn_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("rtn"))
-        .map(|arg_v| arg_v.to_string())
+        .and_then(|arg_v| {
+            has_obj = has_obj || arg_v.is_object();
+            format_value(arg_v)
+        })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    arg_array.append(&mut std::iter::repeat("0".to_string()).take(n_unknown).collect());
-    out.write(arg_array.join(", ").as_str())?;
+    rtn_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
+    out.write(rtn_array.join(", ").as_str())?;
     Ok(())
 }
 
@@ -137,15 +178,19 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
             .ok_or(RenderError::new("Third parameter not an unsigned int"))?
             as usize;
     }
+    let mut has_obj = false;
     let mut rtn_array = logs_array.into_iter().map(|j|
         j.as_object()
         .and_then(|obj| obj.get("rtn"))
         .and_then(|args_v| args_v.as_array())
         .and_then(|args| args.get(index_of_arg))
-        .map(|arg_v| arg_v.to_string())
+        .and_then(|arg_v| {
+            has_obj = has_obj || arg_v.is_object();
+            format_value(arg_v)
+        })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    rtn_array.append(&mut std::iter::repeat("0".to_string()).take(n_unknown).collect());
+    rtn_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
     out.write(rtn_array.join(", ").as_str())?;
     Ok(())
 }
@@ -215,6 +260,21 @@ pub fn expand_x_d_points_to_assume(h: &Helper,
     Ok(())
 }
 
+pub fn expand_holes(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting argument: number_of_holes
+    let n_unknown = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("First parameter not an unsigned int"))?
+        as usize;
+    out.write(std::iter::repeat("??").take(n_unknown).collect::<Vec<_>>().join(", ").as_str())?;
+    Ok(())
+}
+
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
     hb.register_helper("get-unroll-amnt", Box::new(get_unroll_amnt));
@@ -224,6 +284,7 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
     hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
     hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
+    hb.register_helper("expand-holes", Box::new(expand_holes));
 }
 
 #[cfg(test)]
@@ -312,6 +373,63 @@ mod tests {
     }
 
     #[test]
+    fn expands_objects_to_arg_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 1,
+                            "b": 2
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 2,
+                        "b": 1
+                    })
+                },
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 3,
+                            "b": 4
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 4,
+                        "b": 3
+                    })
+                },
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 5,
+                            "b": 4
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 4,
+                        "b": 5
+                    })
+                },
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "args: {{expand-to-arg-array logs 0 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "args: new point( a=1, b=2 ), new point( a=3, b=4 ), new point( a=5, b=4 ), null, null");
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
@@ -339,6 +457,63 @@ mod tests {
     }
 
     #[test]
+    fn expands_objects_to_rtn_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 1,
+                            "b": 2
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 2,
+                        "b": 1
+                    })
+                },
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 3,
+                            "b": 4
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 4,
+                        "b": 3
+                    })
+                },
+                TraceLog {
+                    args: vec![
+                        json!({
+                            "@class_name": "ANONYMOUS::point",
+                            "a": 5,
+                            "b": 4
+                        })
+                    ],
+                    rtn: json!({
+                        "@class_name": "std::vector",
+                        "a": 4,
+                        "b": 5
+                    })
+                },
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "rtn: {{expand-to-rtn-array logs 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "rtn: new vector@std( a=2, b=1 ), new vector@std( a=4, b=3 ), new vector@std( a=4, b=5 ), null, null");
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
@@ -362,6 +537,60 @@ mod tests {
         let template = "rtn_1: {{expand-to-ith-rtn-array logs 1 2}}";
         assert_eq!(hb.render_template(template, &data)?, "rtn_1: 2, 5, 26, 0, 0");
 
+        Ok(())
+    }
+
+    #[test]
+    fn expands_objects_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+                TraceLog {
+                    args: vec![json!(1)],
+                    rtn: json!([{
+                        "@class_name": "std::vector",
+                        "a": 1,
+                        "b": 0
+                    }, {
+                        "@class_name": "std::vector",
+                        "a": 0,
+                        "b": 1
+                    }
+                    ])
+                },
+                TraceLog {
+                    args: vec![json!(2)],
+                    rtn: json!([{
+                        "@class_name": "std::vector",
+                        "a": 2,
+                        "b": 0
+                    }, {
+                        "@class_name": "std::vector",
+                        "a": 0,
+                        "b": 2
+                    }
+                    ])
+                },
+                TraceLog {
+                    args: vec![json!(3)],
+                    rtn: json!([{
+                        "@class_name": "std::vector",
+                        "a": 3,
+                        "b": 0
+                    }, {
+                        "@class_name": "std::vector",
+                        "a": 0,
+                        "b": 3
+                    }
+                    ])
+                },
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "rtn: {{expand-to-ith-rtn-array logs 1 2}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "rtn: new vector@std( a=0, b=1 ), new vector@std( a=0, b=2 ), new vector@std( a=0, b=3 ), null, null");
         Ok(())
     }
 
@@ -414,6 +643,19 @@ mod tests {
         let template = r#"{{expand-x-d-points-to-assume array "a" "b"}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "");
+        Ok(())
+    }
+
+    #[test]
+    fn expands_holes() -> Result<(), Box<dyn Error>> {
+        let data = json!({"hole_count": 5});
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"holes: { {{expand-holes hole_count}} }"#;
+        assert_eq!(hb.render_template(template, &data)?,
+            "holes: { ??, ??, ??, ??, ?? }");
         Ok(())
     }
 }

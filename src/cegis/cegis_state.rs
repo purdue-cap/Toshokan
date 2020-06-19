@@ -14,6 +14,8 @@ pub struct CEGISStateParams {
     pub verify_points: Vec<Vec<isize>>
 }
 
+// TODO: Need to remove possible @address fields (and other ephemeral fields) from the log
+// when doing Hash/PartialEq/Eq on the logs to avoid duplicate logs being encoded
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct TraceLog {
     pub args: Vec<Value>,

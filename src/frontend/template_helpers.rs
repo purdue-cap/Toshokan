@@ -1,6 +1,6 @@
 use handlebars::{Helper, Handlebars, Context,
                 RenderContext, Output,
-                HelperResult, RenderError};
+                HelperResult, RenderError, Renderable};
 use serde_json::value::Value;
 
 pub fn get_n_logs(h: &Helper,
@@ -16,26 +16,6 @@ pub fn get_n_logs(h: &Helper,
     out.write(format!("{}", logs_array.len()).as_str())?;
     Ok(())
 }
-
-pub fn get_unroll_amnt(h: &Helper,
-                    _: &Handlebars,
-                    _: &Context,
-                    _: &mut RenderContext,
-                    out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, default_unroll_amnt
-    let logs_array = h.param(0)
-        .ok_or(RenderError::new("First parameter not found"))?
-        .value().as_array()
-        .ok_or(RenderError::new("First parameter not array"))?;
-    let unroll_amnt = h.param(1)
-        .ok_or(RenderError::new("Second parameter not found"))?
-        .value().as_u64()
-        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
-        as usize;
-    out.write(format!("{}", std::cmp::max(logs_array.len() + 1, unroll_amnt)).as_str())?;
-    Ok(())
-}
-
 
 pub fn get_cap_logs(h: &Helper,
                     _: &Handlebars,
@@ -314,9 +294,35 @@ pub fn expand_holes(h: &Helper,
     Ok(())
 }
 
+pub fn for_cap_logs<'reg, 'rc>(
+    h: &Helper<'reg, 'rc>,
+    r: &'reg Handlebars,
+    ctx: &'rc Context,
+    rc: &mut RenderContext<'reg, 'rc>,
+    out: &mut dyn Output,
+) -> HelperResult {
+    // Expecting parameters: logs, n_unknown
+    let logs_array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?;
+    let n_unknown = h.param(1)
+        .ok_or(RenderError::new("Second parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
+        as usize;
+    let iter_count = logs_array.len() + n_unknown;
+    let inner_template = h.template().ok_or(RenderError::new("Not called as block helper"))?;
+    for i in 0..iter_count {
+        rc.block_mut().ok_or(RenderError::new("Block context not found"))?
+            .set_local_var("@index".to_string(), Value::from(i));
+        inner_template.render(r, ctx, rc, out)?;
+    }
+    Ok(())
+}
+
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
-    hb.register_helper("get-unroll-amnt", Box::new(get_unroll_amnt));
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
@@ -324,6 +330,7 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
     hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
     hb.register_helper("expand-holes", Box::new(expand_holes));
+    hb.register_helper("for-cap-logs", Box::new(for_cap_logs));
 }
 
 #[cfg(test)]
@@ -357,18 +364,6 @@ mod tests {
 
         let template = "n_logs: {{get-n-logs array}}";
         assert_eq!(hb.render_template(template, &data)?, "n_logs: 5");
-        Ok(())
-    }
-
-    #[test]
-    fn gets_unroll_amnt() -> Result<(), Box<dyn Error>> {
-        let data = Param { array: vec![1, 2, 3, 4 ,5] };
-        
-        let mut hb = Handlebars::new();
-        register_helpers(&mut hb);
-
-        let template = "unroll_amnts: {{get-unroll-amnt array 3}}, {{get-unroll-amnt array 10}}";
-        assert_eq!(hb.render_template(template, &data)?, "unroll_amnts: 5, 10");
         Ok(())
     }
 
@@ -740,6 +735,18 @@ mod tests {
         let template = r#"holes: { {{expand-holes hole_count}} }"#;
         assert_eq!(hb.render_template(template, &data)?,
             "holes: { ??, ??, ??, ??, ?? }");
+        Ok(())
+    }
+
+    #[test]
+    fn iters_over_cap_logs() -> Result<(), Box<dyn Error>> {
+        let data = Param { array: vec![1, 2, 3, 4 ,5] };
+        
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "indexes: {{#for-cap-logs array 3}}{{@index}} {{/for-cap-logs}}";
+        assert_eq!(hb.render_template(template, &data)?, "indexes: 0 1 2 3 4 5 6 7 ");
         Ok(())
     }
 }

@@ -350,6 +350,8 @@ struct nlohmann::adl_serializer<{{ type_name }}*>{
 
         string impl_template;
         if (is_array) {
+            // TODO: Need to address aliasing relationships within the structs here
+            // Option 1: If struct is being referenced as a pointer, output the address in separate @address field
             impl_template =
 R"(
 void nlohmann::adl_serializer<{{ type_name }}>::to_json(json &j, const {{ type_name }} &data){
@@ -364,7 +366,6 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
         j = nullptr;
     } else {
         j = *data;
-        j["@address"] = (unsigned long long)data;
     }
 }
 )";
@@ -382,7 +383,6 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
         j = nullptr;
     } else {
         j = *data;
-        j["@address"] = (unsigned long long)data;
     }
 }
 )";

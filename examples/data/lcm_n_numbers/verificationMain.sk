@@ -1,4 +1,4 @@
-pragma options "--bnd-inbits 3 --bnd-unroll-amnt 64 --bnd-cbits 3 --slv-nativeints";
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 128 --bnd-cbits 3 --slv-nativeints";
 int N = 5;
 
 int lcm(int a, int b){

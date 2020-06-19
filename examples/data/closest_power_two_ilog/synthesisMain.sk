@@ -10,18 +10,18 @@ int[{{n_unknowns}}] unknown = ??;
 int used_unknown = 0;
 
 int log(int i){
-    for (int idx = 0; idx < logged; idx ++) {
-        if (iarr[idx] == i) {
-            return rarr[idx];
-        }
-    }
+	{{#for-cap-logs logs n_unknowns}}
+	if ({{@index}} < logged && iarr[{{@index}}] == i) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+    
+    assert logged < cap;
     int val = unknown[used_unknown];
     used_unknown++;
-    if (logged < cap) {
-        iarr[logged] = i;
-        rarr[logged] = val;
-        logged ++;
-    }
+    iarr[logged] = i;
+    rarr[logged] = val;
+    logged ++;
     return val;
 }
 

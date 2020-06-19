@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt {{get-unroll-amnt logs 16}}";
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt 16";
 int N =5;
 
 int cap = {{get-cap-logs logs n_unknowns}};
@@ -28,31 +28,31 @@ int[N] sort(int[N] input){
 
 int[N] sort_proxy(int input_0,int input_1,int input_2,int input_3,int input_4) {
    
-   for (int idx = 0; idx < logged; idx ++) {
-       if (i_0_arr[idx] == input_0 && i_1_arr[idx] == input_1 && i_2_arr[idx] == input_2 && i_3_arr[idx] == input_3&& i_4_arr[idx] == input_4) {
-		   int[N] ind = {r_0_arr[idx], r_1_arr[idx], r_2_arr[idx], r_3_arr[idx], r_4_arr[idx]};
-           return ind;
-       }
-   }
+	{{#for-cap-logs logs n_unknowns}}
+	if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 && i_3_arr[{{@index}}] == input_3&& i_4_arr[{{@index}}] == input_4) {
+		int[N] ind = {r_0_arr[{{@index}}], r_1_arr[{{@index}}], r_2_arr[{{@index}}], r_3_arr[{{@index}}], r_4_arr[{{@index}}]};
+		return ind;
+	}
+	{{/for-cap-logs}}
+	
+	assert logged < cap;
    int val_0 = unknown_0[used_unknown];
    int val_1 = unknown_1[used_unknown];
    int val_2 = unknown_2[used_unknown];
    int val_3 = unknown_3[used_unknown];
    int val_4 = unknown_4[used_unknown];
    used_unknown++;
-   if (logged < cap) {
-	   i_0_arr[logged] = input_0;
-	   i_1_arr[logged] = input_1;
-	   i_2_arr[logged] = input_2;
-	   i_3_arr[logged] = input_3;
-	   i_4_arr[logged] = input_4;
-	   r_0_arr[logged] = val_0;
-	   r_1_arr[logged] = val_1;
-	   r_2_arr[logged] = val_2;
-	   r_3_arr[logged] = val_3;
-	   r_4_arr[logged] = val_4;
-       logged ++;
-   }
+	i_0_arr[logged] = input_0;
+	i_1_arr[logged] = input_1;
+	i_2_arr[logged] = input_2;
+	i_3_arr[logged] = input_3;
+	i_4_arr[logged] = input_4;
+	r_0_arr[logged] = val_0;
+	r_1_arr[logged] = val_1;
+	r_2_arr[logged] = val_2;
+	r_3_arr[logged] = val_3;
+	r_4_arr[logged] = val_4;
+	logged ++;
    int[N] ind = {val_0, val_1, val_2, val_3, val_4};
    return ind;
 }

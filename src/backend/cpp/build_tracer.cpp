@@ -484,18 +484,19 @@ class TracerBuilderASTConsumer : public ASTConsumer {
     // Override the method that gets called for each parsed top-level
     // declaration.
     bool HandleTopLevelDecl(DeclGroupRef DR) override {
+        MatchFinder finder;
+        finder.addMatcher(assertion_removal_matcher, &stmt_cleanup_cb);
+        finder.addMatcher(assumption_removal_matcher, &stmt_cleanup_cb);
+        finder.addMatcher(using_directive_matcher, &using_cleanup_cb);
+        for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
+            finder.matchAST((*b)->getASTContext());
+        }
+
         for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
             if (!impl_func_injector.TraverseDecl(*b)) {
                 done = false;
                 return false;
             }
-        }
-        MatchFinder finder;
-        finder.addMatcher(assumption_removal_matcher, &stmt_cleanup_cb);
-        finder.addMatcher(assertion_removal_matcher, &stmt_cleanup_cb);
-        finder.addMatcher(using_directive_matcher, &using_cleanup_cb);
-        for (auto b = DR.begin(), e = DR.end(); b != e; ++b) {
-            finder.matchAST((*b)->getASTContext());
         }
         done = true;
         return true;

@@ -1,4 +1,4 @@
-pragma options "--bnd-inbits 3 --bnd-unroll-amnt {{get-unroll-amnt logs 8}} --bnd-cbits 3 ";
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
 int n =2;
 int gk =3;
 int BASE = 5;
@@ -29,19 +29,19 @@ bit mat_equals(mat A, mat B) {
 }
 
 mat matmul(mat A,mat B){
-    for (int idx = 0; idx < logged; idx ++) {
-        if (mat_equals(A, i_0_arr[idx]) && mat_equals(B, i_1_arr[idx])) {
-            return rarr[idx];
-        }
-    }
+	{{#for-cap-logs logs n_unknowns}}
+	if ({{@index}} < logged && mat_equals(A, i_0_arr[{{@index}}]) && mat_equals(B, i_1_arr[{{@index}}])) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+
+	assert logged < cap;
     mat val = unknown[used_unknown];
     used_unknown++;
-    if (logged < cap) {
-        i_0_arr[logged] = A;
-		i_1_arr[logged] = B;
-        rarr[logged] = val;
-        logged ++;
-    }
+	i_0_arr[logged] = A;
+	i_1_arr[logged] = B;
+	rarr[logged] = val;
+	logged ++;
     return val;
 }
 

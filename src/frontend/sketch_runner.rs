@@ -130,6 +130,7 @@ impl SketchRunner{
         let output_dir = self.output_dir.clone();
         self.fe_clear().fe_flag("--fe-output-test").fe_flag("--fe-low-overhead")
             .fe_flag("--fe-output-dir").fe_flag(output_dir.join("./"))
+            .fe_flag("--fe-tempdir").fe_flag(output_dir.join("./synthesis_tmp/"))
             .fe_flag("--fe-output-xml").fe_flag(output_dir.join("holes.xml"))
     }
 

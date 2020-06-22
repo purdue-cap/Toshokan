@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock
 import optparse

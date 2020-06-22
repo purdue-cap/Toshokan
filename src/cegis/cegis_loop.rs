@@ -203,11 +203,7 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "CEGISMainLoop", "Start initialization");
 
         let temp_dir_obj = tempdir()?;
-        if self.config.get_params().keep_tmp {
-            self.work_dir = Some(temp_dir_obj.into_path());
-        } else {
-            self.work_dir = Some(temp_dir_obj.path().to_path_buf());
-        }
+        self.work_dir = Some(temp_dir_obj.path().to_path_buf());
         info!(target: "CEGISMainLoop", "Working directory: {:?}", self.work_dir);
         self.output_dir = Some(self.work_dir.as_ref().ok_or("Work dir unset")?.join("output"));
         fs::create_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)?;
@@ -353,6 +349,7 @@ impl<'r> CEGISLoop<'r> {
         self.recorder.as_mut().map(|r| r.commit_time());
         self.recorder.as_ref().map(|r| info!(target:"CEGISMainLoop", "Total elapsed time: {}", r.get_time()));
         if solved.is_none() || self.config.get_params().keep_tmp {
+            temp_dir_obj.into_path();
             self.recorder.as_mut().map(|r| r.commit_last_files());
         }
         info!(target:"CEGISMainLoop", "Total iterations run: {}", self.state.get_iter_count() + 1);

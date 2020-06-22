@@ -4,7 +4,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use regex::Regex;
 use tempfile::NamedTempFile;
-use log::{debug, trace};
+use log::{debug, trace, warn};
 
 pub struct SketchRunner {
     frontend_path: OsString,
@@ -176,6 +176,7 @@ impl SketchRunner{
                         }
                         
                     } else {
+                        warn!(target:"SketchRunner", "Sketch synthesis failure: {:?}", output);
                         SynthesisResult::Failure
                     }
                 } else {

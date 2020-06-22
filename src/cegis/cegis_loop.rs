@@ -307,7 +307,6 @@ impl<'r> CEGISLoop<'r> {
                     base_path = Ok(new_base_path);
                 } else {
                     info!(target: "CEGISMainLoop", "Synthesis(Pre-run) failed");
-                    info!(target: "CEGISMainLoop", "Reason: {:?}", synthesize_result);
                     break None;
                 }
             }
@@ -333,7 +332,6 @@ impl<'r> CEGISLoop<'r> {
                 base_path = Ok(new_base_path);
             } else {
                 info!(target: "CEGISMainLoop", "Synthesis failed");
-                info!(target: "CEGISMainLoop", "Reason: {:?}", synthesize_result);
                 break None;
             }
 

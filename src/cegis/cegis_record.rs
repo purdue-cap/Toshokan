@@ -14,8 +14,9 @@ struct CEGISRecordEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     new_traces: Option<Vec<TraceLog>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    holes: Option<HashMap<String, isize>>
-
+    holes: Option<HashMap<String, isize>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    trace_timed_out: Option<bool>
 }
 
 #[derive(Serialize)]
@@ -38,7 +39,8 @@ pub struct CEGISRecorder {
     holes: Option<HashMap<String, isize>>,
     clock: Option<Instant>,
     last_synthesis: Option<PathBuf>,
-    last_verification: Option<PathBuf>
+    last_verification: Option<PathBuf>,
+    trace_timed_out: Option<bool>
 }
 
 quick_error! {
@@ -74,7 +76,8 @@ impl CEGISRecorder {
             holes: None,
             clock: None,
             last_synthesis: None,
-            last_verification: None
+            last_verification: None,
+            trace_timed_out: None
         }
     }
 
@@ -88,6 +91,10 @@ impl CEGISRecorder {
 
     pub fn set_new_traces(&mut self, new_traces: &Vec<TraceLog>) {
         self.new_traces = Some(new_traces.clone());
+    }
+
+    pub fn set_trace_timed_out(&mut self, trace_timed_out: bool) {
+        self.trace_timed_out = Some(trace_timed_out);
     }
 
     pub fn set_holes(&mut self, holes: &HashMap<String, isize>) {
@@ -111,7 +118,8 @@ impl CEGISRecorder {
             iter_nth : self.iter_nth.take(),
             new_c_e_s: self.new_c_e_s.take(),
             new_traces: self.new_traces.take(),
-            holes: self.holes.take()
+            holes: self.holes.take(),
+            trace_timed_out: self.trace_timed_out.take()
         });
     }
 

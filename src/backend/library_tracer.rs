@@ -147,7 +147,7 @@ int main(int argc, char** argv) {{
         }
     }
 
-    pub fn collect_traces(&self) -> Result<Vec<TraceLog>, TraceError> {
+    pub fn collect_traces(&self) -> Result<(Vec<TraceLog>, bool/* Trace timeout indicator */), TraceError> {
         let mut tracing_cmd = Command::new(self.work_dir.ok_or(
                 TraceError::OtherError("Work Directory not set")
             )?.join(format!("{}_tracer", self.current_base_name.as_ref().ok_or(
@@ -159,6 +159,7 @@ int main(int argc, char** argv) {{
         let mut child = tracing_cmd.spawn()?;
         let mut stdout: Vec<u8>;
         let mut stderr: Vec<u8>;
+        let mut trace_timed_out = false;
         if let Some(timeout) = self.trace_timeout {
             stdout = Vec::new();
             stderr = Vec::new();
@@ -175,6 +176,7 @@ int main(int argc, char** argv) {{
                         let elapsed = time::Instant::now() - wall_start;
                         if  elapsed >= timeout_duration {
                             warn!(target: "LibraryTracer", "Tracing timed out!");
+                            trace_timed_out = true;
                             child.kill()?;
                             break;
                         }
@@ -212,7 +214,7 @@ int main(int argc, char** argv) {{
             let log = parse_log_from_json(line)?;
             logs.push(log);
         }
-        Ok(logs)
+        Ok((logs, trace_timed_out))
     }
 }
 

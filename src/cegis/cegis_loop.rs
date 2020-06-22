@@ -79,7 +79,10 @@ impl<'r> CEGISLoop<'r> {
 
     fn synthesize(&self, c_e: &CEEncoder,
         hole_extractor: &mut HoleExtractor, runner: &mut SketchRunner)
-            -> Result<(Option<(HashMap<String, isize>, PathBuf)>, PathBuf), Box<dyn std::error::Error>> {
+            -> Result<(
+                    Option<(HashMap<String, isize>, PathBuf/* Generated CPP code base path */)>,
+                    PathBuf/* Last synthesis sketch path*/),
+                Box<dyn std::error::Error>> {
         info!(target: "Synthesis", "Filling sketch template");
         let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
@@ -125,7 +128,7 @@ impl<'r> CEGISLoop<'r> {
     }
 
     fn generate(&self, generation: &GenerationEncoder, runner: &mut SketchRunner) 
-            -> Result<PathBuf, Box<dyn std::error::Error>> {
+            -> Result<PathBuf/* Last verification input.tmp path */, Box<dyn std::error::Error>> {
         info!(target: "Generation", "Filling sketch template");
         let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from("generation"));
@@ -157,7 +160,7 @@ impl<'r> CEGISLoop<'r> {
     }
 
     fn trace(&self, base_path: &Path, library_tracer: &mut LibraryTracer)
-            -> Result<Vec<TraceLog>, Box<dyn std::error::Error>> {
+            -> Result<(Vec<TraceLog>, bool/* Trace timeout indicator */), Box<dyn std::error::Error>> {
         let base_name = base_path.file_name().ok_or("Get base name from base path failed")?
             .to_str().ok_or("Base name conversion to str failed")?;
         let main_src = PathBuf::from(format!("{}.cpp", base_path.to_str().ok_or("Base path conversion to str failed")?));
@@ -318,10 +321,11 @@ impl<'r> CEGISLoop<'r> {
             }
 
             info!(target: "CEGISMainLoop", "Tracing");
-            let traces = self.trace(base_path?.as_path(), &mut library_tracer)?;
+            let (traces, timed_out) = self.trace(base_path?.as_path(), &mut library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             self.recorder.as_mut().map(|r| r.set_new_traces(&traces));
+            self.recorder.as_mut().map(|r| r.set_trace_timed_out(timed_out));
             for trace in traces.into_iter() {
                 self.state.add_log(trace);
             }

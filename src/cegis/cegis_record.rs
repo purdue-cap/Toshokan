@@ -7,10 +7,14 @@ use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 struct CEGISRecordEntry {
-    iter_nth: usize,
-    new_c_e_s: Vec<isize>,
-    new_traces: Vec<TraceLog>,
-    holes: HashMap<String, isize>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    iter_nth: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    new_c_e_s: Option<Vec<isize>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    new_traces: Option<Vec<TraceLog>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    holes: Option<HashMap<String, isize>>
 
 }
 
@@ -102,14 +106,13 @@ impl CEGISRecorder {
 
     pub fn set_last_verification(&mut self, p:&Path) {self.last_verification = Some(p.to_path_buf())}
 
-    pub fn commit(&mut self) -> Option<()> {
+    pub fn commit(&mut self) {
         self.record.entries.push(CEGISRecordEntry{
-            iter_nth : self.iter_nth.take()?,
-            new_c_e_s: self.new_c_e_s.take()?,
-            new_traces: self.new_traces.take()?,
-            holes: self.holes.take()?
+            iter_nth : self.iter_nth.take(),
+            new_c_e_s: self.new_c_e_s.take(),
+            new_traces: self.new_traces.take(),
+            holes: self.holes.take()
         });
-        Some(())
     }
 
     pub fn reset_clock(&mut self) -> () {

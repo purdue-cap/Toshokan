@@ -285,6 +285,11 @@ impl<'r> CEGISLoop<'r> {
                 debug!(target: "CEGISMainLoop", "Final holes: {:?}", self.state.get_params().holes);
                 // Read code for final output
                 info!(target: "CEGISMainLoop", "Reading synthesized cpp code as final output");
+                let current_iter_nth = self.state.get_iter_count();
+                self.recorder.as_mut().map(|r| {
+                    r.set_iter_nth(current_iter_nth);
+                    r.commit();
+                });
                 let result = fs::read_to_string(format!("{}.cpp", base_path?.to_str().ok_or("Base name conversion to str failed")?))?;
                 break Some(result);
             }
@@ -303,6 +308,11 @@ impl<'r> CEGISLoop<'r> {
                     base_path = Ok(new_base_path);
                 } else {
                     info!(target: "CEGISMainLoop", "Synthesis(Pre-run) failed");
+                    let current_iter_nth = self.state.get_iter_count();
+                    self.recorder.as_mut().map(|r| {
+                        r.set_iter_nth(current_iter_nth);
+                        r.commit();
+                    });
                     break None;
                 }
             }
@@ -328,6 +338,11 @@ impl<'r> CEGISLoop<'r> {
                 base_path = Ok(new_base_path);
             } else {
                 info!(target: "CEGISMainLoop", "Synthesis failed");
+                let current_iter_nth = self.state.get_iter_count();
+                self.recorder.as_mut().map(|r| {
+                    r.set_iter_nth(current_iter_nth);
+                    r.commit();
+                });
                 break None;
             }
 

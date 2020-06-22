@@ -72,4 +72,7 @@ def main():
     pool.join()
 
 
+if __name__=="__main__":
+    main()
+
 

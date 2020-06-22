@@ -7,7 +7,7 @@ import fcntl
 import time
 import errno
 
-COMMAND="cargo run --example={}"
+COMMAND="target/debug/examples/{}"
 DATA_MOD="extract_record"
 DATA_FUNC="extract"
 

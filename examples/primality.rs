@@ -2,7 +2,7 @@ extern crate libpartlibspec;
 use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole};
 use std::path::PathBuf;
 use std::fs::File;
-use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
+use simplelog::{SimpleLogger, LevelFilter, Config};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(_) = std::env::var("TRACE") {
         log_level = LevelFilter::Trace;
     }
-    TermLogger::init(log_level, Config::default(), TerminalMode::Mixed)?;
+    SimpleLogger::init(log_level, Config::default())?;
     let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/primality");
     let synthesis = base_data_dir.join("synthesisMain.sk");
     let verification = base_data_dir.join("verificationMain.sk");

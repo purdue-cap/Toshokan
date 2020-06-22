@@ -36,8 +36,8 @@ def work(target, command, func, data_postfix, log_file):
     with print_lock:
         print("Finished with {}".format(target))
     wall_time = time.time() - begin_wall
-    stdout_str = process.stdout.read()
-    stderr_str = process.stderr.read()
+    stdout_str = process.stdout.read().decode()
+    stderr_str = process.stderr.read().decode()
     data_line = func(target, stdout_str, stderr_str, wall_time)
     log_fd = open(log_file, "a")
     lock_file(log_fd)

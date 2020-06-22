@@ -9,4 +9,6 @@ src/backend/cpp/build_tracer
 src/backend/cpp/test.cpp
 
 *.record.json
+*.data.csv
+*.log
 test_*/

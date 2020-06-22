@@ -27,6 +27,7 @@ int sqrt(int i){
 
 bit primality(int p) {
 	if(p<=1) return 0;
+	if(p==2) return 1;
     
 	int temp = sqrt({| (??%2)*p (+|-) (??%2) |});
 	
@@ -38,6 +39,7 @@ bit primality(int p) {
 
 bit primality_spec(int p){
 	if(p<=1) return 0;
+	if(p==2) return 1;
 	for(int i=2;i<p;i++){
 		if(p%i == 0) return 0;
 	}

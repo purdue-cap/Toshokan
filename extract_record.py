@@ -6,4 +6,4 @@ def extract(target, stdout_str, stderr_str, wall_time):
     record = res.group(1)
     with open(record, "r") as f:
         data = json.load(f)
-    return "{},{},{}.{}".format(data["solved"], data["wall_time"], data["total_iter"], record)
+    return "{},{},{},{}".format(data["solved"], data["wall_time"], data["total_iter"], record)

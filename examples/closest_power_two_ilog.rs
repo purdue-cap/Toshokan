@@ -3,6 +3,7 @@ use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, Excluded
 use std::path::PathBuf;
 use std::fs::File;
 use simplelog::{TermLogger, LevelFilter, Config, TerminalMode};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut log_level = LevelFilter::Debug;
@@ -47,7 +48,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());
-    let mut record_file = File::create("closest_power_two_ilog.record.json")?;
+    let record_file_name = format!("closest_power_two_ilog.{}.record.json", SystemTime::now().duration_since(UNIX_EPOCH).expect("Time goes backward").as_secs());
+    let mut record_file = File::create(&record_file_name)?;
     main_loop.get_recorder().ok_or("Recorder uninitialized")?.write_json_pretty(&mut record_file)?;
+    println!("Record File: {}", record_file_name);
     Ok(())
 }

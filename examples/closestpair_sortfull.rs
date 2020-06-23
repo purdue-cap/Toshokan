@@ -31,25 +31,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sketch_be_bin.as_path(),
         sketch_home.as_ref().map(|p| p.as_path()),
         impl_file.as_path(),
-        "sorti_proxy",
+        "sort_proxy",
         "main",
-        3,
-        9,
+        5,
+        5,
         VerifyPointsConfig::NoSpec,
         10,
         vec![
             ExcludedHole::Name("H__0".to_string()),
             ExcludedHole::Name("H__1".to_string()),
-            ExcludedHole::Name("H__2".to_string())
+            ExcludedHole::Name("H__2".to_string()),
+            ExcludedHole::Name("H__3".to_string()),
+            ExcludedHole::Name("H__4".to_string())
         ].into_iter(),
         true,
         true,
         log_level == LevelFilter::Trace,
         synthesis.as_path(),
         verification.as_path(),
-        &["start_0_9_9_0", "start_1_a_a_0","start_2_b_b_0",
-        "finish_0_c_c_0", "finish_1_d_d_0","finish_2_e_e_0",
-        "sel_0_f_f_0", "sel_1_10_10_0","sel_2_11_11_0"], None);
+        &["arr_0_5_5_0","arr_1_6_6_0","arr_2_7_7_0","arr_3_8_8_0","arr_4_9_9_0",], None);
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

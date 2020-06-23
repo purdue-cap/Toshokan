@@ -3,6 +3,7 @@
 Cargo.lock
 
 .vscode/
+__pycache__/
 
 *.o
 src/backend/cpp/build_tracer

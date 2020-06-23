@@ -3,6 +3,9 @@ use handlebars::{Helper, Handlebars, Context,
                 HelperResult, RenderError, Renderable};
 use serde_json::value::Value;
 
+handlebars_helper!(range: |x: u64| (0..x).collect::<Vec<u64>>());
+handlebars_helper!(add: |x: u64, y: u64| x + y);
+
 pub fn get_n_logs(h: &Helper,
                     _: &Handlebars,
                     _: &Context,
@@ -322,6 +325,8 @@ pub fn for_cap_logs<'reg, 'rc>(
 }
 
 pub fn register_helpers(hb: &mut Handlebars) {
+    hb.register_helper("range", Box::new(range));
+    hb.register_helper("add", Box::new(add));
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
@@ -747,6 +752,41 @@ mod tests {
 
         let template = "indexes: {{#for-cap-logs array 3}}{{@index}} {{/for-cap-logs}}";
         assert_eq!(hb.render_template(template, &data)?, "indexes: 0 1 2 3 4 5 6 7 ");
+        Ok(())
+    }
+
+    #[test]
+    fn expands_nested_templates() -> Result<(), Box<dyn Error>> {
+        let data = TraceLogParam {
+            logs: vec![
+                TraceLog {
+                    args: vec![json!(1)],
+                    rtn: json!(1)
+                },
+                TraceLog {
+                    args: vec![json!(5)],
+                    rtn: json!(2)
+                },
+                TraceLog {
+                    args: vec![json!(25)],
+                    rtn: json!(5)
+                }
+            ]
+        };
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        // TODO: Currently there's a bug with handlebars-rust (reported: sunng87/handlebars-rust#343) forbids the correct use of 
+        // "each" built-helpers. Only @index are correct within "each" contexts, use that as a workaround for the moment.
+        let template =
+r#"{{#each (range 3)}}{{expand-to-arg-array logs 0 (add @index 1)}}
+{{/each}}"#;
+        assert_eq!(hb.render_template(template, &data)?, 
+r#"1, 5, 25, 0
+1, 5, 25, 0, 0
+1, 5, 25, 0, 0, 0
+"#);
+
         Ok(())
     }
 }

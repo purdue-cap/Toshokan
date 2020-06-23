@@ -9,6 +9,9 @@ extern crate quick_error;
 #[macro_use]
 extern crate serde_json;
 
+#[macro_use]
+extern crate handlebars;
+
 pub mod backend;
 pub mod frontend;
 pub mod cegis;

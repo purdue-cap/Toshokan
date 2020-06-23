@@ -1,12 +1,15 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::{thread, time};
+use std::time;
 use std::io::{Read, Write, BufRead, BufReader};
+use std::os::unix::io::AsRawFd;
 use std::fs::File;
 use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
 use crate::cegis::TraceLog;
 use log::{error, trace, warn};
+use mio::{Events, Poll, Interest, Token};
+use mio::unix::SourceFd;
 
 pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
     impl_file: &'i Path,
@@ -165,34 +168,52 @@ int main(int argc, char** argv) {{
             stderr = Vec::new();
             let timeout_duration = time::Duration::from_secs_f32(timeout);
             trace!(target: "LibraryTracer", "Tracing with timeout: {:?}", timeout_duration);
-            let wall_start = time::Instant::now();
+            let mut total_waited_time = time::Duration::new(0, 0);
+
+            let mut poll = Poll::new()?;
+            let mut events = Events::with_capacity(1024);
+
+            let stdout_fd = child.stdout.as_ref().ok_or(TraceError::OtherError("Stdout not found"))?.as_raw_fd();
+            let stderr_fd = child.stderr.as_ref().ok_or(TraceError::OtherError("Stderr not found"))?.as_raw_fd();
+
+            let mut stdout_source_fd = SourceFd(&stdout_fd);
+            let mut stderr_source_fd = SourceFd(&stderr_fd);
+
+            poll.registry().register(&mut stdout_source_fd, Token(0), Interest::READABLE)?;
+            poll.registry().register(&mut stderr_source_fd, Token(1), Interest::READABLE)?;
+
+            let polling_interval = time::Duration::from_millis(200);
             loop {
-                match child.try_wait() {
-                    Ok(Some(status)) => {
-                        trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", status.clone());
+                let mut buffer: [u8; 256] = [0; 256];
+                poll.poll(&mut events, Some(polling_interval))?;
+                if events.is_empty() {
+                    // Only checks process status if no further could be read
+                    if let Some(return_code) = child.try_wait()? {
+                        trace!(target: "LibraryTracer", "Tracing process return code: {:?}", return_code);
                         break;
-                    },
-                    Ok(None) => {
-                        let elapsed = time::Instant::now() - wall_start;
-                        if  elapsed >= timeout_duration {
-                            warn!(target: "LibraryTracer", "Tracing timed out!");
-                            trace_timed_out = true;
-                            child.kill()?;
-                            break;
-                        }
-                        thread::sleep(time::Duration::from_millis(100));
-                    },
-                    Err(e) => {
-                        return Err(TraceError::IOError(e));
+                    }
+                    // Only accumulate real "waited" time
+                    total_waited_time += polling_interval;
+                    if  total_waited_time >= timeout_duration {
+                        warn!(target: "LibraryTracer", "Tracing timed out!");
+                        trace_timed_out = true;
+                        child.kill()?;
+                        break;
                     }
                 }
-            };
-            child.stdout.as_mut().ok_or(
-                TraceError::OtherError("Stdout not found")
-            )?.read_to_end(&mut stdout)?;
-            child.stderr.as_mut().ok_or(
-                TraceError::OtherError("Stderr not found")
-            )?.read_to_end(&mut stderr)?;
+                for event in &events {
+                    if event.token() == Token(0) && event.is_readable() {
+                        let stdout_fo = child.stdout.as_mut().ok_or(TraceError::OtherError("Stdout not found"))?;
+                        let bytes_read = stdout_fo.read(&mut buffer)?;
+                        stdout.extend(&buffer[0..bytes_read]);
+                    }
+                    if event.token() == Token(1) && event.is_readable() {
+                        let stderr_fo = child.stderr.as_mut().ok_or(TraceError::OtherError("Stderr not found"))?;
+                        let bytes_read = stderr_fo.read(&mut buffer)?;
+                        stderr.extend(&buffer[0..bytes_read]);
+                    }
+                }
+            }
         } else {
             let output = child.wait_with_output()?;
             trace!(target: "LibraryTracer", "Sketch tracing_output.status: {:?}", output.status.clone());

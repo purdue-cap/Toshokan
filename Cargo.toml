@@ -27,6 +27,10 @@ regex = "1"
 log = ">=0.4"
 rand = "0.7.3"
 
+[dependencies.mio]
+version = "0.7.0"
+features = ["os-poll", "os-util"]
+
 [build-dependencies]
 cc = "1.0"
 

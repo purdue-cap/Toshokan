@@ -1,0 +1,75 @@
+pragma options "--bnd-inbits 8 --bnd-cbits 3 --bnd-unroll-amnt 256 --bnd-inline-amnt 3 --slv-nativeints";
+
+
+int sqrt(int num){
+    if (num==1) return 1;
+    int low=0;
+    int mid;//,square;
+    int high=1+(num/2);
+    while (low+1<high){
+        mid=low+(high-low)/2;
+        //square=mid*mid;
+        if (num %mid == 0 && num/mid == mid)//num == mid*mid
+            return mid;
+        else if (mid<=num/mid)//mid*mid < num
+            low=mid;
+        else
+            high=mid;
+    }
+    return low;
+}
+
+
+generator int linexp(int N, int[N] vals){
+    int[N+1] t;
+    t[0]= (??-2)*vals[0];
+    int i=1;
+    repeat(N-1){
+        t[i] = t[i-1] + (??-2)*vals[i];
+        i = i+1;
+    }
+    return t[i-1];
+}
+
+harness void main(int p){
+    bit oldres = 1;
+    if(p<=1) oldres = 0;
+    else{
+        for(int i=2;i<p;i++){
+            if(p%i == 0) oldres=0;
+        }
+    }
+
+    bit newres = 1;
+    if(p<=1) newres=0;
+    else{
+        int temp = sqrt(linexp(2,{p,??}));
+        // if(p%?? == 0){ newres = 0; }
+        // if(p%?? == 0){ newres = 0; }
+        if(p>??){   
+            int q=0;
+            minrepeat{
+                if(p%?? == 0){ newres = 0; }
+                ++q; assert q < 3;
+            }
+            int i=??;
+            int qq = linexp(2, {temp, ??}) / ??;
+            while(i < qq){
+                q=0;
+                minrepeat{
+                  int t = linexp(2, {i, ??});
+                  if(p%t == 0) newres = 0;
+                  ++q; assert q < 3;
+                }
+                // if((p%(6*i+1))==0) newres = 0;
+                // if((p%(6*i-1))==0) newres = 0;
+                i = i+1;
+            }
+            int bnd = ??;
+            minimize(bnd);
+            if(p<256){ assert i < bnd; }
+        }
+    }
+    //assert(oldres==newres);
+    assert(oldres==newres);
+}

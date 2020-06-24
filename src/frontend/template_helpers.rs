@@ -1,5 +1,6 @@
 use handlebars::{Helper, Handlebars, Context,
                 RenderContext, Output,
+                BlockContext, BlockParams,
                 HelperResult, RenderError, Renderable};
 use serde_json::value::Value;
 
@@ -316,11 +317,24 @@ pub fn for_cap_logs<'reg, 'rc>(
         as usize;
     let iter_count = logs_array.len() + n_unknown;
     let inner_template = h.template().ok_or(RenderError::new("Not called as block helper"))?;
+    let block_context = BlockContext::new();
+    rc.push_block(block_context);
     for i in 0..iter_count {
-        rc.block_mut().ok_or(RenderError::new("Block context not found"))?
-            .set_local_var("@index".to_string(), Value::from(i));
+        let block_context = rc.block_mut().ok_or(RenderError::new("Block context not found"))?;
+        let is_first = i == 0;
+        let is_last = i == iter_count - 1;
+        block_context.set_local_var("@index".to_string(), Value::from(i));
+        block_context.set_local_var("@first".to_string(), Value::from(is_first));
+        block_context.set_local_var("@last".to_string(), Value::from(is_last));
+        if let Some(bp_val) = h.block_param() {
+            let mut params = BlockParams::new();
+            params.add_value(bp_val, Value::from(i))?;
+
+            block_context.set_block_params(params);
+        }
         inner_template.render(r, ctx, rc, out)?;
     }
+    rc.pop_block();
     Ok(())
 }
 
@@ -750,8 +764,22 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "indexes: {{#for-cap-logs array 3}}{{@index}} {{/for-cap-logs}}";
-        assert_eq!(hb.render_template(template, &data)?, "indexes: 0 1 2 3 4 5 6 7 ");
+        let template = "indexes: {{#for-cap-logs array 3}}{{@index}}|{{@first}}|{{@last}} {{/for-cap-logs}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "indexes: 0|true|false 1|false|false 2|false|false 3|false|false 4|false|false 5|false|false 6|false|false 7|false|true ");
+        Ok(())
+    }
+
+    #[test]
+    fn iters_over_cap_logs_with_nested_iteration() -> Result<(), Box<dyn Error>> {
+        let data = Param { array: vec![1, 2, 3, 4 ,5] };
+        
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = "indexes: {{#for-cap-logs array 3 as |i|}}{{#each (range 3)}}{{add @index i}}{{/each}} {{/for-cap-logs}}";
+        assert_eq!(hb.render_template(template, &data)?,
+            "indexes: 012 123 234 345 456 567 678 789 ");
         Ok(())
     }
 

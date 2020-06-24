@@ -267,6 +267,7 @@ impl<'r> CEGISLoop<'r> {
             self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout);
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)
             .ok_or("Prepare work dir for library tracer failed")?;
+        let mut retry_strategy = self.config.new_retry_strategy();
         info!(target: "CEGISMainLoop", "Initialization complete");
 
         let mut base_path : Result<PathBuf, &str> = Err("Base name uninitialized");
@@ -300,9 +301,19 @@ impl<'r> CEGISLoop<'r> {
             if self.state.get_iter_count() == 0 {
                 info!(target: "CEGISMainLoop", "Iter 0: Pre-run synthesis before tracing to generate runnable candidate");
                 info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
-                let (synthesize_result, last_synthesis) = self.synthesize(&c_e_encoder,
-                    &mut hole_extractor, &mut sketch_runner)?;
-                self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                let synthesize_result = loop {
+                    let (result, last_synthesis) = self.synthesize(&c_e_encoder,
+                        &mut hole_extractor, &mut sketch_runner)?;
+                    self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                    if result.is_some() {
+                        retry_strategy.succeed(&self.state);
+                        break result;
+                    } else if !retry_strategy.fail_and_retry(&mut self.state){
+                        break None;
+                    } else {
+                        warn!(target: "CEGISMainLoop", "Synthesis failed, retry initiated by RetryStrategy");
+                    }
+                };
                 if let Some((new_holes, new_base_path)) = synthesize_result {
                     info!(target: "CEGISMainLoop", "Synthesis(Pre-run) returned candidate");
                     debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
@@ -331,9 +342,19 @@ impl<'r> CEGISLoop<'r> {
             }
 
             info!(target: "CEGISMainLoop", "Synthesizing");
-            let (synthesize_result, last_synthesis) = self.synthesize(&c_e_encoder,
-                &mut hole_extractor, &mut sketch_runner)?;
-            self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                let synthesize_result = loop {
+                    let (result, last_synthesis) = self.synthesize(&c_e_encoder,
+                        &mut hole_extractor, &mut sketch_runner)?;
+                    self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                    if result.is_some() {
+                        retry_strategy.succeed(&self.state);
+                        break result;
+                    } else if !retry_strategy.fail_and_retry(&mut self.state){
+                        break None;
+                    } else {
+                        warn!(target: "CEGISMainLoop", "Synthesis failed, retry initiated by RetryStrategy");
+                    }
+                };
             if let Some((new_holes, new_base_path)) = synthesize_result {
                 info!(target: "CEGISMainLoop", "Synthesis returned candidate");
                 debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);

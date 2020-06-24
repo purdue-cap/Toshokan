@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use std::ffi::OsString;
 use rand::Rng;
-use super::CEGISState;
+use super::{CEGISState, RetryStrategy};
+use super::retry_strategies::{SimpleRetryStrategy, NeverRetryStrategy};
 
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub enum ExcludedHole {
@@ -26,6 +27,7 @@ pub struct CEGISConfigParams {
     pub pure_function: bool,
     pub enable_record: bool,
     pub keep_tmp: bool,
+    pub retry_strategy_config: RetryStrategyConfig,
     pub cand_encoder_src: EncoderSource,
     pub input_tmp_file: Option<PathBuf>,
     pub be_verify_flags: Option<Vec<OsString>>,
@@ -45,6 +47,11 @@ pub enum VerifyPointsConfig {
         end: usize
     },
     NoSpec
+}
+
+pub enum RetryStrategyConfig {
+    Simple(usize),
+    Never
 }
 
 pub struct CEGISConfig {
@@ -77,6 +84,7 @@ impl CEGISConfig {
                 pure_function: pure_function,
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
+                retry_strategy_config: RetryStrategyConfig::Simple(5),
                 cand_encoder_src: EncoderSource::Rewrite,
                 input_tmp_file: None,
                 be_verify_flags: None,
@@ -104,6 +112,13 @@ impl CEGISConfig {
         if let Some(ref flags) = self.params.be_verify_flags {
             runner.set_be_verify_flags(flags);
         }
+    }
+
+    pub fn new_retry_strategy(&self) -> Box<dyn RetryStrategy> {
+        match self.params.retry_strategy_config {
+            RetryStrategyConfig::Simple(retry_amount) => Box::new(SimpleRetryStrategy::new(retry_amount)),
+            RetryStrategyConfig::Never => Box::new(NeverRetryStrategy{})
+        } 
     }
 
     pub fn populate_v_p_s(&self, state: &mut CEGISState) -> Option<()> {

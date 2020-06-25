@@ -27,7 +27,7 @@ impl RetryStrategy for SimpleRetryStrategy {
     fn fail_and_retry(&mut self, _state: &mut CEGISState) -> bool {
         self.failed_times += 1;
         warn!(target: "SimpleRetryStrategy", "Total failed times: {}, retry amount: {}", self.failed_times, self.retry_amount);
-        self.failed_times > self.retry_amount
+        self.failed_times <= self.retry_amount
     }
 }
 

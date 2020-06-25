@@ -278,6 +278,7 @@ impl<'r> CEGISLoop<'r> {
             let (verify_result, last_verification) = self.verify(&cand_encoder,
                 &log_analyzer, &mut sketch_runner)?;
             self.recorder.as_mut().map(|r| r.set_last_verification(&last_verification));
+            self.recorder.as_mut().map(|r| r.set_verification_seed(sketch_runner.get_last_verification_seed_used()));
             if let Some(new_c_e) = verify_result{
                 info!(target: "CEGISMainLoop", "Verification returned C.E.");
                 debug!(target: "CEGISMainLoop", "New C.E: {:?}", new_c_e);
@@ -305,6 +306,7 @@ impl<'r> CEGISLoop<'r> {
                     let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                         &mut hole_extractor, &mut sketch_runner)?;
                     self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                    self.recorder.as_mut().map(|r| r.add_pre_synthesis_seed(sketch_runner.get_last_synthesis_seed_used()));
                     if result.is_some() {
                         retry_strategy.succeed(&self.state);
                         break result;
@@ -346,6 +348,7 @@ impl<'r> CEGISLoop<'r> {
                     let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                         &mut hole_extractor, &mut sketch_runner)?;
                     self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                    self.recorder.as_mut().map(|r| r.add_synthesis_seed(sketch_runner.get_last_synthesis_seed_used()));
                     if result.is_some() {
                         retry_strategy.succeed(&self.state);
                         break result;

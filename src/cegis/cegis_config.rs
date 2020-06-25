@@ -99,6 +99,8 @@ impl CEGISConfig {
 
     pub fn get_params(&self) -> &CEGISConfigParams {&self.params}
 
+    pub fn get_params_mut(&mut self) -> &mut CEGISConfigParams {&mut self.params}
+
     pub fn is_be_config_unresolved(&self) -> bool {self.params.input_tmp_file.is_none() || self.params.be_verify_flags.is_none()}
 
     pub fn set_input_tmp_path(&mut self, path: PathBuf) {self.input_tmp_path = Some(path)}

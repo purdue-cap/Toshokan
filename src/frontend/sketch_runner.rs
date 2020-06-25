@@ -14,7 +14,12 @@ pub struct SketchRunner {
     fe_flags: Vec<OsString>,
     be_flags: Vec<OsString>,
     output_dir: PathBuf,
-    generation_dir: PathBuf
+    generation_dir: PathBuf,
+    last_synthesis_seed_used: Option<u64>,
+    last_verification_seed_used: Option<u64>,
+    synthesis_seed_to_use: Option<u64>,
+    verification_seed_to_use: Option<u64>
+
 }
 
 pub enum VerificationResult {
@@ -41,7 +46,11 @@ impl SketchRunner{
             fe_flags: Vec::<OsString>::new(),
             be_flags: Vec::<OsString>::new(),
             output_dir: output_dir.as_ref().to_path_buf(),
-            generation_dir: generation_dir.as_ref().to_path_buf()
+            generation_dir: generation_dir.as_ref().to_path_buf(),
+            last_synthesis_seed_used: None,
+            last_verification_seed_used: None,
+            synthesis_seed_to_use: None,
+            verification_seed_to_use: None
         }
     }
     pub fn fe_clear(&mut self) -> &mut Self {
@@ -68,6 +77,14 @@ impl SketchRunner{
 
     pub fn get_be_flags(&self) -> &Vec<OsString> {&self.be_flags}
 
+    pub fn get_last_synthesis_seed_used(&self) -> Option<u64> {self.last_synthesis_seed_used}
+
+    pub fn get_last_verification_seed_used(&self) -> Option<u64> {self.last_verification_seed_used}
+
+    pub fn set_synthesis_seed_to_use(&mut self, seed: Option<u64>) {self.synthesis_seed_to_use = seed;}
+
+    pub fn set_verification_seed_to_use(&mut self, seed: Option<u64>) {self.verification_seed_to_use = seed;}
+
     pub fn fe_output<P: AsRef<Path>>(&mut self, input_file:P) -> io::Result<Output> {
         self.frontend_cmd.args(&self.fe_flags);
         self.frontend_cmd.arg(input_file.as_ref());
@@ -90,6 +107,9 @@ impl SketchRunner{
 
     pub fn be_output<P: AsRef<Path>>(&mut self, input_file:P) -> io::Result<Output> {
         self.backend_cmd.args(&self.be_flags);
+        if let Some(seed) = self.verification_seed_to_use {
+            self.backend_cmd.arg("--seed").arg(seed.to_string());
+        }
         self.backend_cmd.arg("-o").arg(self.generation_dir.join("be_solution"));
         self.backend_cmd.arg(input_file.as_ref());
         debug!(target: "SketchRunner", "Sketch Backend command: {:?}", self.backend_cmd);
@@ -132,6 +152,12 @@ impl SketchRunner{
             .fe_flag("--fe-output-dir").fe_flag(output_dir.join("./"))
             .fe_flag("--fe-tempdir").fe_flag(output_dir.join("./synthesis_tmp/"))
             .fe_flag("--fe-output-xml").fe_flag(output_dir.join("holes.xml"))
+            .fe_flag("-V").fe_flag("3");
+        if let Some(seed) = self.synthesis_seed_to_use {
+            self.fe_flag("--slv-seed").fe_flag(seed.to_string())
+        } else {
+            self
+        }
     }
 
     pub fn fe_flag_generate(&mut self) -> &mut Self {
@@ -150,7 +176,13 @@ impl SketchRunner{
                         VerificationResult::Pass
                     } else {
                         match String::from_utf8(output.stdout) {
-                            Ok(decoded) => VerificationResult::CounterExample(decoded),
+                            Ok(decoded) => {
+                                let pattern = Regex::new(r"SOLVER RAND SEED = (\d+)").expect("Hard coded regex should not fail");
+                                self.last_verification_seed_used = pattern.captures(decoded.as_str())
+                                    .and_then(|caps| caps.get(1))
+                                    .and_then(|seed_match| seed_match.as_str().parse::<u64>().ok());
+                                VerificationResult::CounterExample(decoded)
+                            },
                             Err(error) =>
                                 VerificationResult::ExecutionErr(io::Error::new(io::ErrorKind::Other, error))
                         }
@@ -170,6 +202,13 @@ impl SketchRunner{
                 if let Some(code) = output.status.code() {
                     if code == 0 {
                         if let Some(base_name) = input_file.as_ref().file_name() {
+                            self.last_synthesis_seed_used = std::str::from_utf8(&output.stdout).ok()
+                                .and_then(|stdout_str| {
+                                    let pattern = Regex::new(r"SOLVER RAND SEED = (\d+)").expect("Hard coded regex should not fail");
+                                    pattern.captures(stdout_str)
+                                })
+                                .and_then(|caps| caps.get(1))
+                                .and_then(|seed_match| seed_match.as_str().parse::<u64>().ok());
                             SynthesisResult::Candidate(self.output_dir.join(base_name))
                         } else {
                             SynthesisResult::ExecutionErr(

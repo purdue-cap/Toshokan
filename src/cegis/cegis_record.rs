@@ -16,7 +16,13 @@ struct CEGISRecordEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     holes: Option<HashMap<String, isize>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    trace_timed_out: Option<bool>
+    trace_timed_out: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    synthesis_seed: Option<Vec<u64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    verification_seed: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pre_synthesis_seed: Option<Vec<u64>>
 }
 
 #[derive(Serialize)]
@@ -40,7 +46,10 @@ pub struct CEGISRecorder {
     clock: Option<Instant>,
     last_synthesis: Option<PathBuf>,
     last_verification: Option<PathBuf>,
-    trace_timed_out: Option<bool>
+    trace_timed_out: Option<bool>,
+    synthesis_seed: Option<Vec<u64>>,
+    verification_seed: Option<u64>,
+    pre_synthesis_seed: Option<Vec<u64>>
 }
 
 quick_error! {
@@ -77,7 +86,10 @@ impl CEGISRecorder {
             clock: None,
             last_synthesis: None,
             last_verification: None,
-            trace_timed_out: None
+            trace_timed_out: None,
+            synthesis_seed: None,
+            verification_seed: None,
+            pre_synthesis_seed: None
         }
     }
 
@@ -95,6 +107,28 @@ impl CEGISRecorder {
 
     pub fn set_trace_timed_out(&mut self, trace_timed_out: bool) {
         self.trace_timed_out = Some(trace_timed_out);
+    }
+
+    pub fn add_synthesis_seed(&mut self, seed: Option<u64>) {
+        if let Some(seed_value) = seed {
+            match self.synthesis_seed {
+                Some(ref mut seeds) => {seeds.push(seed_value)}
+                None => {self.synthesis_seed = Some(vec![seed_value])}
+            }
+        }
+    }
+
+    pub fn set_verification_seed(&mut self, seed: Option<u64>) {
+        self.verification_seed = seed;
+    }
+
+    pub fn add_pre_synthesis_seed(&mut self, seed: Option<u64>) {
+        if let Some(seed_value) = seed {
+            match self.pre_synthesis_seed {
+                Some(ref mut seeds) => {seeds.push(seed_value)}
+                None => {self.pre_synthesis_seed = Some(vec![seed_value])}
+            }
+        }
     }
 
     pub fn set_holes(&mut self, holes: &HashMap<String, isize>) {
@@ -119,7 +153,10 @@ impl CEGISRecorder {
             new_c_e_s: self.new_c_e_s.take(),
             new_traces: self.new_traces.take(),
             holes: self.holes.take(),
-            trace_timed_out: self.trace_timed_out.take()
+            trace_timed_out: self.trace_timed_out.take(),
+            synthesis_seed: self.synthesis_seed.take(),
+            verification_seed: self.verification_seed.take(),
+            pre_synthesis_seed: self.pre_synthesis_seed.take()
         });
     }
 

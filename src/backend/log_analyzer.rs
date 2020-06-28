@@ -4,6 +4,7 @@ use std::iter::repeat;
 use std::path::Path;
 use std::fs::File;
 use regex::Regex;
+use log::info;
 
 pub struct LogAnalyzer<'n, 's> {
     c_e_names: &'n [&'s str],
@@ -21,8 +22,9 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
 
     pub fn read_c_e_s<R: BufRead>(&self, mut reader: R) -> Result<Vec<isize>, Error> {
         let mut buffer = String::new();
-        let mut c_e_s : Vec<Option<isize>> = repeat(None).take(self.c_e_names.len()).collect();
+        let mut c_e_s : Vec<isize> = repeat(0).take(self.c_e_names.len()).collect();
         let mut in_find = false;
+        let mut c_e_s_collected : usize = 0;
         loop {
             if reader.read_line(&mut buffer)? == 0 {
                 break;
@@ -48,11 +50,13 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
                                     )
                                 ).flatten();
                         if let Some((name, value)) = parse_result {
-                            self.lookup_map.get(name)
-                                .and_then(|index|{
-                                    *c_e_s.get_mut(*index)? = Some(value);
-                                    Some(())
-                                });
+                            self.lookup_map.get(name).and_then(
+                                |index| c_e_s.get_mut(*index)
+                            ).map(
+                                |slot_ref| {*slot_ref = value;}
+                            )
+                            .ok_or(Error::new(std::io::ErrorKind::Other, "Unhandled C.E.(s) from Sketch run log"))?;
+                            c_e_s_collected += 1;
                         }
                     }
                 }
@@ -60,7 +64,8 @@ impl<'n, 's> LogAnalyzer<'n, 's> {
             }
             buffer.clear();
         }
-        c_e_s.into_iter().collect::<Option<_>>().ok_or(Error::new(std::io::ErrorKind::Other, "Missing C.E.(s)"))
+        info!(target:"LogAnalyzer", "C.E.(s) collected: {}/{}", c_e_s_collected, self.c_e_names.len());
+        Ok(c_e_s)
     }
     
     pub fn read_c_e_s_from_str<S: AsRef<str>>(&self, logs: S) -> Result<Vec<isize>, Error> {

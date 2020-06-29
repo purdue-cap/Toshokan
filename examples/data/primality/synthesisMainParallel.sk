@@ -1,0 +1,52 @@
+pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3  --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
+
+int cap = {{get-cap-logs logs n_unknowns}};
+int logged = {{get-n-logs logs}};
+int[cap] iarr = { {{expand-to-arg-array logs 0 n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array logs n_unknowns}} };
+
+
+int[{{n_unknowns}}] unknown = ??;
+int used_unknown = 0;
+
+int sqrt(int i){
+	{{#for-cap-logs logs n_unknowns}}
+	if ({{@index}} < logged && iarr[{{@index}}] == i) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+    
+    assert logged < cap;
+    int val = unknown[used_unknown];
+    used_unknown++;
+    iarr[logged] = i;
+    rarr[logged] = val;
+    logged ++;
+    return val;
+}
+
+bit primality(int p) {
+	if(p<=1) return 0;
+	if(p==2) return 1;
+    
+	int temp = sqrt({| (??%2)*p (+|-) (??%2) |});
+	
+	for(int i=2;{| i (< | > | <= | >=) temp |};i++){
+		if(p%i == 0) return 0;
+	}
+	return 1;
+}
+
+bit primality_spec(int p){
+	if(p<=1) return 0;
+	if(p==2) return 1;
+	for(int i=2;i<p;i++){
+		if(p%i == 0) return 0;
+	}
+	return 1;
+}
+
+harness void main(int p) {
+    {{expand-points-to-assume c_e_s.[0] "p"}}
+    assert primality(p) == primality_spec(p);
+}

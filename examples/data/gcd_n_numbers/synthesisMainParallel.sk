@@ -1,0 +1,62 @@
+pragma options "--bnd-inbits 4 --bnd-unroll-amnt 16 --bnd-cbits 3  --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
+int N = 5;
+
+int cap = {{get-cap-logs logs n_unknowns}};
+int logged = {{get-n-logs logs}};
+int[cap] i_0_arr = { {{expand-to-arg-array logs 0 n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array logs 1 n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array logs n_unknowns}} };
+
+
+int[{{n_unknowns}}] unknown = ??;
+int used_unknown = 0;
+
+int gcd(int a, int b){
+	{{#for-cap-logs logs n_unknowns}}
+    if ({{@index}} < logged && i_0_arr[{{@index}}] == a && i_1_arr[{{@index}}] == b) {
+        return rarr[{{@index}}];
+    }
+	{{/for-cap-logs}}
+
+    assert logged < cap;
+    int val = unknown[used_unknown];
+    used_unknown++;
+    i_0_arr[logged] = a;
+    i_1_arr[logged] = b;
+    rarr[logged] = val;
+    logged ++;
+    return val;
+}
+
+// synthesize algorithm for computing gcd of N numbers
+harness void multi_gcd(int nums_0, int nums_1, int nums_2, int nums_3, int nums_4){
+    {{expand-x-d-points-to-assume c_e_s "nums_0" "nums_1" "nums_2" "nums_3" "nums_4"}}
+    int[N] nums;
+    nums[0] = nums_0;
+    nums[1] = nums_1;
+    nums[2] = nums_2;
+    nums[3] = nums_3;
+    nums[4] = nums_4;
+	
+	for(int i=0; i<N; i++)
+	  if(nums[i] == 0) return;	
+	if(N<2) return;        
+
+	int result = gcd(nums[0], nums[1]);
+	for(int i =??; i<{| N | N-1 | N-2 |}; i++){
+	  result = gcd({| result | nums[i]|}, {| result | nums[i]|});
+	}
+
+
+	for(int i=0; i<N; i++)
+	 assert nums[i] % result== 0;
+	
+	for(int i=result+1; i <= nums[0]; i++)
+	 {
+	  bit divisible = 1;
+	  for(int j=0; j<N; j++)
+             divisible = divisible && (nums[j] %i == 0);
+      assert !divisible;
+	 }
+
+}

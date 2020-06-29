@@ -11,8 +11,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     SimpleLogger::init(log_level, Config::default())?;
     let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/matexpo_matmult");
-    let verification = base_data_dir.join("verificationMainParallel.sk");
-    let synthesis = base_data_dir.join("synthesisMain.sk");
+    let verification = base_data_dir.join("verificationMain.sk");
+    let synthesis = base_data_dir.join("synthesisMainParallel.sk");
     let impl_file = base_data_dir.join("impl.cpp");
     let mut sketch_fe_bin = PathBuf::from("sketchsynth");
     if let Ok(env_path) = std::env::var("SKETCH_FE") {

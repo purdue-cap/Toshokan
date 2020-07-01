@@ -10,11 +10,11 @@ struct mat{
 	int k;
 }
 
-int cap = {{get-cap-logs logs n_unknowns}};
-int logged = {{get-n-logs logs}};
-mat[cap] i_0_arr = { {{expand-to-arg-array logs 0 true n_unknowns}} };
-mat[cap] i_1_arr = { {{expand-to-arg-array logs 0 true n_unknowns}} };
-mat[cap] rarr = { {{expand-to-rtn-array logs true n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::matmul")}};
+mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 0 true n_unknowns}} };
+mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 0 true n_unknowns}} };
+mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul") true n_unknowns}} };
 
 
 mat[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
@@ -29,7 +29,7 @@ bit mat_equals(mat A, mat B) {
 }
 
 mat matmul(mat A,mat B){
-	{{#for-cap-logs logs n_unknowns}}
+	{{#for-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}}
 	if ({{@index}} < logged && mat_equals(A, i_0_arr[{{@index}}]) && mat_equals(B, i_1_arr[{{@index}}])) {
 		return rarr[{{@index}}];
 	}

@@ -38,7 +38,7 @@ impl<'r> CEGISLoop<'r> {
     pub fn new(config: CEGISConfig) -> Self{
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
-        let state = CEGISState::new(config.get_params().n_f_args,
+        let state = CEGISState::new(config.get_params().func_config.clone(),
             config.get_params().n_inputs,
             config.get_params().init_n_unknowns,
             config.get_params().pure_function);
@@ -262,7 +262,7 @@ impl<'r> CEGISLoop<'r> {
             self.state.get_h_names().clone());
 
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
-            self.config.get_params().lib_func_name.as_str(),
+            &self.config.get_params().func_config,
             self.config.get_params().harness_func_name.as_str(),
             self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout);
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)

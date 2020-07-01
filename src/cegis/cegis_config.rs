@@ -1,6 +1,6 @@
 use crate::frontend::{SketchRunner, EncoderSource};
 use std::path::{Path, PathBuf};
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::ffi::OsString;
 use rand::Rng;
 use super::{CEGISState, RetryStrategy};
@@ -17,9 +17,8 @@ pub struct CEGISConfigParams {
     pub sketch_be_bin: PathBuf,
     pub sketch_home: Option<PathBuf>,
     pub impl_file: PathBuf,
-    pub lib_func_name: String,
     pub harness_func_name: String,
-    pub n_f_args: usize,
+    pub func_config: HashMap<String, usize>,
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
@@ -62,8 +61,8 @@ pub struct CEGISConfig {
 impl CEGISConfig {
     pub fn new<P: AsRef<Path>, S: AsRef<str>, I: Iterator<Item=ExcludedHole>>(
             sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
-            lib_func_name: S, harness_func_name: S,
-            n_f_args: usize, n_inputs: usize, v_p_config: VerifyPointsConfig,
+            func_config: &[(&str, usize)], harness_func_name: S,
+            n_inputs: usize, v_p_config: VerifyPointsConfig,
             init_n_unknowns: usize, excluded_holes: I,
             pure_function: bool, enable_record: bool, keep_tmp: bool,
             synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str],
@@ -74,9 +73,8 @@ impl CEGISConfig {
                 sketch_be_bin: sketch_be_bin.as_ref().to_path_buf(),
                 sketch_home: sketch_home.as_ref().map(|p| p.as_ref().to_path_buf()),
                 impl_file: impl_file.as_ref().to_path_buf(),
-                lib_func_name: lib_func_name.as_ref().to_string(),
+                func_config: func_config.iter().map(|(name, args)| (name.to_string(), *args)).collect(),
                 harness_func_name: harness_func_name.as_ref().to_string(),
-                n_f_args: n_f_args,
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,

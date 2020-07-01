@@ -41,6 +41,17 @@ QualType getBaseType(QualType type) {
     return base_type;
 }
 
+string reformatName(const string& qualifiedName) {
+    size_t index = 0;
+    string name(qualifiedName);
+    while (true) {
+        index = name.find("::", index);
+        if (index == string::npos) return name;
+        name.replace(index, 2, "__");
+        index += 2;
+    }
+}
+
 const StatementMatcher copyarr_out_call_matcher =
 callExpr(
     anyOf(
@@ -80,15 +91,17 @@ class CopyArrLookUpCallback : public MatchFinder::MatchCallback {
 
 class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
     public:
-    ImplFuncInjector(Rewriter &R, string &name, string_set states = string_set())
-        : TheRewriter(R), LibFuncName(name), StateArgNames(std::move(states)), printingPolicy(LangOptions()) {
+    ImplFuncInjector(Rewriter &R, string_set &func_names, string_set states = string_set())
+        : TheRewriter(R), FuncNames(func_names), StateArgNames(std::move(states)), 
+          compare(R.getSourceMgr()), printingPolicy(LangOptions()) {
             printingPolicy.SuppressTagKeyword = true;
         }
 
     bool VisitFunctionDecl(FunctionDecl *f) {
         auto &SM = TheRewriter.getSourceMgr();
         if (f->hasBody()
-            && f->getNameAsString() == LibFuncName
+            && FuncNames.find(f->getQualifiedNameAsString()) != FuncNames.end()
+            && doneFunc.find(f->getQualifiedNameAsString()) == doneFunc.end()
             && SM.isInMainFile(f->getBeginLoc())) {
 
             vector<string> arg_name_list;
@@ -166,7 +179,8 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             }
 
             json data;
-            data["lib_func_name"] = LibFuncName;
+            data["lib_func_name"] = f->getQualifiedNameAsString();
+            data["lib_func_formatted_name"] = reformatName(data["lib_func_name"]);
             data["arg_list"] = arg_name_list;
             data["rtn_arg"] = rtn_arg_name;
             data["arg_list_rendered"] = inja::render(
@@ -200,7 +214,7 @@ R"(
                 data["array_length"] = array_length_str;
                 body_template = 
 R"({
-    {{ rtn_type }} rtn_vec = {{ lib_func_name }}_impl({{ arg_list_rendered }});
+    {{ rtn_type }} rtn_vec = {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});
     for (int i = 0; i < {{ array_length }}; i++) {
         {{ rtn_arg }}[i] = rtn_vec[i];
     }
@@ -209,6 +223,7 @@ R"({
     args.push_back(json({{ arg }}));{% endfor %}
     log["args"] = args;
     log["rtn"] = rtn_vec;
+    log["func"] = "{{ lib_func_name }}";
     {{ state_log_stmt_rendered }}
     std::cerr << log << std::endl;
 }
@@ -216,12 +231,13 @@ R"({
             } else {
                 body_template = 
 R"({
-    {{ rtn_arg }} = {{ lib_func_name }}_impl({{ arg_list_rendered }});
+    {{ rtn_arg }} = {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});
     json log;
     std::vector<json> args;{% for arg in arg_list %}
     args.push_back(json({{ arg }}));{% endfor %}
     log["args"] = args;
     log["rtn"] = {{ rtn_arg }};
+    log["func"] = "{{ lib_func_name }}";
     {{ state_log_stmt_rendered }}
     std::cerr << log << std::endl;
 }
@@ -229,7 +245,7 @@ R"({
             }
             string decl_template(
 R"(
-{{ rtn_type }} {{ lib_func_name }}_impl({{ arg_types_rendered }});
+{{ rtn_type }} {{ lib_func_formatted_name }}_impl({{ arg_types_rendered }});
 )"
             );
 
@@ -242,34 +258,51 @@ R"(
             }
             auto* outer_decl = dyn_cast<NamespaceDecl>(outer_context);
             auto insert_loc = outer_decl->getBeginLoc();
-
-            string json_include = "#include \"json.hpp\"\n";
-            string vector_include = "#include <vector>\n";
-            string iostream_include = "#include <iostream>\n";
-            string json_use = "using nlohmann::json;\n";
-
-            TheRewriter.InsertText(insert_loc, json_include);
-            TheRewriter.InsertText(insert_loc, vector_include);
-            TheRewriter.InsertText(insert_loc, iostream_include);
-            TheRewriter.InsertText(insert_loc, json_use);
-            for (auto decl_str: JSONConvertorDecls) {
-                TheRewriter.InsertText(insert_loc, decl_str);
+            if (insertionPoint.isInvalid() || compare(insert_loc, insertionPoint)) {
+                insertionPoint = insert_loc;
             }
-            for (auto impl_str: JSONConvertorImpls) {
-                TheRewriter.InsertText(insert_loc, impl_str);
-            }
-            TheRewriter.InsertText(insert_loc, inja::render(decl_template, data));
+
+            FuncDecls.push_back(inja::render(decl_template, data));
+            doneFunc.insert(f->getQualifiedNameAsString());
         }
         return true;
     }
 
+    SourceLocation getInsertionPoint() {
+        return insertionPoint;
+    }
+
+    void fillTopLevelInsertions(vector<string>& TopInsertions) {
+        string json_include = "#include \"json.hpp\"\n";
+        string vector_include = "#include <vector>\n";
+        string iostream_include = "#include <iostream>\n";
+        string json_use = "using nlohmann::json;\n";
+        TopInsertions.push_back(std::move(json_include));
+        TopInsertions.push_back(std::move(vector_include));
+        TopInsertions.push_back(std::move(iostream_include));
+        TopInsertions.push_back(std::move(json_use));
+        for (auto decl_str: JSONConvertorDecls) {
+            TopInsertions.push_back(decl_str);
+        }
+        for (auto impl_str: JSONConvertorImpls) {
+            TopInsertions.push_back(impl_str);
+        }
+        for (auto func_decl_str: FuncDecls) {
+            TopInsertions.push_back(func_decl_str);
+        }
+    }
+
     private:
     Rewriter &TheRewriter;
-    string &LibFuncName;
+    string_set &FuncNames;
     string_set StateArgNames;
     vector<string> JSONConvertorDecls;
     vector<string> JSONConvertorImpls;
-    unordered_set<string> doneType;
+    vector<string> FuncDecls;
+    SourceLocation insertionPoint;
+    BeforeThanCompare<SourceLocation> compare;
+    string_set doneType;
+    string_set doneFunc;
     PrintingPolicy printingPolicy;
     bool buildJSONConversionForType(QualType type){
         auto type_name = type.getUnqualifiedType().getAsString(printingPolicy);
@@ -478,8 +511,8 @@ class UsingDirectiveCleanUpCallback : public MatchFinder::MatchCallback {
 
 class TracerBuilderASTConsumer : public ASTConsumer {
     public:
-    TracerBuilderASTConsumer(Rewriter &R, string &name, bool &done, string_set state = string_set())
-        : impl_func_injector(R, name, std::move(state)), stmt_cleanup_cb(R), using_cleanup_cb(R), done(done) {}
+    TracerBuilderASTConsumer(ImplFuncInjector& injector, Rewriter& R, bool &done)
+        :impl_func_injector(injector), stmt_cleanup_cb(R), using_cleanup_cb(R), done(done) {}
 
     // Override the method that gets called for each parsed top-level
     // declaration.
@@ -503,7 +536,7 @@ class TracerBuilderASTConsumer : public ASTConsumer {
     }
 
     private:
-    ImplFuncInjector impl_func_injector;
+    ImplFuncInjector& impl_func_injector;
     StmtCleanUpCallback stmt_cleanup_cb;
     UsingDirectiveCleanUpCallback using_cleanup_cb;
     bool& done;
@@ -511,12 +544,18 @@ class TracerBuilderASTConsumer : public ASTConsumer {
 
 class TracerBuilderFrontendAction : public ASTFrontendAction {
     public:
-    TracerBuilderFrontendAction(string &name, llvm::raw_ostream &out, bool& done, string_set states = string_set())
-        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out), done(done) {}
+    TracerBuilderFrontendAction(string_set &func_names, llvm::raw_ostream &out, bool& done, string_set states = string_set())
+        :impl_func_injector(TheRewriter, func_names, std::move(states)), OutStream(out), done(done) {}
 
     void EndSourceFileAction() override {
-        SourceManager &SM = TheRewriter.getSourceMgr();
+        impl_func_injector.fillTopLevelInsertions(TopLevelInsertions);
 
+        auto insert_loc = impl_func_injector.getInsertionPoint();
+        for (auto code : TopLevelInsertions) {
+            TheRewriter.InsertText(insert_loc, code);
+        }
+
+        auto &SM = TheRewriter.getSourceMgr();
         // Now emit the rewritten buffer.
         TheRewriter.getEditBuffer(SM.getMainFileID()).write(OutStream);
     }
@@ -524,34 +563,34 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                     StringRef file) override {
         TheRewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
-        return std::make_unique<TracerBuilderASTConsumer>(TheRewriter, LibFuncName, done, StateArgNames);
+        return std::make_unique<TracerBuilderASTConsumer>(impl_func_injector, TheRewriter, done);
     }
 
     private:
     Rewriter TheRewriter;
-    string &LibFuncName;
-    string_set StateArgNames;
+    vector<string> TopLevelInsertions;
+    ImplFuncInjector impl_func_injector;
     llvm::raw_ostream &OutStream;
     bool& done;
 };
 
 class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
     public:
-    TracerBuilderFrontendActionFactory(string &name, llvm::raw_ostream &out, bool& done, string_set states = string_set())
-        : LibFuncName(name), StateArgNames(std::move(states)), OutStream(out), done(done) {}
+    TracerBuilderFrontendActionFactory(string_set func_names, llvm::raw_ostream &out, bool& done, string_set states = string_set())
+        : FuncNames(func_names), StateArgNames(std::move(states)), OutStream(out), done(done) {}
 
     std::unique_ptr<FrontendAction> create() {
-        return  std::make_unique<TracerBuilderFrontendAction>(LibFuncName, OutStream, done, StateArgNames);
+        return  std::make_unique<TracerBuilderFrontendAction>(FuncNames, OutStream, done, StateArgNames);
     }
 
     private:
-    string LibFuncName;
+    string_set FuncNames;
     string_set StateArgNames;
     llvm::raw_ostream &OutStream;
     bool& done;
 };
 
-int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &out, string_set states = string_set()) {
+int BuildTracer(string_set &func_names, string& input_file, llvm::raw_ostream &out, string_set states = string_set()) {
     string source_path_list[1] = {input_file};
     auto dir_path = llvm::sys::path::parent_path(input_file);
     string error_msg;
@@ -562,7 +601,7 @@ int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &ou
     }
     ClangTool tool(*db, source_path_list);
     bool done;
-    TracerBuilderFrontendActionFactory factory(lib_func_name, out, done, std::move(states));
+    TracerBuilderFrontendActionFactory factory(func_names, out, done, std::move(states));
     int rtn_code = tool.run(&factory);
     if (rtn_code != 0){
         return rtn_code;
@@ -573,13 +612,13 @@ int BuildTracer(string& lib_func_name, string& input_file, llvm::raw_ostream &ou
     }
 }
 
-int BuildTracer(string& lib_func_name, string& input_file, string& output_file, string_set states = string_set()) {
+int BuildTracer(string_set &func_names, string& input_file, string& output_file, string_set states = string_set()) {
     std::error_code EC;
     llvm::raw_fd_ostream out_stream(output_file, EC);
     if (EC) {
         return EC.value();
     }
-    return BuildTracer(lib_func_name, input_file, out_stream, std::move(states));
+    return BuildTracer(func_names, input_file, out_stream, std::move(states));
 }
 
 } // namespace TracerBuilder
@@ -589,11 +628,14 @@ int BuildTracer(string& lib_func_name, string& input_file, string& output_file, 
 
 extern "C" {
 
-int build_tracer(const char* lib_func_name, const char* input_file, const char* output_file){
-    std::string LibFuncName(lib_func_name);
+int build_tracer(const char** func_names, int func_names_len, const char* input_file, const char* output_file){
+    std::unordered_set<std::string> FuncNames;
+    for (int i = 0; i < func_names_len; i++) {
+        FuncNames.insert(std::string(func_names[i]));
+    }
     std::string InputFile(input_file);
     std::string OutputFile(output_file);
-    return TracerBuilder::BuildTracer(LibFuncName, InputFile, OutputFile);
+    return TracerBuilder::BuildTracer(FuncNames, InputFile, OutputFile);
 }
 
 }
@@ -606,17 +648,12 @@ int main(int argc, const char **argv) {
         return 1;
     }
     string input_file(argv[1]);
-    string func_name(argv[2]);
 
-    if (argc >= 4) {
-        string_set states;
-        for (int i = 3; i < argc; i ++) {
-            states.insert(string(argv[i]));
-        }
-        return BuildTracer(func_name, input_file, llvm::outs(), std::move(states));
-    } else {
-        return BuildTracer(func_name, input_file, llvm::outs());
+    string_set func_configs;
+    for (int i = 2; i < argc; i++) {
+        func_configs.insert(string(argv[i]));
     }
 
+    return BuildTracer(func_configs, input_file, llvm::outs());
 }
 #endif // TESTBIN

@@ -18,7 +18,7 @@ class mat{
 
 constexpr int n = 2;
 constexpr int BASE = 5;
-ANONYMOUS::mat matmul_impl(ANONYMOUS::mat* A, ANONYMOUS::mat* B) {
+ANONYMOUS::mat ANONYMOUS__matmul_impl(ANONYMOUS::mat* A, ANONYMOUS::mat* B) {
     int R_rv[n][n];
     int R_A [n][n]= { {A->R_0_0, A->R_0_1}, {A->R_1_0, A->R_1_1} };
     int R_B [n][n]= { {B->R_0_0, B->R_0_1}, {B->R_1_0, B->R_1_1} };

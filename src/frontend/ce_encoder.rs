@@ -45,7 +45,7 @@ mod tests {
     
     #[test]
     fn renders_c_e_s() -> Result<(), Box<dyn Error>> {
-        let mut state = CEGISState::new(1, 1, 10, true);
+        let mut state = CEGISState::new([("func".to_string(), 1 as usize)].iter().cloned().collect(), 1, 10, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CEEncoder::new(&handlebars);
         encoder.load_str("c_e_2 = {{c_e_s.[0].[2]}}")?;

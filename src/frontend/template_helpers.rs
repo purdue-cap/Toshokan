@@ -6,6 +6,7 @@ use serde_json::value::Value;
 
 handlebars_helper!(range: |x: u64| (0..x).collect::<Vec<u64>>());
 handlebars_helper!(add: |x: u64, y: u64| x + y);
+handlebars_helper!(subtree: |obj: object, key: str| obj.get(key).cloned().unwrap_or(Value::Null));
 
 pub fn get_n_logs(h: &Helper,
                     _: &Handlebars,
@@ -27,6 +28,7 @@ pub fn get_cap_logs(h: &Helper,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
     // Expecting parameters: logs, n_unknown
+    println!("{:?}", h.param(0));
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -341,6 +343,7 @@ pub fn for_cap_logs<'reg, 'rc>(
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("range", Box::new(range));
     hb.register_helper("add", Box::new(add));
+    hb.register_helper("subtree", Box::new(subtree));
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
@@ -375,6 +378,23 @@ mod tests {
     }
 
     #[test]
+    fn gets_subtree() -> Result<(), Box<dyn Error>> {
+        let data = json!(
+            {
+                "logs": {
+                    "array": [0, 1, 2]
+                }
+            }
+        );
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"{{subtree logs "array"}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "[0, 1, 2, ]");
+        Ok(())
+    }
+
+    #[test]
     fn gets_n_logs() -> Result<(), Box<dyn Error>> {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
@@ -404,15 +424,18 @@ mod tests {
             logs: vec![
                 TraceLog {
                     args: vec![json!(1)],
-                    rtn: json!(1)
+                    rtn: json!(1),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(5)],
-                    rtn: json!(2)
+                    rtn: json!(2),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(25)],
-                    rtn: json!(5)
+                    rtn: json!(5),
+                    func: "sqrt".to_string()
                 }
             ]
         };
@@ -441,7 +464,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 2,
                         "b": 1
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
                 TraceLog {
                     args: vec![
@@ -455,7 +479,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 3
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
                 TraceLog {
                     args: vec![
@@ -469,7 +494,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 5
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
             ]
         };
@@ -503,15 +529,18 @@ mod tests {
             logs: vec![
                 TraceLog {
                     args: vec![json!(1)],
-                    rtn: json!(1)
+                    rtn: json!(1),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(5)],
-                    rtn: json!(2)
+                    rtn: json!(2),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(25)],
-                    rtn: json!(5)
+                    rtn: json!(5),
+                    func: "sqrt".to_string()
                 }
             ]
         };
@@ -540,7 +569,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 2,
                         "b": 1
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
                 TraceLog {
                     args: vec![
@@ -554,7 +584,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 3
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
                 TraceLog {
                     args: vec![
@@ -568,7 +599,8 @@ mod tests {
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 5
-                    })
+                    }),
+                    func: "inv".to_string()
                 },
             ]
         };
@@ -602,15 +634,18 @@ mod tests {
             logs: vec![
                 TraceLog {
                     args: vec![json!(1), json!(2)],
-                    rtn: json!(vec![1, 2])
+                    rtn: json!(vec![1, 2]),
+                    func: "vec".to_string()
                 },
                 TraceLog {
                     args: vec![json!(5), json!(2)],
-                    rtn: json!(vec![2, 5])
+                    rtn: json!(vec![2, 5]),
+                    func: "vec".to_string()
                 },
                 TraceLog {
                     args: vec![json!(25), json!(26)],
-                    rtn: json!(vec![25, 26])
+                    rtn: json!(vec![25, 26]),
+                    func: "vec".to_string()
                 }
             ]
         };
@@ -638,7 +673,8 @@ mod tests {
                         "a": 0,
                         "b": 1
                     }
-                    ])
+                    ]),
+                    func:"inv".to_string()
                 },
                 TraceLog {
                     args: vec![json!(2)],
@@ -651,7 +687,8 @@ mod tests {
                         "a": 0,
                         "b": 2
                     }
-                    ])
+                    ]),
+                    func:"inv".to_string()
                 },
                 TraceLog {
                     args: vec![json!(3)],
@@ -664,7 +701,8 @@ mod tests {
                         "a": 0,
                         "b": 3
                     }
-                    ])
+                    ]),
+                    func:"inv".to_string()
                 },
             ]
         };
@@ -789,15 +827,18 @@ mod tests {
             logs: vec![
                 TraceLog {
                     args: vec![json!(1)],
-                    rtn: json!(1)
+                    rtn: json!(1),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(5)],
-                    rtn: json!(2)
+                    rtn: json!(2),
+                    func: "sqrt".to_string()
                 },
                 TraceLog {
                     args: vec![json!(25)],
-                    rtn: json!(5)
+                    rtn: json!(5),
+                    func: "sqrt".to_string()
                 }
             ]
         };

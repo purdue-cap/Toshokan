@@ -4,6 +4,7 @@ use std::time;
 use std::io::{Read, Write, BufRead, BufReader};
 use std::os::unix::io::AsRawFd;
 use std::fs::File;
+use std::collections::HashMap;
 use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
 use crate::cegis::TraceLog;
@@ -11,9 +12,9 @@ use log::{error, trace, warn};
 use mio::{Events, Poll, Interest, Token};
 use mio::unix::SourceFd;
 
-pub struct LibraryTracer<'i, 'ln, 'hn, 'w> {
+pub struct LibraryTracer<'i, 'c, 'hn, 'w> {
     impl_file: &'i Path,
-    lib_func_name: &'ln str,
+    func_config: &'c HashMap<String, usize>,
     harness_func_name: &'hn str,
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>,
@@ -31,11 +32,11 @@ pub fn parse_log_from_json<S: AsRef<str>>(line: S) -> Result<TraceLog, TraceErro
 static JSON_HPP: &'static str = include_str!("cpp/nlohmann/json.hpp");
 static VOPS_H: &'static str = include_str!("cpp/vops.h");
 
-impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
-    pub fn new(impl_file: &'i Path, lib_func_name: &'ln str, harness_func_name: &'hn str, sketch_home: Option<&Path>, trace_timeout: Option<f32>) -> Self {
+impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
+    pub fn new(impl_file: &'i Path, func_config: &'c HashMap<String, usize>, harness_func_name: &'hn str, sketch_home: Option<&Path>, trace_timeout: Option<f32>) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
-            lib_func_name: lib_func_name,
+            func_config: func_config,
             harness_func_name: harness_func_name,
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None,
@@ -83,7 +84,7 @@ impl<'i, 'ln, 'hn, 'w> LibraryTracer<'i, 'ln, 'hn, 'w> {
             self.flag_manager.get_compilation_cmd_line(main_file.as_ref())?,
             main_file.as_ref().to_str()?
         ).ok()?;
-        match build_tracer_to_file(self.lib_func_name, main_file.as_ref(), output_file.as_path()) {
+        match build_tracer_to_file(self.func_config.keys().cloned().collect(), main_file.as_ref(), output_file.as_path()) {
             Ok(()) => {Some(output_file)}
             Err(code) => {
                 error!(target: "LibraryTracer", "CPP function error code: {}", code);
@@ -246,10 +247,11 @@ mod tests {
     use std::error::Error;
     #[test]
     fn parses_json_log_line() -> Result<(), Box<dyn Error>> {
-        let json_str = r#"{"args":[5],"rtn":2}"#;
+        let json_str = r#"{"args":[5],"rtn":2,"func":"sqrt"}"#;
         let fixture = TraceLog {
             args: vec![json!(5)],
-            rtn: json!(2)
+            rtn: json!(2),
+            func: "sqrt".to_string()
         };
         let result = parse_log_from_json(json_str)?;
         assert_eq!(result, fixture);

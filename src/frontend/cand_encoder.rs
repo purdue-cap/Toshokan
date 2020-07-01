@@ -98,7 +98,7 @@ mod tests {
     
     #[test]
     fn renders_holes() -> Result<(), Box<dyn Error>> {
-        let mut state = CEGISState::new(1, 1, 10, true);
+        let mut state = CEGISState::new([("func".to_string(), 1 as usize)].iter().cloned().collect(), 1, 10, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CandEncoder::new(&handlebars);
         encoder.load_str(r#"holes_2 = {{holes.H__2}}"#)?;
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn renders_from_tmp_file() -> Result<(), Box<dyn Error>> {
-        let mut state = CEGISState::new(1, 1, 10, true);
+        let mut state = CEGISState::new([("func".to_string(), 1 as usize)].iter().cloned().collect(), 1, 10, true);
         let handlebars = RefCell::new(Handlebars::new());
         let mut encoder = CandEncoder::new(&handlebars);
         encoder.load_input_tmp_from_str(

@@ -5,19 +5,24 @@ use std::path::Path;
 use log::debug;
 
 extern {
-    fn build_tracer(lib_func_name: *const c_char,
+    fn build_tracer(func_names: *const *const c_char,
+            func_names_len: c_int,
             input_file: *const c_char,
             output_file: *const c_char) -> c_int;
 }
 
-pub fn build_tracer_to_file<P: AsRef<Path>, S: AsRef<str>>(
-            lib_func_name: S, input_file: P, output_file: P) -> Result<(), c_int> {
-    let c_lib_func_name = CString::new(lib_func_name.as_ref()).or(Err(-128))?;
+pub fn build_tracer_to_file<P: AsRef<Path>>(
+            func_names: Vec<String>, input_file: P, output_file: P) -> Result<(), c_int> {
+    let vec_c_string_func_names : Vec<CString> = func_names.iter().map(|n| CString::new(n.as_str())).collect::<Result<_,_>>().or(Err(-128))?;
+    let vec_c_func_names : Vec<*const c_char> =  vec_c_string_func_names.iter().map(|c_string| c_string.as_ptr()).collect();
+   
+    let c_func_names_len = func_names.len() as i32;
     let c_input_file = CString::new(input_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
     let c_output_file = CString::new(output_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
-    debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?})", c_lib_func_name, c_input_file, c_output_file);
+    debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?}, {:?})", func_names, c_func_names_len, c_input_file, c_output_file); 
     let rtn_val = unsafe { build_tracer(
-        c_lib_func_name.as_ptr(),
+        vec_c_func_names.as_slice().as_ptr(),
+        c_func_names_len,
         c_input_file.as_ptr(),
         c_output_file.as_ptr())
     };
@@ -64,7 +69,7 @@ void sqrt(int i, int& _out) {
         "#,tmp_dir.path().to_str().ok_or("Path to str conversion failed")?)?;
         let output_file_path = tmp_dir.path().join("output.cpp");
 
-        build_tracer_to_file("sqrt", input_file_path.as_path(), output_file_path.as_path())
+        build_tracer_to_file(vec!["sqrt".to_string()], input_file_path.as_path(), output_file_path.as_path())
             .or(Err("Main function failed"))?;
         
         let mut output_file = File::open(output_file_path.as_path())?;

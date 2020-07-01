@@ -1,16 +1,16 @@
 pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
 
-int cap = {{get-cap-logs logs n_unknowns}};
-int logged = {{get-n-logs logs}};
-int[cap] iarr = { {{expand-to-arg-array logs 0 n_unknowns}} };
-int[cap] rarr = { {{expand-to-rtn-array logs n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sqrt") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::sqrt")}};
+int[cap] iarr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sqrt") 0 n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::sqrt") n_unknowns}} };
 
 
 int[{{n_unknowns}}] unknown = ??;
 int used_unknown = 0;
 
 int sqrt(int i){
-	{{#for-cap-logs logs n_unknowns}}
+	{{#for-cap-logs (subtree logs "ANONYMOUS::sqrt") n_unknowns}}
 	if ({{@index}} < logged && iarr[{{@index}}] == i) {
 		return rarr[{{@index}}];
 	}

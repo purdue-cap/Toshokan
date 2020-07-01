@@ -7,7 +7,7 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Serialize)]
 pub struct CEGISStateParams {
-    pub logs: Vec<TraceLog>,
+    pub logs: HashMap<String, Vec<TraceLog>>,
     pub n_unknowns: usize,
     pub c_e_s: Vec<Vec<isize>>,
     pub holes: HashMap<String, isize>,
@@ -19,7 +19,8 @@ pub struct CEGISStateParams {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct TraceLog {
     pub args: Vec<Value>,
-    pub rtn: Value
+    pub rtn: Value,
+    pub func: String
 }
 
 impl Hash for TraceLog {
@@ -28,12 +29,13 @@ impl Hash for TraceLog {
             value.to_string().hash(state);
         }
         self.rtn.to_string().hash(state);
+        self.func.hash(state);
     }
 }
 
 pub struct CEGISState {
     params: CEGISStateParams,
-    n_f_args: usize,
+    func_config: HashMap<String, usize>,
     n_input: usize,
     c_e_set: HashSet<Vec<isize>>,
     v_p_set: HashSet<Vec<isize>>,
@@ -43,25 +45,25 @@ pub struct CEGISState {
 }
 
 enum LibFuncLog {
-    Pure(HashSet<TraceLog>),
+    Pure(HashMap<String, HashSet<TraceLog>>),
     NonPure
 }
 
 impl CEGISState {
-    pub fn new(n_f_args: usize, n_input: usize, n_unknowns: usize, pure_function: bool) -> Self {
+    pub fn new(func_config: HashMap<String, usize>, n_input: usize, n_unknowns: usize, pure_function: bool) -> Self {
         CEGISState {
             params: CEGISStateParams {
-                logs: vec![],
+                logs: func_config.keys().map(|k| (k.clone(), vec![])).collect(),
                 n_unknowns: n_unknowns,
                 c_e_s: repeat(Vec::<isize>::new()).take(n_input).collect(),
                 holes: HashMap::new(),
                 verify_points: repeat(Vec::<isize>::new()).take(n_input).collect()
             },
-            n_f_args: n_f_args,
+            log_set: if pure_function {LibFuncLog::Pure(func_config.keys().map(|k| (k.clone(), HashSet::new())).collect())} else {LibFuncLog::NonPure},
+            func_config: func_config,
             n_input: n_input,
             c_e_set: HashSet::new(),
             v_p_set: HashSet::new(),
-            log_set: if pure_function {LibFuncLog::Pure(HashSet::new())} else {LibFuncLog::NonPure},
             iter_count: 0,
             h_names: HashSet::new()
         }
@@ -71,7 +73,7 @@ impl CEGISState {
         &self.params
     }
 
-    pub fn get_n_f_args(&self) -> usize {self.n_f_args}
+    pub fn get_func_config(&self) -> &HashMap<String, usize> {&self.func_config}
 
     pub fn get_n_input(&self) -> usize {self.n_input}
 
@@ -119,15 +121,17 @@ impl CEGISState {
     pub fn add_log(&mut self, log: TraceLog) -> Option<()> {
         match self.log_set {
             LibFuncLog::NonPure => {unimplemented!();},
-            LibFuncLog::Pure(ref mut set) => {
+            LibFuncLog::Pure(ref mut map) => {
+                let set = map.get_mut(&log.func)?;
                 if set.contains(&log) {
                     return Some(());
                 }
 
                 set.insert(log.clone());
-                self.params.logs.push(log);
+                let vec = self.params.logs.get_mut(&log.func)?;
+                vec.push(log);
 
-                if self.params.logs.len() != set.len() {
+                if vec.len() != set.len() {
                     return None;
                 }
 

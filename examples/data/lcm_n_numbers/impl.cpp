@@ -10,6 +10,6 @@ int gcd(int a, int b){
 	return _gcd;
 }
 
-int lcm_impl(int a, int b){
+int ANONYMOUS__lcm_impl(int a, int b){
 	return a * b / gcd(a,b);
 }

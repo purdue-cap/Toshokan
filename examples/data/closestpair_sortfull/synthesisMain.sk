@@ -1,18 +1,18 @@
 pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --bnd-unroll-amnt 8 --slv-nativeints";
 int N =5;
 
-int cap = {{get-cap-logs logs n_unknowns}};
-int logged = {{get-n-logs logs}};
-int[cap] i_0_arr = { {{expand-to-arg-array logs 0 n_unknowns}} };
-int[cap] i_1_arr = { {{expand-to-arg-array logs 1 n_unknowns}} };
-int[cap] i_2_arr = { {{expand-to-arg-array logs 2 n_unknowns}} };
-int[cap] i_3_arr = { {{expand-to-arg-array logs 3 n_unknowns}} };
-int[cap] i_4_arr = { {{expand-to-arg-array logs 4 n_unknowns}} };
-int[cap] r_0_arr = { {{expand-to-ith-rtn-array logs 0 n_unknowns}} };
-int[cap] r_1_arr = { {{expand-to-ith-rtn-array logs 1 n_unknowns}} };
-int[cap] r_2_arr = { {{expand-to-ith-rtn-array logs 2 n_unknowns}} };
-int[cap] r_3_arr = { {{expand-to-ith-rtn-array logs 3 n_unknowns}} };
-int[cap] r_4_arr = { {{expand-to-ith-rtn-array logs 4 n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sort_proxy") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::sort_proxy")}};
+int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 0 n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 1 n_unknowns}} };
+int[cap] i_2_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 2 n_unknowns}} };
+int[cap] i_3_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 3 n_unknowns}} };
+int[cap] i_4_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 4 n_unknowns}} };
+int[cap] r_0_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 0 n_unknowns}} };
+int[cap] r_1_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 1 n_unknowns}} };
+int[cap] r_2_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 2 n_unknowns}} };
+int[cap] r_3_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 3 n_unknowns}} };
+int[cap] r_4_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 4 n_unknowns}} };
 
 
 int[{{n_unknowns}}] unknown_0 = ??;
@@ -28,7 +28,7 @@ int[N] sort(int[N] input){
 
 int[N] sort_proxy(int input_0,int input_1,int input_2,int input_3,int input_4) {
    
-	{{#for-cap-logs logs n_unknowns}}
+	{{#for-cap-logs (subtree logs "ANONYMOUS::sort_proxy") n_unknowns}}
 	if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 && i_3_arr[{{@index}}] == input_3&& i_4_arr[{{@index}}] == input_4) {
 		int[N] ind = {r_0_arr[{{@index}}], r_1_arr[{{@index}}], r_2_arr[{{@index}}], r_3_arr[{{@index}}], r_4_arr[{{@index}}]};
 		return ind;

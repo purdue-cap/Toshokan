@@ -105,12 +105,15 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
                 func_calls_list.push(format!(
 r#"
     try{{
-      ANONYMOUS::{harness_name}__WrapperNospec({arg_list});
-      ANONYMOUS::{harness_name}__Wrapper({arg_list});
+      {harness_name}__WrapperNospec({arg_list});
+      {harness_name}__Wrapper({arg_list});
     }}catch(AssumptionFailedException& afe){{  }}
 "#,
                     arg_list = joined_params,
-                    harness_name = self.harness_func_name
+                    harness_name = if self.harness_func_name.contains("::")
+                        {self.harness_func_name.to_string()}
+                    else
+                        {format!("ANONYMOUS::{}", self.harness_func_name)}
                 ));
 
                 idx += 1;

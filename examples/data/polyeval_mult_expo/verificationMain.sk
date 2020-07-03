@@ -1,0 +1,66 @@
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 2 --bnd-cbits 2 --bnd-unroll-amnt 16";
+int n = 5;
+int BASE = 4;
+int k=3;
+
+//derivative computation for a polynomial represented by coefficient list
+int[2*n] mult(int[n] x, int[n] y){
+    int[2*n] out = 0;
+    for(int i=0; i<n; ++i){
+        for(int j=0; j<n; ++j){            
+            int tmp = y[i] * x[j];
+            tmp = out[j + i] + tmp;
+            out[j + i] = tmp % BASE;
+            out[j + i + 1] = out[j + i + 1] + (tmp / BASE); 
+        }           
+    }       
+    return out;
+}
+int[2*n] plus(int[2*n] x, int[2*n] y){ 
+    int[2*n] out = 0;
+    for(int i = 0; i<2*n; ++i){
+        int tmp = x[i] + y[i] + out[i];
+        out[i] = tmp % BASE;
+        if(i < 2*n-1){
+        	out[i+1] =  tmp / BASE;
+        }
+    }   
+    return out;
+}
+int[n] toBase(int z){
+	//write z in base BASE
+	int[n] out =0;
+	int sum =z;
+	for (int i=0;i<n;i++){
+		out[i] = sum % BASE;
+		sum = sum/BASE;
+	}
+	return out;
+}
+
+int[n] exp(int x,int i){
+	int res = 1;
+	for(int j=0;j<i;j++){
+		res = res * x;
+	}
+	return toBase(res);	
+}
+
+
+harness void main(
+    int p_0_0, int p_1_0, int p_2_0, int p_0_1, int p_1_1, int p_2_1, int p_0_2, int p_1_2, int p_2_2, int p_0_3, int p_1_3, int p_2_3, int p_0_4, int p_1_4, int p_2_4,
+    int x){
+
+    int[n][k] p = { { p_0_0, p_0_1, p_0_2, p_0_3, p_0_4 }, { p_1_0, p_1_1, p_1_2, p_1_3, p_1_4 }, { p_2_0, p_2_1, p_2_2, p_2_3, p_2_4 } };
+
+	int[2*n] out1 = 0;
+	for(int i=0;i<k;i++){
+		out1 = plus(mult(exp(x,i),p[i]),out1);
+	}
+	int[2*n] out2 = 0;
+	for(int i=??;{|i  (< | <= | > | >=) (??*k (+ | -) ??) |};i++){
+		out2 = plus(out2,mult(p[{| ??*i (+ | -) ?? |}],exp(x,{| ??*i (+ | -) ?? |})));
+	}
+	assert(out1 == out2);
+}
+

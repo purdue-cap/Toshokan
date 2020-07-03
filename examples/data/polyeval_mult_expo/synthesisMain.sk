@@ -1,0 +1,132 @@
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 2 --bnd-cbits 2 --bnd-unroll-amnt 16";
+int n = 5;
+int BASE = 4;
+int k=3;
+
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::mult_proxy")}};
+{{#each (range 5)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+{{/each}}
+{{#each (range 5)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") (add @index 5) n_unknowns}} };
+{{/each}}
+{{#each (range 10)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+{{/each}}
+
+{{#each (range 10)}}int[{{n_unknowns}}] unknown_{{@index}} = ??;
+{{/each}}
+int used_unknown = 0;
+
+int[2*n] mult_proxy(
+	{{#each (range 5)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+	{{#each (range 5)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+){
+	{{#for-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns as |i|}}
+	if ( {{i}} < logged
+	{{#each (range 5)}} && x_{{@index}}_arr[{{i}}] == x_{{@index}}
+	{{/each}}
+	{{#each (range 5)}} && y_{{@index}}_arr[{{i}}] == y_{{@index}}
+	{{/each}}
+	) {
+		int[2*n] result = { {{#each (range 10)}}r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
+		return result;
+	}
+	{{/for-cap-logs}}
+
+	assert logged < cap;
+	{{#each (range 10)}}int val_{{@index}} = unknown_{{@index}}[used_unknown];
+	{{/each}}
+	used_unknown++;
+	{{#each (range 5)}}x_{{@index}}_arr[logged] = x_{{@index}};
+	{{/each}}
+	{{#each (range 5)}}y_{{@index}}_arr[logged] = y_{{@index}};
+	{{/each}}
+	{{#each (range 10)}}r_{{@index}}_arr[logged] = val_{{@index}};
+	{{/each}}
+	logged ++;
+	int[2*n] result = { {{#each (range 10)}}val_{{@index}}{{#unless @last}}, {{/unless}}{{/each}} };
+	return result;
+}
+
+//derivative computation for a polynomial represented by coefficient list
+int[2*n] mult(int[n] x, int[n] y){
+	return mult_proxy(
+		{{#each (range 5)}}x[{{@index}}]{{#unless @last}},{{/unless}}{{/each}},
+		{{#each (range 5)}}y[{{@index}}]{{#unless @last}},{{/unless}}{{/each}}
+	);
+}
+
+int e_cap = {{get-cap-logs (subtree logs "ANONYMOUS::exp") n_unknowns}};
+int e_logged = {{get-n-logs (subtree logs "ANONYMOUS::exp")}};
+int[e_cap] x_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp") 0 n_unknowns}} };
+int[e_cap] i_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp") 1 n_unknowns}} };
+{{#each (range 5)}}int[e_cap] e_r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::exp") @index n_unknowns}} };
+{{/each}}
+
+{{#each (range 5)}}int[{{n_unknowns}}] e_unknown_{{@index}} = ??;
+{{/each}}
+int e_used_unknown = 0;
+
+
+int[n] exp(int x,int i){
+	{{#for-cap-logs (subtree logs "ANONYMOUS::exp") n_unknowns as |i|}}
+	if ( {{i}} < e_logged && x_arr[{{i}}] == x && i_arr[{{i}}] == i
+	) {
+		int[n] result = { {{#each (range 5)}}e_r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
+		return result;
+	}
+	{{/for-cap-logs}}
+
+	assert e_logged < e_cap;
+	{{#each (range 5)}}int val_{{@index}} = e_unknown_{{@index}}[e_used_unknown];
+	{{/each}}
+	e_used_unknown++;
+	x_arr[e_logged] = x;
+	i_arr[e_logged] = i;
+	{{#each (range 5)}}e_r_{{@index}}_arr[e_logged] = val_{{@index}};
+	{{/each}}
+	e_logged ++;
+	int[n] result = { {{#each (range 5)}}val_{{@index}}{{#unless @last}}, {{/unless}}{{/each}} };
+	return result;
+}
+
+int[2*n] plus(int[2*n] x, int[2*n] y){ 
+    int[2*n] out = 0;
+    for(int i = 0; i<2*n; ++i){
+        int tmp = x[i] + y[i] + out[i];
+        out[i] = tmp % BASE;
+        if(i < 2*n-1){
+        	out[i+1] =  tmp / BASE;
+        }
+    }   
+    return out;
+}
+int[n] toBase(int z){
+	//write z in base BASE
+	int[n] out =0;
+	int sum =z;
+	for (int i=0;i<n;i++){
+		out[i] = sum % BASE;
+		sum = sum/BASE;
+	}
+	return out;
+}
+
+
+harness void main(
+    int p_0_0, int p_1_0, int p_2_0, int p_0_1, int p_1_1, int p_2_1, int p_0_2, int p_1_2, int p_2_2, int p_0_3, int p_1_3, int p_2_3, int p_0_4, int p_1_4, int p_2_4,
+    int x){
+
+	{{expand-x-d-points-to-assume c_e_s "p_0_0" "p_1_0" "p_2_0" "p_0_1" "p_1_1" "p_2_1" "p_0_2" "p_1_2" "p_2_2" "p_0_3" "p_1_3" "p_2_3" "p_0_4" "p_1_4" "p_2_4" "x"}}
+
+    int[n][k] p = { { p_0_0, p_0_1, p_0_2, p_0_3, p_0_4 }, { p_1_0, p_1_1, p_1_2, p_1_3, p_1_4 }, { p_2_0, p_2_1, p_2_2, p_2_3, p_2_4 } };
+	int[2*n] out1 = 0;
+	for(int i=0;i<k;i++){
+		out1 = plus(mult(exp(x,i),p[i]),out1);
+	}
+	int[2*n] out2 = 0;
+	for(int i=??;{|i  (< | <= | > | >=) (??*k (+ | -) ??) |};i++){
+		out2 = plus(out2,mult(p[{| ??*i (+ | -) ?? |}],exp(x,{| ??*i (+ | -) ?? |})));
+	}
+	assert(out1 == out2);
+}
+

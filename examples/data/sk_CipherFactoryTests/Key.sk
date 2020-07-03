@@ -1,0 +1,8 @@
+package Key {
+
+Object Key_Key(Object self) {
+    return self;
+}
+
+
+}

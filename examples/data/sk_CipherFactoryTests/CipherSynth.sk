@@ -1,0 +1,50 @@
+package Cipher {
+  
+int cap = {{get-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "Cipher::doFinal_byte")}};
+Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 true n_unknowns}} };
+Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 true n_unknowns}} };
+Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") true n_unknowns}} };
+
+Array_char[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
+int used_unknown = 0;
+
+
+Object Cipher_Cipher(Object self) {
+    return self;
+}
+
+Object Cipher_Cipher_String(Object self, Object type) {
+  self.type_Cipher = type;
+  self.ENCRYPT_MODE_Cipher = 1;
+  self.DECRYPT_MODE_Cipher = 2;
+  self.updated_Cipher = null;
+  return self;
+}
+
+Object getInstance_String(Object type) {
+  return Cipher_Cipher_String(new Object(__cid=Cipher()), type);
+}
+
+void init_int_Key(Object self, int opmode, Object key) {
+  self.key_Cipher = key;
+  self.mode_Cipher = opmode;
+}
+
+Array_char doFinal_byte(Object self, Array_char text) {
+	{{#for-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}}
+	if ({{@index}} < logged && equals_Object_Object@Object(self, i_0_arr[{{@index}}]) && text.length == i_1_arr[{{@index}}].length && text.A == i_1_arr[{{@index}}].A ) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+
+	assert logged < cap;
+    Array_char val = unknown[used_unknown];
+    used_unknown++;
+	i_0_arr[logged] = self;
+	i_1_arr[logged] = text;
+	rarr[logged] = val;
+	logged ++;
+    return val;
+}
+}

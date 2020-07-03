@@ -1,0 +1,75 @@
+package Object {
+
+Object Object_Object(Object self) {
+    return self;
+}
+
+bit equals_Object_Object(Object a, Object b) {
+  if (a == null) {
+    if (b == null) {
+      return true;
+    }
+    return false;
+  }
+  return (a.__cid == SecureRandom() ? equals_Object@Object(a, b) : a.__cid == StringBuilder() ? equals_Object@Object(a, b) : a.__cid == Byte() ? equals_Object@Object(a, b) : a.__cid == ConfigurableCipherFactory() ? equals_Object@Object(a, b) : a.__cid == HashMap() ? equals_Object@Object(a, b) : a.__cid == Integer() ? equals_Object@Integer(a, b) : a.__cid == Character() ? equals_Object@Character(a, b) : a.__cid == System() ? equals_Object@Object(a, b) : a.__cid == CryptoManager() ? equals_Object@Object(a, b) : a.__cid == SecretKeySpec() ? equals_Object@Object(a, b) : a.__cid == Cipher() ? equals_Object@Object(a, b) : a.__cid == HashMap_Node() ? equals_Object@Object(a, b) : a.__cid == String() ? equals_Object@String(a, b) : a.__cid == ArrayList() ? equals_Object@Object(a, b) : a.__cid == Mac() ? equals_Object@Object(a, b) : a.__cid == CipherFactoryTests() ? equals_Object@Object(a, b) : a.__cid == IvParameterSpec() ? equals_Object@Object(a, b) : a.__cid == Boolean() ? equals_Object@Object(a, b) : a.__cid == Assert() ? equals_Object@Object(a, b) : a.__cid == DefaultCipherFactory() ? equals_Object@Object(a, b) : a.__cid == Object() ? equals_Object@Object(a, b) : 0);
+}
+
+bit equals_Object(Object self, Object obj) {
+  return self == obj;
+}
+
+int hashCode(Object self) {
+  return 0;
+}
+
+struct Object {
+  int           __cid;
+  Object        ALGORITHM_DefaultCipherFactory;
+  Object        PADDING_DefaultCipherFactory;
+  Object        algorithm_DefaultCipherFactory;
+  Object        padding_DefaultCipherFactory;
+  Object        key_DefaultCipherFactory;
+  bit           keyBase64_DefaultCipherFactory;
+  bit           bool_Boolean;
+  Array_Object  elementData_ArrayList;
+  int           DEFAULT_CAPACITY_ArrayList;
+  int           capacity_ArrayList;
+  int           size_ArrayList;
+  Array_char    _value_String;
+  int           _count_String;
+  Object        key_HashMap_Node;
+  Object        value_HashMap_Node;
+  int           hash_HashMap_Node;
+  Object        type_Cipher;
+  Object        key_Cipher;
+  int           mode_Cipher;
+  Array_bit     updated_Cipher;
+  int           ENCRYPT_MODE_Cipher;
+  int           DECRYPT_MODE_Cipher;
+  Array_char    key_SecretKeySpec;
+  Object        basicCharset_CryptoManager;
+  Object        charset_CryptoManager;
+  char          encryptedMark_CryptoManager;
+  bit           useEncryptionStrict_CryptoManager;
+  Object        cipherFactory_CryptoManager;
+  char          value_Character;
+  int           value_Integer;
+  Array_Object  elementData_HashMap;
+  int           numPairs_HashMap;
+  int           capacity_HashMap;
+  char          b_Byte;
+  Array_char    _value_StringBuilder;
+  int           _count_StringBuilder;
+  Array_bit     _array_bit;
+  Array_char    _array_char;
+  Array_int     _array_int;
+  Array_float   _array_float;
+  Array_double  _array_double;
+  Array_Object  _array_object;
+  bit           _bit;
+  char          _char;
+  int           _int;
+  float         _float;
+  double        _double;
+}
+}

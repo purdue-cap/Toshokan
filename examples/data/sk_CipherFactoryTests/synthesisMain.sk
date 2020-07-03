@@ -1,0 +1,1333 @@
+pragma options "--bnd-cbits 8 --bnd-inbits 3 --slv-nativeints";
+//pragma options "--bnd-unroll-amnt 35";
+pragma options "--bnd-inline-amnt 3 --bnd-unroll-amnt 9 --bnd-arr-size 32";
+pragma options "--fe-fpencoding AS_FIXPOINT";
+package meta {
+
+// distinct class IDs
+int ArrayList()                  { return 10; }
+int Assert()                     { return 26; }
+int Boolean()                    { return 29; }
+int Byte()                       { return 28; }
+int CharSequence()               { return 23; }
+int Character()                  { return 20; }
+int Cipher()                     { return 11; }
+int CipherFactoryTests()         { return 3; }
+int ConfigurableCipherFactory()  { return 4; }
+int CryptoManager()              { return 2; }
+int DefaultCipherFactory()       { return 5; }
+int HashMap()                    { return 16; }
+int HashMap_Node()               { return 17; }
+int ICipherFactory()             { return 6; }
+int ICryptoManager()             { return 7; }
+int Integer()                    { return 24; }
+int IvParameterSpec()            { return 21; }
+int Key()                        { return 25; }
+int List()                       { return 14; }
+int Mac()                        { return 8; }
+int Map()                        { return 12; }
+int Map_Entry()                  { return 13; }
+int Object()                     { return 1; }
+int SecretKey()                  { return 19; }
+int SecretKeySpec()              { return 18; }
+int SecureRandom()               { return 15; }
+int String()                     { return 22; }
+int StringBuilder()              { return 9; }
+int System()                     { return 27; }
+
+// Uninterpreted functions
+}
+package Object {
+
+Object Object_Object(Object self) {
+    return self;
+}
+
+bit equals_Object_Object(Object a, Object b) {
+  if (a == null) {
+    if (b == null) {
+      return true;
+    }
+    return false;
+  }
+  return (a.__cid == SecureRandom() ? equals_Object@Object(a, b) : a.__cid == StringBuilder() ? equals_Object@Object(a, b) : a.__cid == Byte() ? equals_Object@Object(a, b) : a.__cid == ConfigurableCipherFactory() ? equals_Object@Object(a, b) : a.__cid == HashMap() ? equals_Object@Object(a, b) : a.__cid == Integer() ? equals_Object@Integer(a, b) : a.__cid == Character() ? equals_Object@Character(a, b) : a.__cid == System() ? equals_Object@Object(a, b) : a.__cid == CryptoManager() ? equals_Object@Object(a, b) : a.__cid == SecretKeySpec() ? equals_Object@Object(a, b) : a.__cid == Cipher() ? equals_Object@Object(a, b) : a.__cid == HashMap_Node() ? equals_Object@Object(a, b) : a.__cid == String() ? equals_Object@String(a, b) : a.__cid == ArrayList() ? equals_Object@Object(a, b) : a.__cid == Mac() ? equals_Object@Object(a, b) : a.__cid == CipherFactoryTests() ? equals_Object@Object(a, b) : a.__cid == IvParameterSpec() ? equals_Object@Object(a, b) : a.__cid == Boolean() ? equals_Object@Object(a, b) : a.__cid == Assert() ? equals_Object@Object(a, b) : a.__cid == DefaultCipherFactory() ? equals_Object@Object(a, b) : a.__cid == Object() ? equals_Object@Object(a, b) : 0);
+}
+
+bit equals_Object(Object self, Object obj) {
+  return self == obj;
+}
+
+int hashCode(Object self) {
+  return 0;
+}
+
+struct Object {
+  int           __cid;
+  Object        ALGORITHM_DefaultCipherFactory;
+  Object        PADDING_DefaultCipherFactory;
+  Object        algorithm_DefaultCipherFactory;
+  Object        padding_DefaultCipherFactory;
+  Object        key_DefaultCipherFactory;
+  bit           keyBase64_DefaultCipherFactory;
+  bit           bool_Boolean;
+  Array_Object  elementData_ArrayList;
+  int           DEFAULT_CAPACITY_ArrayList;
+  int           capacity_ArrayList;
+  int           size_ArrayList;
+  Array_char    _value_String;
+  int           _count_String;
+  Object        key_HashMap_Node;
+  Object        value_HashMap_Node;
+  int           hash_HashMap_Node;
+  Object        type_Cipher;
+  Object        key_Cipher;
+  int           mode_Cipher;
+  Array_bit     updated_Cipher;
+  int           ENCRYPT_MODE_Cipher;
+  int           DECRYPT_MODE_Cipher;
+  Array_char    key_SecretKeySpec;
+  Object        basicCharset_CryptoManager;
+  Object        charset_CryptoManager;
+  char          encryptedMark_CryptoManager;
+  bit           useEncryptionStrict_CryptoManager;
+  Object        cipherFactory_CryptoManager;
+  char          value_Character;
+  int           value_Integer;
+  Array_Object  elementData_HashMap;
+  int           numPairs_HashMap;
+  int           capacity_HashMap;
+  char          b_Byte;
+  Array_char    _value_StringBuilder;
+  int           _count_StringBuilder;
+  Array_bit     _array_bit;
+  Array_char    _array_char;
+  Array_int     _array_int;
+  Array_float   _array_float;
+  Array_double  _array_double;
+  Array_Object  _array_object;
+  bit           _bit;
+  char          _char;
+  int           _int;
+  float         _float;
+  double        _double;
+}
+}
+package array {
+
+struct Array_bit {
+  int length;
+  bit[length] A;
+}
+
+struct Array_char {
+  int length;
+  char[length] A;
+}
+
+struct Array_int {
+  int length;
+  int[length] A;
+}
+
+struct Array_float {
+  int length;
+  float[length] A;
+}
+
+struct Array_double {
+  int length;
+  double[length] A;
+}
+
+struct Array_Object {
+  int length;
+  Object[length] A;
+}
+
+}
+package CryptoManager {
+
+Object CryptoManager_CryptoManager(Object self) {
+  self.useEncryptionStrict_CryptoManager = true;
+  self.encryptedMark_CryptoManager = (char)129;
+  self.charset_CryptoManager = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=5+1, A="UTF-8"), 0, 5);
+  self.basicCharset_CryptoManager = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=8+1, A="US-ASCII"), 0, 8);
+  self.basicCharset_CryptoManager = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=8+1, A="US-ASCII"), 0, 8);
+  self.charset_CryptoManager = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=5+1, A="UTF-8"), 0, 5);
+  char b = 'a';
+  self.encryptedMark_CryptoManager = b;
+  self.useEncryptionStrict_CryptoManager = true;
+  self.cipherFactory_CryptoManager = DefaultCipherFactory_DefaultCipherFactory(new Object(__cid=DefaultCipherFactory()));
+  return self;
+}
+
+generator Object genRetVal_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+  if (??) {
+    return plainText;
+  }
+  if (??) {
+    return decode_byte_String@CryptoManager(self, bytes, getCharset@CryptoManager(self));
+  }
+  return null;
+}
+
+generator Object setCipher_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+  if (??) {
+    return (cf.__cid == ConfigurableCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  if (??) {
+    return (cf.__cid == ConfigurableCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  if (??) {
+    return Cipher_Cipher_String(new Object(__cid=Cipher()), String_String_char_int_int(new Object(__cid=String()), new Array_char(length=0+1, A=""), 0, 0));
+  }
+  return null;
+}
+
+generator Object setICipherFactory_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+  if (??) {
+    return getCipherFactory@CryptoManager(self);
+  }
+  return null;
+}
+
+generator Array_char setBytes_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+  if (??) {
+    return readEncoded_String@CryptoManager(self, plainText);
+  }
+  if (??) {
+    return processEscape_byte_boolean@CryptoManager(self, bytes, true);
+  }
+  if (??) {
+    return encode_String_String@CryptoManager(self, plainText, getCharset@CryptoManager(self));
+  }
+  if (??) {
+    return appendEncryptionMark_byte@CryptoManager(self, bytes);
+  }
+  if (??) {
+    return cryptInCipher_Cipher_byte@CryptoManager(self, cipher, bytes);
+  }
+  if (??) {
+    bit guard = isEncryptedByte_byte@CryptoManager(self, bytes);
+    if (guard) {
+      return cutEncryptionMark_byte@CryptoManager(self, bytes);
+    }
+  }
+  return new Array_char(length=1);
+}
+
+generator Object genStmtsRet_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+  if (??) {
+    bytes = setBytes_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  }
+  if (??) {
+    cf = setICipherFactory_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  }
+  if (??) {
+    cipher = setCipher_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  }
+  if (??) {
+    return genRetVal_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  }
+  if (??) {
+    return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  }
+  return null;
+}
+
+Object encrypt_String(Object self, Object message) {
+  return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, message, new Array_char(length=1), null, null);
+}
+
+Object encryptIfNotEncrypted_String(Object self, Object message) {
+  if (!isEncrypted_String@CryptoManager(self, message)) {
+    return encrypt_String@CryptoManager(self, message);
+  }
+  return message;
+}
+
+Array_char appendEncryptionMark_byte(Object self, Array_char bytesArray) {
+  Array_char extendedBytes = new Array_char(length=bytesArray.length + 1);
+  extendedBytes.A[0] = getEncryptedMark@CryptoManager(self);
+  arraycopy_byte_int_byte_int_int@System(bytesArray, 0, extendedBytes, 1, bytesArray.length);
+  return extendedBytes;
+}
+
+Array_char cutEncryptionMark_byte(Object self, Array_char bytesArray) {
+  Array_char trimmedBytes = new Array_char(length=bytesArray.length - 1);
+  for (int i = 1; i < bytesArray.length; i++) {
+    trimmedBytes.A[i - 1] = bytesArray.A[i];
+  }
+  return trimmedBytes;
+}
+
+Array_char readEncoded_String(Object self, Object encrypted) {
+  Array_char bytes = encode_String_String@CryptoManager(self, encrypted, getBasicCharset@CryptoManager(self));
+  return processEscape_byte_boolean@CryptoManager(self, bytes, false);
+}
+
+bit isEncryptedByte_byte(Object self, Array_char data) {
+  return data.A[0] == getEncryptedMark@CryptoManager(self);
+}
+
+Object decrypt_String(Object self, Object encryptedMessage) {
+  if (!isEncrypted_String@CryptoManager(self, encryptedMessage)) {
+    return encryptedMessage;
+  }
+  return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, encryptedMessage, new Array_char(length=1), null, null);
+}
+
+bit isEncrypted_String(Object self, Object message) {
+  Object cf = getCipherFactory@CryptoManager(self);
+  Object cipher = (cf.__cid == ConfigurableCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : null);
+  Array_char bytes = readEncoded_String@CryptoManager(self, message);
+  Array_char data = cryptInCipher_Cipher_byte@CryptoManager(self, cipher, bytes);
+  return !isUseEncryptionStrict@CryptoManager(self) || isEncryptedByte_byte@CryptoManager(self, data);
+}
+
+Array_char cryptInCipher_Cipher_byte(Object self, Object cipher, Array_char data) {
+  Array_char decrypt = (cipher.__cid == Cipher() ? doFinal_byte@Cipher(cipher, data) : null);
+  return decrypt;
+}
+
+Array_char processEscape_byte_boolean(Object self, Array_char data, bit escape) {
+  return data;
+}
+
+Array_char encode_String_String(Object self, Object string, Object charset) {
+  return (string.__cid == String() ? getBytes@String(string) : null);
+}
+
+Object decode_byte_String(Object self, Array_char string, Object charset) {
+  return String_String_byte(new Object(__cid=String()), string);
+}
+
+Object getBasicCharset(Object self) {
+  return self.basicCharset_CryptoManager;
+}
+
+void setBasicCharset_String(Object self, Object basicCharset) {
+  self.basicCharset_CryptoManager = basicCharset;
+}
+
+Object getCharset(Object self) {
+  return self.charset_CryptoManager;
+}
+
+void setCharset_String(Object self, Object charset) {
+  self.charset_CryptoManager = charset;
+}
+
+char getEncryptedMark(Object self) {
+  return self.encryptedMark_CryptoManager;
+}
+
+Object getCipherFactory(Object self) {
+  return self.cipherFactory_CryptoManager;
+}
+
+void setCipherFactory_ICipherFactory(Object self, Object cipherFactory) {
+  self.cipherFactory_CryptoManager = cipherFactory;
+}
+
+bit isUseEncryptionStrict(Object self) {
+  return self.useEncryptionStrict_CryptoManager;
+}
+
+void setUseEncryptionStrict_boolean(Object self, bit useEncryptionStrict) {
+  self.useEncryptionStrict_CryptoManager = useEncryptionStrict;
+}
+
+}
+package CipherFactoryTests {
+
+Object CipherFactoryTests_CipherFactoryTests(Object self) {
+    return self;
+}
+
+harness void main(int p_i) {
+  {{expand-points-to-assume c_e_s.[0] "p_i"}}
+  int x = 1;
+  for (int i = 0; i < p_i; i++) {
+    x = x * 9;
+  }
+  Object self = Object_Object(new Object(__cid=Object()));
+  Object cm = CryptoManager_CryptoManager(new Object(__cid=CryptoManager()));
+  Object m = toString_int@Integer(x);
+  Object d = (cm.__cid == CryptoManager() ? encrypt_String@CryptoManager(cm, m) : null);
+  assert !(m.__cid == String() ? equals_Object@String(m, d) : 0);
+  Object p = (cm.__cid == CryptoManager() ? decrypt_String@CryptoManager(cm, d) : null);
+  assert (p.__cid == String() ? equals_Object@String(p, m) : 0);
+}
+
+}
+package ConfigurableCipherFactory {
+
+Object ConfigurableCipherFactory_ConfigurableCipherFactory(Object self) {
+    return self;
+}
+
+void setAlgorithm_String(Object self, Object algorithm) {
+  self.algorithm_DefaultCipherFactory = algorithm;
+}
+
+void setPadding_String(Object self, Object padding) {
+  self.padding_DefaultCipherFactory = padding;
+}
+
+}
+package DefaultCipherFactory {
+
+Object DefaultCipherFactory_DefaultCipherFactory(Object self) {
+  self.ALGORITHM_DefaultCipherFactory = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=3+1, A="AES"), 0, 3);
+  self.PADDING_DefaultCipherFactory = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=20+1, A="AES/ECB/PKCS5Padding"), 0, 20);
+  self.algorithm_DefaultCipherFactory = self.ALGORITHM_DefaultCipherFactory;
+  self.padding_DefaultCipherFactory = self.PADDING_DefaultCipherFactory;
+  self.key_DefaultCipherFactory = String_String_char_int_int(new Object(__cid=String()), new Array_char(length=3+1, A="KEY"), 0, 3);
+  return self;
+}
+
+Object encryptionCipher(Object self) {
+  return initCipher_int@DefaultCipherFactory(self, 1);
+}
+
+Object decryptionCipher(Object self) {
+  return initCipher_int@DefaultCipherFactory(self, 2);
+}
+
+Object initCipher_int(Object self, int mode) {
+  Object cipher;
+  cipher = obtainCipher_int@DefaultCipherFactory(self, mode);
+  return cipher;
+}
+
+Object obtainCipher_int(Object self, int mode) {
+  Object secretKeySpec = SecretKeySpec_SecretKeySpec_byte_String(new Object(__cid=SecretKeySpec()), key@DefaultCipherFactory(self), getAlgorithm@DefaultCipherFactory(self));
+  Object cipher = getInstance_String@Cipher(getPadding@DefaultCipherFactory(self));
+  if (cipher.__cid == Cipher()) { init_int_Key@Cipher(cipher, mode, secretKeySpec); }
+  else { 0; };
+  return cipher;
+}
+
+Array_char key(Object self) {
+  Object k = getKey@DefaultCipherFactory(self);
+  return (k.__cid == String() ? getBytes@String(k) : null);
+}
+
+Object getAlgorithm(Object self) {
+  return self.algorithm_DefaultCipherFactory;
+}
+
+Object getPadding(Object self) {
+  return self.padding_DefaultCipherFactory;
+}
+
+Object getKey(Object self) {
+  return self.key_DefaultCipherFactory;
+}
+
+void setKey_String(Object self, Object key) {
+  self.key_DefaultCipherFactory = key;
+}
+
+bit isKeyBase64(Object self) {
+  return self.keyBase64_DefaultCipherFactory;
+}
+
+void setKeyBase64_boolean(Object self, bit keyBase64) {
+  self.keyBase64_DefaultCipherFactory = keyBase64;
+}
+
+}
+package ICipherFactory {
+
+Object ICipherFactory_ICipherFactory(Object self) {
+    return self;
+}
+
+
+
+}
+package ICryptoManager {
+
+Object ICryptoManager_ICryptoManager(Object self) {
+    return self;
+}
+
+
+
+
+
+}
+package Mac {
+
+Object Mac_Mac(Object self) {
+  return self;
+}
+
+Object getInstance_String(Object type) {
+  return Mac_Mac(new Object(__cid=Mac()));
+}
+
+void init_SecretKeySpec(Object self, Object key) {
+}
+
+Array_char doFinal_byte(Object self, Array_char text) {
+  return text;
+}
+
+}
+package StringBuilder {
+
+Object StringBuilder_StringBuilder(Object self) {
+  self._value_StringBuilder = new Array_char(length=1);
+  self._count_StringBuilder = 0;
+  return self;
+}
+
+Object StringBuilder_StringBuilder_String(Object self, Object str) {
+  self._value_StringBuilder = str._value_String;
+  self._count_StringBuilder = (str.__cid == String() ? length@String(str) : 0);
+  return self;
+}
+
+char charAt_int(Object self, int index) {
+  if (0 <= index && index < self._count_StringBuilder) return self._value_StringBuilder.A[index];
+}
+
+int length(Object self) {
+  return self._count_StringBuilder;
+}
+
+Object toString(Object self) {
+  return String_String_char_int_int(new Object(__cid=String()), self._value_StringBuilder, 0, self._count_StringBuilder);
+}
+
+void setCharAt_int_char(Object self, int i, char c) {
+  self._value_StringBuilder.A[i] = c;
+}
+
+void append_String(Object self, Object s) {
+  int len = (s.__cid == String() ? length@String(s) : 0);
+  int new_value_len = self._count_StringBuilder + len;
+  Array_char new_value = new Array_char(length=new_value_len);
+  for (int i = 0; i < self._count_StringBuilder; i++) {
+    new_value.A[i] = self._value_StringBuilder.A[i];
+  }
+  for (int i = 0; i < len; i++) {
+    new_value.A[self._count_StringBuilder + i] = (s.__cid == String() ? charAt_int@String(s, i) : '\0');
+  }
+  self._value_StringBuilder = new_value;
+  self._count_StringBuilder = new_value_len;
+}
+
+void append_char(Object self, char c) {
+  int new_value_len = self._count_StringBuilder + 1;
+  Array_char new_value = new Array_char(length=new_value_len);
+  for (int i = 0; i < self._count_StringBuilder; i++) {
+    new_value.A[i] = self._value_StringBuilder.A[i];
+  }
+  new_value.A[self._count_StringBuilder] = c;
+  self._value_StringBuilder = new_value;
+  self._count_StringBuilder = new_value_len;
+}
+
+}
+package ArrayList {
+
+Array_Object EMPTY_ELEMENTDATA = new Array_Object(length=0, A={});
+Array_Object EMPTY_ELEMENTDATA_g() { return EMPTY_ELEMENTDATA; }
+void EMPTY_ELEMENTDATA_s(Array_Object EMPTY_ELEMENTDATA_s) { EMPTY_ELEMENTDATA = EMPTY_ELEMENTDATA_s; }
+
+int MAX_ARRAY_SIZE = 1000000;
+int MAX_ARRAY_SIZE_g() { return MAX_ARRAY_SIZE; }
+void MAX_ARRAY_SIZE_s(int MAX_ARRAY_SIZE_s) { MAX_ARRAY_SIZE = MAX_ARRAY_SIZE_s; }
+
+Object ArrayList_ArrayList(Object self) {
+  self.DEFAULT_CAPACITY_ArrayList = 10;
+  self.elementData_ArrayList = new Array_Object(length=self.DEFAULT_CAPACITY_ArrayList);
+  self.capacity_ArrayList = self.DEFAULT_CAPACITY_ArrayList;
+  self.size_ArrayList = 0;
+  return self;
+}
+
+void copyNewElementData_int(Object self, int size) {
+  Array_Object newElementData = new Array_Object(length=size);
+  int i = 0;
+  for (i = 0; i < self.size_ArrayList; i++) {
+    newElementData.A[i] = self.elementData_ArrayList.A[i];
+  }
+  self.elementData_ArrayList = newElementData;
+  self.capacity_ArrayList = size;
+}
+
+void checkAdjustSize(Object self) {
+  if (self.size_ArrayList + 1 >= self.capacity_ArrayList) {
+    copyNewElementData_int@ArrayList(self, self.capacity_ArrayList + 10);
+  }
+}
+
+void createSpace_int(Object self, int index) {
+  int j = 0;
+  for (j = self.size_ArrayList; j > index; j--) {
+    self.elementData_ArrayList.A[j] = self.elementData_ArrayList.A[j - 1];
+  }
+}
+
+bit add_E(Object self, Object e) {
+  checkAdjustSize@ArrayList(self);
+  self.elementData_ArrayList.A[self.size_ArrayList++] = e;
+  return true;
+}
+
+Object get_int(Object self, int index) {
+  if (index < 0 || index >= self.size_ArrayList) {
+    return null;
+  }
+  return self.elementData_ArrayList.A[index];
+}
+
+Object set_int_E(Object self, int index, Object element) {
+  Object oldElement;
+  if (index < 0 || index >= self.size_ArrayList) {
+    return null;
+  }
+  oldElement = self.elementData_ArrayList.A[index];
+  self.elementData_ArrayList.A[index] = element;
+  return oldElement;
+}
+
+int size(Object self) {
+  return self.size_ArrayList;
+}
+
+void ensureCapacity_int(Object self, int minCapacity) {
+  int minExpand;
+  if (self.elementData_ArrayList != EMPTY_ELEMENTDATA) {
+    minExpand = 0;
+  }
+  else {
+    minExpand = self.DEFAULT_CAPACITY_ArrayList;
+  }
+  if (minCapacity > minExpand) {
+    ensureExplicitCapacity_int@ArrayList(self, minCapacity);
+  }
+}
+
+void ensureCapacityInternal_int(Object self, int minCapacity) {
+  if (self.elementData_ArrayList == EMPTY_ELEMENTDATA) {
+    if (self.DEFAULT_CAPACITY_ArrayList > minCapacity) {
+      minCapacity = self.DEFAULT_CAPACITY_ArrayList;
+    }
+  }
+  ensureExplicitCapacity_int@ArrayList(self, minCapacity);
+}
+
+void ensureExplicitCapacity_int(Object self, int minCapacity) {
+  if (minCapacity - self.elementData_ArrayList.length > 0) grow_int@ArrayList(self, minCapacity);
+}
+
+void grow_int(Object self, int minCapacity) {
+  int oldCapacity = self.elementData_ArrayList.length;
+  int newCapacity = oldCapacity + (oldCapacity / 2);
+  if (newCapacity - minCapacity < 0) newCapacity = minCapacity;
+  if (newCapacity - MAX_ARRAY_SIZE > 0) newCapacity = hugeCapacity_int(minCapacity);
+  copyNewElementData_int@ArrayList(self, newCapacity);
+}
+
+int hugeCapacity_int(int minCapacity) {
+  return ((minCapacity > MAX_ARRAY_SIZE) ? 0x7fffffff : MAX_ARRAY_SIZE);
+}
+
+}
+package Cipher {
+  
+int cap = {{get-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "Cipher::doFinal_byte")}};
+Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 true n_unknowns}} };
+Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 true n_unknowns}} };
+Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") true n_unknowns}} };
+
+Array_char[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
+int used_unknown = 0;
+
+
+Object Cipher_Cipher(Object self) {
+    return self;
+}
+
+Object Cipher_Cipher_String(Object self, Object type) {
+  self.type_Cipher = type;
+  self.ENCRYPT_MODE_Cipher = 1;
+  self.DECRYPT_MODE_Cipher = 2;
+  self.updated_Cipher = null;
+  return self;
+}
+
+Object getInstance_String(Object type) {
+  return Cipher_Cipher_String(new Object(__cid=Cipher()), type);
+}
+
+void init_int_Key(Object self, int opmode, Object key) {
+  self.key_Cipher = key;
+  self.mode_Cipher = opmode;
+}
+
+Array_char doFinal_byte(Object self, Array_char text) {
+	{{#for-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}}
+	if ({{@index}} < logged && equals_Object_Object@Object(self, i_0_arr[{{@index}}]) && text.length == i_1_arr[{{@index}}].length && text.A == i_1_arr[{{@index}}].A ) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+
+	assert logged < cap;
+    Array_char val = unknown[used_unknown];
+    used_unknown++;
+	i_0_arr[logged] = self;
+	i_1_arr[logged] = text;
+	rarr[logged] = val;
+	logged ++;
+    return val;
+}
+}
+package Map {
+
+Object Map_Map(Object self) {
+    return self;
+}
+
+
+
+
+
+
+
+
+}
+package Map_Entry {
+
+Object self0;
+
+Object Map_Entry_Map_Entry_Map(Object self, Object self_0) {
+    self0 = self_0;
+    return self;
+}
+
+
+}
+package List {
+
+Object List_List(Object self) {
+    return self;
+}
+
+
+
+
+
+
+
+
+}
+package SecureRandom {
+
+Object SecureRandom_SecureRandom(Object self) {
+  return self;
+}
+
+void nextBytes_byte(Object self, Array_char buf) {
+  for (int i = 0; i < buf.length; i++) {
+    buf.A[i] = (char)i;
+  }
+}
+
+}
+package HashMap {
+
+int DEFAULT_INITIAL_CAPACITY = 1 << 4;
+int DEFAULT_INITIAL_CAPACITY_g() { return DEFAULT_INITIAL_CAPACITY; }
+void DEFAULT_INITIAL_CAPACITY_s(int DEFAULT_INITIAL_CAPACITY_s) { DEFAULT_INITIAL_CAPACITY = DEFAULT_INITIAL_CAPACITY_s; }
+
+Object HashMap_HashMap(Object self) {
+  self.elementData_HashMap = new Array_Object(length=DEFAULT_INITIAL_CAPACITY);
+  self.numPairs_HashMap = 0;
+  self.capacity_HashMap = DEFAULT_INITIAL_CAPACITY;
+  return self;
+}
+
+void resize_int(Object self, int newSize) {
+  int i,  h,  hashMod;
+  Object n;
+  Array_Object oldElementData = self.elementData_HashMap;
+  Array_Object newElementData = new Array_Object(length=newSize);
+  Object k;
+  Object v;
+  for (i = 0; i < self.capacity_HashMap; i++) {
+    if (oldElementData.A[i] != null) {
+      h = oldElementData.A[i].hash_HashMap_Node;
+      k = oldElementData.A[i].key_HashMap_Node;
+      v = oldElementData.A[i].value_HashMap_Node;
+      hashMod = h % newSize;
+      if (hashMod < 0) {
+        hashMod = hashMod + newSize;
+      }
+      newElementData.A[hashMod] = HashMap_Node_HashMap_Node_HashMap_K_V_int(new Object(__cid=HashMap_Node()), self, k, v, h);
+    }
+  }
+  self.elementData_HashMap = newElementData;
+  self.capacity_HashMap = newSize;
+}
+
+bit containsKey_K(Object self, Object key) {
+  return get_K@HashMap(self, key) != null;
+}
+
+Object get_K(Object self, Object key) {
+  int hashMod = (key.__cid == SecureRandom() ? hashCode@Object(key) : key.__cid == StringBuilder() ? hashCode@Object(key) : key.__cid == Byte() ? hashCode@Object(key) : key.__cid == ConfigurableCipherFactory() ? hashCode@Object(key) : key.__cid == HashMap() ? hashCode@Object(key) : key.__cid == Integer() ? hashCode@Integer(key) : key.__cid == Character() ? hashCode@Object(key) : key.__cid == System() ? hashCode@Object(key) : key.__cid == CryptoManager() ? hashCode@Object(key) : key.__cid == SecretKeySpec() ? hashCode@Object(key) : key.__cid == Cipher() ? hashCode@Object(key) : key.__cid == HashMap_Node() ? hashCode@Object(key) : key.__cid == String() ? hashCode@String(key) : key.__cid == ArrayList() ? hashCode@Object(key) : key.__cid == Mac() ? hashCode@Object(key) : key.__cid == CipherFactoryTests() ? hashCode@Object(key) : key.__cid == IvParameterSpec() ? hashCode@Object(key) : key.__cid == Boolean() ? hashCode@Object(key) : key.__cid == Assert() ? hashCode@Object(key) : key.__cid == DefaultCipherFactory() ? hashCode@Object(key) : key.__cid == Object() ? hashCode@Object(key) : 0) % self.capacity_HashMap;
+  if (hashMod < 0) {
+    hashMod = hashMod + self.capacity_HashMap;
+  }
+  Object node = self.elementData_HashMap.A[hashMod];
+  if (node != null) {
+    if ((key.__cid == SecureRandom() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == StringBuilder() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Byte() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == ConfigurableCipherFactory() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == HashMap() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Integer() ? equals_Object@Integer(key, node.key_HashMap_Node) : key.__cid == Character() ? equals_Object@Character(key, node.key_HashMap_Node) : key.__cid == System() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == CryptoManager() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == SecretKeySpec() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Cipher() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == HashMap_Node() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == String() ? equals_Object@String(key, node.key_HashMap_Node) : key.__cid == ArrayList() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Mac() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == CipherFactoryTests() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == IvParameterSpec() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Boolean() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Assert() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == DefaultCipherFactory() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Object() ? equals_Object@Object(key, node.key_HashMap_Node) : 0)) {
+      return node.value_HashMap_Node;
+    }
+  }
+  return null;
+}
+
+Object remove_K(Object self, Object key) {
+  Object val = get_K@HashMap(self, key);
+  int hashMod = (key.__cid == SecureRandom() ? hashCode@Object(key) : key.__cid == StringBuilder() ? hashCode@Object(key) : key.__cid == Byte() ? hashCode@Object(key) : key.__cid == ConfigurableCipherFactory() ? hashCode@Object(key) : key.__cid == HashMap() ? hashCode@Object(key) : key.__cid == Integer() ? hashCode@Integer(key) : key.__cid == Character() ? hashCode@Object(key) : key.__cid == System() ? hashCode@Object(key) : key.__cid == CryptoManager() ? hashCode@Object(key) : key.__cid == SecretKeySpec() ? hashCode@Object(key) : key.__cid == Cipher() ? hashCode@Object(key) : key.__cid == HashMap_Node() ? hashCode@Object(key) : key.__cid == String() ? hashCode@String(key) : key.__cid == ArrayList() ? hashCode@Object(key) : key.__cid == Mac() ? hashCode@Object(key) : key.__cid == CipherFactoryTests() ? hashCode@Object(key) : key.__cid == IvParameterSpec() ? hashCode@Object(key) : key.__cid == Boolean() ? hashCode@Object(key) : key.__cid == Assert() ? hashCode@Object(key) : key.__cid == DefaultCipherFactory() ? hashCode@Object(key) : key.__cid == Object() ? hashCode@Object(key) : 0) % self.capacity_HashMap;
+  if (hashMod < 0) {
+    hashMod = hashMod + self.capacity_HashMap;
+  }
+  self.elementData_HashMap.A[hashMod] = null;
+  if (val != null) {
+    self.numPairs_HashMap--;
+  }
+  return val;
+}
+
+Object put_K_V(Object self, Object key, Object value) {
+  int h = (key.__cid == SecureRandom() ? hashCode@Object(key) : key.__cid == StringBuilder() ? hashCode@Object(key) : key.__cid == Byte() ? hashCode@Object(key) : key.__cid == ConfigurableCipherFactory() ? hashCode@Object(key) : key.__cid == HashMap() ? hashCode@Object(key) : key.__cid == Integer() ? hashCode@Integer(key) : key.__cid == Character() ? hashCode@Object(key) : key.__cid == System() ? hashCode@Object(key) : key.__cid == CryptoManager() ? hashCode@Object(key) : key.__cid == SecretKeySpec() ? hashCode@Object(key) : key.__cid == Cipher() ? hashCode@Object(key) : key.__cid == HashMap_Node() ? hashCode@Object(key) : key.__cid == String() ? hashCode@String(key) : key.__cid == ArrayList() ? hashCode@Object(key) : key.__cid == Mac() ? hashCode@Object(key) : key.__cid == CipherFactoryTests() ? hashCode@Object(key) : key.__cid == IvParameterSpec() ? hashCode@Object(key) : key.__cid == Boolean() ? hashCode@Object(key) : key.__cid == Assert() ? hashCode@Object(key) : key.__cid == DefaultCipherFactory() ? hashCode@Object(key) : key.__cid == Object() ? hashCode@Object(key) : 0);
+  return putVal_int_K_V@HashMap(self, h, key, value);
+}
+
+Object putVal_int_K_V(Object self, int hash, Object key, Object value) {
+  int hashMod = hash % self.capacity_HashMap;
+  if (hashMod < 0) {
+    hashMod = hashMod + self.capacity_HashMap;
+  }
+  Object node = self.elementData_HashMap.A[hashMod];
+  if (node != null) {
+    if (node.hash_HashMap_Node != hash || !(key.__cid == SecureRandom() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == StringBuilder() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Byte() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == ConfigurableCipherFactory() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == HashMap() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Integer() ? equals_Object@Integer(key, node.key_HashMap_Node) : key.__cid == Character() ? equals_Object@Character(key, node.key_HashMap_Node) : key.__cid == System() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == CryptoManager() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == SecretKeySpec() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Cipher() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == HashMap_Node() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == String() ? equals_Object@String(key, node.key_HashMap_Node) : key.__cid == ArrayList() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Mac() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == CipherFactoryTests() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == IvParameterSpec() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Boolean() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Assert() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == DefaultCipherFactory() ? equals_Object@Object(key, node.key_HashMap_Node) : key.__cid == Object() ? equals_Object@Object(key, node.key_HashMap_Node) : 0)) {
+      resize_int@HashMap(self, hash + 1);
+      hashMod = hash % self.capacity_HashMap;
+      if (hashMod < 0) {
+        hashMod = hashMod + self.capacity_HashMap;
+      }
+      node = self.elementData_HashMap.A[hashMod];
+      self.numPairs_HashMap++;
+    }
+    self.elementData_HashMap.A[hashMod] = HashMap_Node_HashMap_Node_HashMap_K_V_int(new Object(__cid=HashMap_Node()), self, key, value, hash);
+    if (node != null) {
+      return node.value_HashMap_Node;
+    }
+    else {
+      return null;
+    }
+  }
+  self.elementData_HashMap.A[hashMod] = HashMap_Node_HashMap_Node_HashMap_K_V_int(new Object(__cid=HashMap_Node()), self, key, value, hash);
+  self.numPairs_HashMap++;
+  return null;
+}
+
+}
+package HashMap_Node {
+
+Object self0;
+
+Object HashMap_Node_HashMap_Node_HashMap(Object self, Object self_0) {
+    self0 = self_0;
+    return self;
+}
+
+Object HashMap_Node_HashMap_Node_HashMap_K_V_int(Object self, Object self_0, Object key, Object value, int hash) {
+  self0 = self_0;
+  self.key_HashMap_Node = key;
+  self.value_HashMap_Node = value;
+  self.hash_HashMap_Node = hash;
+  return self;
+}
+
+}
+package SecretKeySpec {
+
+Object SecretKeySpec_SecretKeySpec(Object self) {
+    return self;
+}
+
+Object SecretKeySpec_SecretKeySpec_byte_String(Object self, Array_char key, Object type) {
+  self.key_SecretKeySpec = key;
+  return self;
+}
+
+Array_char getEncoded(Object self) {
+  return self.key_SecretKeySpec;
+}
+
+}
+package SecretKey {
+
+Object SecretKey_SecretKey(Object self) {
+    return self;
+}
+
+}
+package Character {
+
+Object Character_Character(Object self) {
+    return self;
+}
+
+Object Character_Character_char(Object self, char value) {
+  self.value_Character = value;
+  return self;
+}
+
+char charValue(Object self) {
+  return self.value_Character;
+}
+
+bit equals_Object(Object self, Object obj) {
+  if (obj.__cid == Character()) {
+    return self.value_Character == ((obj).__cid == Character() ? charValue@Character((obj)) : '\0');
+  }
+  return false;
+}
+
+}
+package IvParameterSpec {
+
+Object IvParameterSpec_IvParameterSpec(Object self) {
+    return self;
+}
+
+Object IvParameterSpec_IvParameterSpec_byte(Object self, Array_char val) {
+  return self;
+}
+
+}
+package String {
+
+Object String_String(Object self) {
+    return self;
+}
+
+Object String_String_char_int_int(Object self, Array_char ca, int offset, int count) {
+  if (offset > 0 && offset < ca.length) {
+    Array_char tmp = new Array_char(length=count);
+    for (int i = 0; i < count; i++) {
+      tmp.A[i] = ca.A[i + offset];
+    }
+    self._value_String = tmp;
+  }
+  else {
+    self._value_String = ca;
+  }
+  self._count_String = count;
+  return self;
+}
+
+Object String_String_byte(Object self, Array_char bytes) {
+  int len = bytes.length;
+  self._value_String = new Array_char(length=len);
+  for (int i = 0; i < len; i++) {
+    self._value_String.A[i] = (char)(bytes.A[i]);
+  }
+  self._count_String = len;
+  return self;
+}
+
+char charAt_int(Object self, int index) {
+  if (0 <= index && index < self._count_String) return self._value_String.A[index];
+  return '\0';
+}
+
+int length(Object self) {
+  return self._count_String;
+}
+
+Object toString(Object self) {
+  return self;
+}
+
+void setCharAt_int_char(Object self, int i, char c) {
+  self._value_String.A[i] = c;
+}
+
+int indexOf_String(Object self, Object s) {
+  return indexOf_String_int@String(self, s, 0);
+}
+
+int indexOf_String_int(Object self, Object s, int i) {
+  int tLen = (self.__cid == String() ? length@String(self) : 0);
+  int sLen = (s.__cid == String() ? length@String(s) : 0);
+  int index = i;
+  int mLen = 0;
+  int j;
+  if (i >= tLen || i < 0 || sLen == 0) {
+    return -1;
+  }
+  for (j = i; (j < tLen) && (mLen < sLen) && ((j - index) < sLen); ) {
+    if ((self.__cid == String() ? charAt_int@String(self, j) : '\0') != (s.__cid == String() ? charAt_int@String(s, j - index) : '\0')) {
+      mLen = 0;
+      index++;
+      j = index;
+    }
+    else {
+      mLen++;
+      j++;
+    }
+  }
+  if (mLen != sLen) {
+    index = -1;
+  }
+  return index;
+}
+
+int indexOf_char(Object self, char c) {
+  return indexOf_char_int@String(self, c, 0);
+}
+
+int indexOf_char_int(Object self, char c, int i) {
+  int len = (self.__cid == String() ? length@String(self) : 0);
+  int index = -1;
+  if (i >= len || i < 0) {
+    return index;
+  }
+  for (int j = i; j < len; j++) {
+    if ((self.__cid == String() ? charAt_int@String(self, j) : '\0') == c) {
+      return j;
+    }
+  }
+  return index;
+}
+
+int compareTo_String(Object self, Object str) {
+  return compare_String_String((self.__cid == String() ? toString@String(self) : null), str);
+}
+
+int compare_String_String(Object s1, Object s2) {
+  int l1 = (s1.__cid == String() ? length@String(s1) : 0);
+  int l2 = (s2.__cid == String() ? length@String(s2) : 0);
+  int lendiff = l1 - l2;
+  int smaller = l1;
+  if (l1 > l2) {
+    smaller = l2;
+  }
+  else {
+    for (int i = 0; i < smaller; i++) {
+      char c1 = (s1.__cid == String() ? charAt_int@String(s1, i) : '\0');
+      char c2 = (s2.__cid == String() ? charAt_int@String(s2, i) : '\0');
+      if (c1 != c2) {
+        return c1 - c2;
+      }
+    }
+    if (lendiff != 0) return lendiff;
+    return 0;
+  }
+}
+
+Object concat_String(Object self, Object str) {
+  int otherLen = (str.__cid == String() ? length@String(str) : 0);
+  if (otherLen == 0) {
+    return self;
+  }
+  int thisLen = (self.__cid == String() ? length@String(self) : 0);
+  int totalLen = (self.__cid == String() ? length@String(self) : 0) + otherLen;
+  Array_char ret = new Array_char(length=totalLen);
+  for (int i = 0; i < thisLen; i++) {
+    ret.A[i] = (self.__cid == String() ? charAt_int@String(self, i) : '\0');
+  }
+  for (int i = thisLen; i < totalLen; i++) {
+    ret.A[i] = (str.__cid == String() ? charAt_int@String(str, i - thisLen) : '\0');
+  }
+  return String_String_char_int_int(new Object(__cid=String()), ret, 0, totalLen);
+}
+
+bit equalsIgnoreCase_Object(Object self, Object obj) {
+  return equals_Object@String(self, obj);
+}
+
+bit equals_Object(Object self, Object obj) {
+  bit isEqual = false;
+  if (obj.__cid == String()) {
+    isEqual = true;
+    Object s = obj;
+    int sLen = (s.__cid == String() ? length@String(s) : 0);
+    int tLen = (self.__cid == String() ? length@String(self) : 0);
+    if (sLen != tLen) isEqual = false;
+    for (int i = 0; (i < sLen) && (isEqual == true); i++) {
+      if (s._value_String.A[i] != self._value_String.A[i]) {
+        isEqual = false;
+      }
+    }
+  }
+  return isEqual;
+}
+
+int hashCode(Object self) {
+  int n = self._count_String,  hash = 0,  temp = 0;
+  if (n == 0) {
+    return 0;
+  }
+  for (int i = 0; i < n; i++) {
+    temp = (self.__cid == String() ? charAt_int@String(self, i) : '\0');
+    for (int j = 0; j < n - 1 - i; j++) {
+      temp = temp * 31;
+    }
+    hash = hash + temp;
+  }
+  return hash;
+}
+
+Object replace_char_char(Object self, char oldChar, char newChar) {
+  if (oldChar != newChar) {
+    int len = self._count_String;
+    int i = -1;
+    int stop = 0;
+    Array_char val = self._value_String;
+    while (i < len) {
+      i = i + 1;
+      if (val.A[i] == oldChar && stop == 0) {
+        stop = i;
+      }
+    }
+    if (stop < len) {
+      Array_char buf = new Array_char(length=len);
+      for (int j = 0; j < stop; j++) {
+        buf.A[j] = val.A[j];
+      }
+      while (stop < len) {
+        char c = val.A[stop];
+        buf.A[stop] = ((c == oldChar) ? newChar : c);
+        stop++;
+      }
+      return String_String_char_int_int(new Object(__cid=String()), buf, 0, len);
+    }
+  }
+  return self;
+}
+
+Array_char getBytes(Object self) {
+  return getBytes_String((self.__cid == String() ? toString@String(self) : null));
+}
+
+Array_char getBytes_String(Object str) {
+  int len = (str.__cid == String() ? length@String(str) : 0);
+  Array_char bytes = new Array_char(length=len);
+  for (int i = 0; i < len; i++) {
+    bytes.A[i] = (char)((str.__cid == String() ? charAt_int@String(str, i) : '\0'));
+  }
+  return bytes;
+}
+
+Object substring_int(Object self, int beginIndex) {
+  int subLen = self._count_String - beginIndex;
+  assert subLen > 0;
+  return ((beginIndex == 0) ? self : String_String_char_int_int(new Object(__cid=String()), self._value_String, beginIndex, subLen));
+}
+
+Object substring_int_int(Object self, int beginIndex, int endIndex) {
+  assert beginIndex >= 0 && endIndex <= self._value_String.length;
+  int subLen = endIndex - beginIndex;
+  assert subLen > 0;
+  return ((beginIndex == 0 && endIndex == self._count_String) ? self : String_String_char_int_int(new Object(__cid=String()), self._value_String, beginIndex, subLen));
+}
+
+}
+package CharSequence {
+
+Object CharSequence_CharSequence(Object self) {
+    return self;
+}
+
+
+
+
+}
+package Integer {
+
+Object Integer_Integer(Object self) {
+    return self;
+}
+
+Object Integer_Integer_int(Object self, int value) {
+  self.value_Integer = value;
+  return self;
+}
+
+int intValue(Object self) {
+  return self.value_Integer;
+}
+
+int compareTo_Integer(Object self, Object anotherInteger) {
+  return compare_int_int(self.value_Integer, (anotherInteger.__cid == Integer() ? intValue@Integer(anotherInteger) : 0));
+}
+
+int compare_int_int(int x, int y) {
+  return ((x < y) ? -1 : (((x == y) ? 0 : 1)));
+}
+
+bit equals_Object(Object self, Object obj) {
+  if (obj.__cid == Integer()) {
+    return self.value_Integer == ((obj).__cid == Integer() ? intValue@Integer((obj)) : 0);
+  }
+  return false;
+}
+
+int hashCode(Object self) {
+  return self.value_Integer;
+}
+
+Object toString(Object self) {
+  return toString_int(self.value_Integer);
+}
+
+Object toString_int(int i) {
+  if (i == 0) {
+    return String_String_char_int_int(new Object(__cid=String()), new Array_char(length=1+1, A="0"), 0, 1);
+  }
+  int index = 0,  temp = i,  j;
+  Array_char ret = new Array_char(length=32);
+  Array_char ret2 = new Array_char(length=32);
+  Array_char nums = new Array_char(length=10, A={'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'});
+  if (temp < 0) {
+    temp = temp * -1;
+  }
+  while (temp > 0) {
+    ret.A[index] = nums.A[temp % 10];
+    temp = temp / 10;
+    index = index + 1;
+  }
+  if (i < 0) {
+    ret.A[index] = '-';
+    index = index + 1;
+  }
+  int size = index;
+  for (j = 0; j < size; j++) {
+    ret2.A[j] = ret.A[index - 1];
+    index = index - 1;
+  }
+  return String_String_char_int_int(new Object(__cid=String()), ret2, 0, size);
+}
+
+}
+package Key {
+
+Object Key_Key(Object self) {
+    return self;
+}
+
+
+}
+package Assert {
+
+Object Assert_Assert(Object self) {
+  return self;
+}
+
+void assertTrue_String_boolean(Object message, bit condition) {
+  assert condition;
+}
+
+void assertTrue_boolean(bit condition) {
+  assertTrue_String_boolean(String_String_char_int_int(new Object(__cid=String()), new Array_char(length=0+1, A=""), 0, 0), condition);
+}
+
+void assertFalse_String_boolean(Object message, bit condition) {
+  assertTrue_String_boolean(message, !condition);
+}
+
+void assertFalse_boolean(bit condition) {
+  assertFalse_String_boolean(String_String_char_int_int(new Object(__cid=String()), new Array_char(length=0+1, A=""), 0, 0), condition);
+}
+
+void fail_String(Object message) {
+  if (message == null) {
+
+  }
+
+}
+
+void assertEquals_String_Object_Object(Object message, Object expected, Object actual) {
+  assert (expected.__cid == SecureRandom() ? equals_Object@Object(expected, actual) : expected.__cid == StringBuilder() ? equals_Object@Object(expected, actual) : expected.__cid == Byte() ? equals_Object@Object(expected, actual) : expected.__cid == ConfigurableCipherFactory() ? equals_Object@Object(expected, actual) : expected.__cid == HashMap() ? equals_Object@Object(expected, actual) : expected.__cid == Integer() ? equals_Object@Integer(expected, actual) : expected.__cid == Character() ? equals_Object@Character(expected, actual) : expected.__cid == System() ? equals_Object@Object(expected, actual) : expected.__cid == CryptoManager() ? equals_Object@Object(expected, actual) : expected.__cid == SecretKeySpec() ? equals_Object@Object(expected, actual) : expected.__cid == Cipher() ? equals_Object@Object(expected, actual) : expected.__cid == HashMap_Node() ? equals_Object@Object(expected, actual) : expected.__cid == String() ? equals_Object@String(expected, actual) : expected.__cid == ArrayList() ? equals_Object@Object(expected, actual) : expected.__cid == Mac() ? equals_Object@Object(expected, actual) : expected.__cid == CipherFactoryTests() ? equals_Object@Object(expected, actual) : expected.__cid == IvParameterSpec() ? equals_Object@Object(expected, actual) : expected.__cid == Boolean() ? equals_Object@Object(expected, actual) : expected.__cid == Assert() ? equals_Object@Object(expected, actual) : expected.__cid == DefaultCipherFactory() ? equals_Object@Object(expected, actual) : expected.__cid == Object() ? equals_Object@Object(expected, actual) : 0);
+}
+
+bit equalsRegardingNull_Object_Object(Object expected, Object actual) {
+  if (expected == null) {
+    return actual == null;
+  }
+  return isEquals_Object_Object(expected, actual);
+}
+
+bit isEquals_Object_Object(Object expected, Object actual) {
+  return (expected.__cid == SecureRandom() ? equals_Object@Object(expected, actual) : expected.__cid == StringBuilder() ? equals_Object@Object(expected, actual) : expected.__cid == Byte() ? equals_Object@Object(expected, actual) : expected.__cid == ConfigurableCipherFactory() ? equals_Object@Object(expected, actual) : expected.__cid == HashMap() ? equals_Object@Object(expected, actual) : expected.__cid == Integer() ? equals_Object@Integer(expected, actual) : expected.__cid == Character() ? equals_Object@Character(expected, actual) : expected.__cid == System() ? equals_Object@Object(expected, actual) : expected.__cid == CryptoManager() ? equals_Object@Object(expected, actual) : expected.__cid == SecretKeySpec() ? equals_Object@Object(expected, actual) : expected.__cid == Cipher() ? equals_Object@Object(expected, actual) : expected.__cid == HashMap_Node() ? equals_Object@Object(expected, actual) : expected.__cid == String() ? equals_Object@String(expected, actual) : expected.__cid == ArrayList() ? equals_Object@Object(expected, actual) : expected.__cid == Mac() ? equals_Object@Object(expected, actual) : expected.__cid == CipherFactoryTests() ? equals_Object@Object(expected, actual) : expected.__cid == IvParameterSpec() ? equals_Object@Object(expected, actual) : expected.__cid == Boolean() ? equals_Object@Object(expected, actual) : expected.__cid == Assert() ? equals_Object@Object(expected, actual) : expected.__cid == DefaultCipherFactory() ? equals_Object@Object(expected, actual) : expected.__cid == Object() ? equals_Object@Object(expected, actual) : 0);
+}
+
+void assertEquals_Object_Object(Object expected, Object actual) {
+  assertEquals_String_Object_Object(null, expected, actual);
+}
+
+void assertEquals_int_int(int expected, int actual) {
+  assert expected == actual;
+}
+
+}
+package System {
+
+Object System_System(Object self) {
+    return self;
+}
+
+void arraycopy_byte_int_byte_int_int(Array_char src, int srcPos, Array_char dst, int dstPos, int length) {
+  for (int i = srcPos; i < srcPos + length; i++) {
+    dst.A[dstPos + i] = src.A[i];
+  }
+}
+
+}
+package Byte {
+
+Object Byte_Byte(Object self) {
+    return self;
+}
+
+Object Byte_Byte_byte(Object self, char b) {
+  self.b_Byte = b;
+  return self;
+}
+
+char byteValue(Object self) {
+  return self.b_Byte;
+}
+
+}
+package Boolean {
+
+Object Boolean_Boolean(Object self) {
+    return self;
+}
+
+Object Boolean_Boolean_boolean(Object self, bit bool) {
+  self.bool_Boolean = bool;
+  return self;
+}
+
+bit booleanValue(Object self) {
+  return self.bool_Boolean;
+}
+
+}

@@ -1,0 +1,21 @@
+package CipherFactoryTests {
+
+Object CipherFactoryTests_CipherFactoryTests(Object self) {
+    return self;
+}
+
+harness void main(int p_i) {
+  int x = 1;
+  for (int i = 0; i < p_i; i++) {
+    x = x * 9;
+  }
+  Object self = Object_Object(new Object(__cid=Object()));
+  Object cm = CryptoManager_CryptoManager(new Object(__cid=CryptoManager()));
+  Object m = toString_int@Integer(x);
+  Object d = (cm.__cid == CryptoManager() ? encrypt_String@CryptoManager(cm, m) : null);
+  assert !(m.__cid == String() ? equals_Object@String(m, d) : 0);
+  Object p = (cm.__cid == CryptoManager() ? decrypt_String@CryptoManager(cm, d) : null);
+  assert (p.__cid == String() ? equals_Object@String(p, m) : 0);
+}
+
+}

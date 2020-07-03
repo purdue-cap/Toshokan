@@ -28,7 +28,6 @@ pub fn get_cap_logs(h: &Helper,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
     // Expecting parameters: logs, n_unknown
-    println!("{:?}", h.param(0));
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()

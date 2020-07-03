@@ -12,7 +12,7 @@ int used_unknown = 0;
 
 int sqrt(int i){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::sqrt") n_unknowns}}
-	if ({{@index}} < logged && iarr[{{@index}}] == i) {
+	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && iarr[{{@index}}] == i) {
 		return rarr[{{@index}}];
 	}
 	{{/for-cap-logs}}

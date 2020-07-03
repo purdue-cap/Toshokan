@@ -29,7 +29,7 @@ int[N] sort(int[N] input){
 int[N] sort_proxy(int input_0,int input_1,int input_2,int input_3,int input_4) {
    
 	{{#for-cap-logs (subtree logs "ANONYMOUS::sort_proxy") n_unknowns}}
-	if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 && i_3_arr[{{@index}}] == input_3&& i_4_arr[{{@index}}] == input_4) {
+	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 && i_3_arr[{{@index}}] == input_3&& i_4_arr[{{@index}}] == input_4) {
 		int[N] ind = {r_0_arr[{{@index}}], r_1_arr[{{@index}}], r_2_arr[{{@index}}], r_3_arr[{{@index}}], r_4_arr[{{@index}}]};
 		return ind;
 	}

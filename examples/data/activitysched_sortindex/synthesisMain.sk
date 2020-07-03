@@ -23,7 +23,7 @@ int[N] sorti(int[N] input){
 int[N] sorti_proxy(int input_0, int input_1, int input_2) {
    
 	{{#for-cap-logs (subtree logs "ANONYMOUS::sorti_proxy") n_unknowns}}
-	if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 ) {
+	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 ) {
 		int[N] ind = {r_0_arr[{{@index}}], r_1_arr[{{@index}}], r_2_arr[{{@index}}]};
 		return ind;
 	}

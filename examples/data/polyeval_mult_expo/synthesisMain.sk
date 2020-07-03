@@ -21,7 +21,7 @@ int[2*n] mult_proxy(
 	{{#each (range 5)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
 ){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns as |i|}}
-	if ( {{i}} < logged
+	{{#unless @first}}else {{/unless}}if ( {{i}} < logged
 	{{#each (range 5)}} && x_{{@index}}_arr[{{i}}] == x_{{@index}}
 	{{/each}}
 	{{#each (range 5)}} && y_{{@index}}_arr[{{i}}] == y_{{@index}}
@@ -69,7 +69,7 @@ int e_used_unknown = 0;
 
 int[n] exp(int x,int i){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::exp") n_unknowns as |i|}}
-	if ( {{i}} < e_logged && x_arr[{{i}}] == x && i_arr[{{i}}] == i
+	{{#unless @first}}else {{/unless}}if ( {{i}} < e_logged && x_arr[{{i}}] == x && i_arr[{{i}}] == i
 	) {
 		int[n] result = { {{#each (range 5)}}e_r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
 		return result;

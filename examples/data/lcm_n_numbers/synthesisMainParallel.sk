@@ -13,7 +13,7 @@ int used_unknown = 0;
 
 int lcm(int a, int b){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::lcm") n_unknowns}}
-    if ({{@index}} < logged && i_0_arr[{{@index}}] == a && i_1_arr[{{@index}}] == b) {
+    {{#unless @first}}else {{/unless}}if ({{@index}} < logged && i_0_arr[{{@index}}] == a && i_1_arr[{{@index}}] == b) {
         return rarr[{{@index}}];
     }
 	{{/for-cap-logs}}

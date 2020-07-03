@@ -22,7 +22,7 @@ int[2*n] mult_proxy(
 	{{#each (range 20)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
 ){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns as |i|}}
-	if ( {{i}} < logged
+	{{#unless @first}}else {{/unless}}if ( {{i}} < logged
 	{{#each (range 20)}} && x_{{@index}}_arr[{{i}}] == x_{{@index}}
 	{{/each}}
 	{{#each (range 20)}} && y_{{@index}}_arr[{{i}}] == y_{{@index}}

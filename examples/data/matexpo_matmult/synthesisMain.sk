@@ -30,7 +30,7 @@ bit mat_equals(mat A, mat B) {
 
 mat matmul(mat A,mat B){
 	{{#for-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}}
-	if ({{@index}} < logged && mat_equals(A, i_0_arr[{{@index}}]) && mat_equals(B, i_1_arr[{{@index}}])) {
+	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && mat_equals(A, i_0_arr[{{@index}}]) && mat_equals(B, i_1_arr[{{@index}}])) {
 		return rarr[{{@index}}];
 	}
 	{{/for-cap-logs}}

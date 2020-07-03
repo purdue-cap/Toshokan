@@ -115,7 +115,7 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                     rtn_arg = arg;
                     continue;
                 }
-                if (arg_name.find("__ANONYMOUS_") != string::npos) {
+                if (arg_name.find("__") != string::npos) {
                     continue;
                 }
                 auto arg_type = arg->getType();

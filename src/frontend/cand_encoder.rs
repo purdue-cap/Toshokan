@@ -1,11 +1,10 @@
-use handlebars::Handlebars;
-use std::cell::RefCell;
 use std::path::Path;
 use std::fs;
 use std::io::Write;
 use std::collections::HashSet;
 use regex::Regex;
 use super::{Encoder, EncodeError, RewriteController};
+use crate::cegis::CEGISStateParams;
 
 pub static HOLE_REGEX: &'static str = r#"(?x)
 (?:
@@ -26,26 +25,16 @@ pub static HOLE_REGEX: &'static str = r#"(?x)
 >"#;
 
 
-pub struct CandEncoder<'h, 'r> {
-    handlebars: &'h RefCell<Handlebars<'r>>,
-    name: &'static str,
-    input_tmp: Option<String>
+pub struct CandEncoder {
+    input_tmp: Option<String>,
+    template: Option<String>
 }
 
-impl<'h, 'r> CandEncoder<'h, 'r> {
-    pub fn new(hb: &'h RefCell<Handlebars<'r>>) -> Self{
+impl CandEncoder {
+    pub fn new() -> Self {
         CandEncoder {
-            handlebars: hb,
-            name: "cand-encoder",
-            input_tmp: None
-        }
-    }
-
-    pub fn new_with_name(hb: &'h RefCell<Handlebars<'r>>, name: &'static str) -> Self{
-        CandEncoder {
-            handlebars: hb,
-            name: name,
-            input_tmp: None
+            input_tmp: None,
+            template: None
         }
     }
 
@@ -65,10 +54,7 @@ impl<'h, 'r> CandEncoder<'h, 'r> {
     }
 }
 
-impl<'h, 'r> Encoder<'r> for CandEncoder<'h, 'r> {
-    fn name(&self) -> &'static str { self.name }
-    fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
-
+impl Encoder for CandEncoder {
     fn setup_rewrite(&mut self, controller: &RewriteController) -> Result<(), EncodeError> {
         if controller.enable_rewrite_cand_encoder() {
             self.load_input_tmp_from_file(controller.get_input_tmp_path().ok_or(
@@ -88,6 +74,35 @@ impl<'h, 'r> Encoder<'r> for CandEncoder<'h, 'r> {
         write!(output_file, "{}", self.rewrite_template_to_str()?)?;
         Ok(())
     }
+
+    fn load_str<S: AsRef<str>>(&mut self, template: S) -> Result<(), EncodeError> {
+        self.template = Some(template.as_ref().to_string());
+        Ok(())
+    }
+
+    fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError> {
+        let mut work_buffer = self.template.as_ref().ok_or(EncodeError::SimpleRenderError("Template not loaded"))?.clone();
+        let mut idx : usize = 0;
+        while idx < work_buffer.len() {
+            if Some("{{holes.") == work_buffer.get(idx..idx+8) {
+                let hole_start_idx = idx + 8;
+                let mut hole_idx = hole_start_idx;
+                let hole_name = loop {
+                    if work_buffer.get(hole_idx..hole_idx+2).ok_or(EncodeError::SimpleRenderError("Unexpected EOF"))? == "}}" {
+                        break work_buffer.get(hole_start_idx..hole_idx).ok_or(EncodeError::SimpleRenderError("Unexpected EOF"))?;
+                    }
+                    hole_idx += 1;
+                };
+                let end_idx = hole_idx + 2;
+                let hole_value_string = params.holes.get(hole_name).ok_or(EncodeError::SimpleRenderError("Hole name not found"))?.to_string();
+                work_buffer.replace_range(idx..end_idx, hole_value_string.as_str());
+                idx += hole_value_string.len();
+                continue;
+            }
+            idx += 1;
+        }
+        Ok(work_buffer)
+    }
 }
 
 #[cfg(test)]
@@ -99,8 +114,7 @@ mod tests {
     #[test]
     fn renders_holes() -> Result<(), Box<dyn Error>> {
         let mut state = CEGISState::new([("func".to_string(), 1 as usize)].iter().cloned().collect(), 1, 10, true);
-        let handlebars = RefCell::new(Handlebars::new());
-        let mut encoder = CandEncoder::new(&handlebars);
+        let mut encoder = CandEncoder::new();
         encoder.load_str(r#"holes_2 = {{holes.H__2}}"#)?;
         state.update_hole("H__2", 3);
         assert_eq!(encoder.render(&state)?, "holes_2 = 3");
@@ -110,8 +124,7 @@ mod tests {
     #[test]
     fn renders_from_tmp_file() -> Result<(), Box<dyn Error>> {
         let mut state = CEGISState::new([("func".to_string(), 1 as usize)].iter().cloned().collect(), 1, 10, true);
-        let handlebars = RefCell::new(Handlebars::new());
-        let mut encoder = CandEncoder::new(&handlebars);
+        let mut encoder = CandEncoder::new();
         encoder.load_input_tmp_from_str(
             "<H__0  1> + <H__1> + <H__2 1 *> + <H__3 +> + MINVAR <H__4> + SPVAR 3 $ H__3 $ < H__5 $>");
         encoder.load_from_rewrite()?;

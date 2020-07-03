@@ -1,7 +1,7 @@
 use handlebars::Handlebars;
 use std::cell::RefCell;
 use std::path::Path;
-use super::{Encoder, EncodeError, RewriteController};
+use super::{HandlebarsEncoder, EncodeError, RewriteController};
 
 pub struct CEEncoder<'h, 'r> {
     handlebars: &'h RefCell<Handlebars<'r>>,
@@ -24,7 +24,7 @@ impl<'h, 'r> CEEncoder<'h, 'r> {
     }
 }
 
-impl<'h, 'r> Encoder<'r> for CEEncoder<'h, 'r> {
+impl<'h, 'r> HandlebarsEncoder<'r> for CEEncoder<'h, 'r> {
     fn name(&self) -> &'static str { self.name }
     fn handlebars(&self) -> &RefCell<Handlebars<'r>> { self.handlebars }
 
@@ -41,6 +41,7 @@ impl<'h, 'r> Encoder<'r> for CEEncoder<'h, 'r> {
 mod tests {
     use super::*;
     use crate::cegis::CEGISState;
+    use crate::frontend::Encoder;
     use std::error::Error;
     
     #[test]

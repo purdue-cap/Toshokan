@@ -8,6 +8,7 @@ pub use sketch_runner::GenerationResult;
 
 mod encoder;
 pub use encoder::Encoder;
+pub use encoder::HandlebarsEncoder;
 pub use encoder::EncoderSource;
 mod cand_encoder;
 pub use cand_encoder::CandEncoder;

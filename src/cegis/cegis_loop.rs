@@ -235,7 +235,7 @@ impl<'r> CEGISLoop<'r> {
         debug!(target: "CEGISMainLoop", "Verify points: {:?}", self.state.get_params().verify_points);
         warn!(target: "CEGISMainLoop", "Verify points are currently unused in sketch backend based verification phrase.");
 
-        let mut cand_encoder = CandEncoder::new(&self.hb);
+        let mut cand_encoder = CandEncoder::new();
         let mut c_e_encoder = CEEncoder::new(&self.hb);
         cand_encoder.setup_rewrite(&rewrite_controller)?;
         c_e_encoder.setup_rewrite(&rewrite_controller)?;

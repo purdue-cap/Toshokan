@@ -41,6 +41,9 @@ quick_error! {
         RewriteError(desc: &'static str) {
             display("{}", desc)
         }
+        SimpleRenderError(desc: &'static str) {
+            display("{}", desc)
+        }
     }
 }
 

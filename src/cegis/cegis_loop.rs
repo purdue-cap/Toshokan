@@ -203,6 +203,8 @@ impl<'r> CEGISLoop<'r> {
     pub fn get_recorder(&self) -> Option<&CEGISRecorder> {self.recorder.as_ref()}
 
     pub fn run_loop(&mut self) -> Result<Option<String>, Box<dyn std::error::Error>> {
+        self.recorder.as_mut().map(|r| r.start_total_clock());
+
         info!(target: "CEGISMainLoop", "Start initialization");
 
         let temp_dir_obj = tempdir()?;
@@ -252,8 +254,6 @@ impl<'r> CEGISLoop<'r> {
             self.recorder = None;
         }
 
-        self.recorder.as_mut().map(|r| r.reset_clock());
-
         let c_e_names_in_log : Vec<_> = self.config.get_params().c_e_names.iter().map(|s| s.as_str()).collect();
         let log_analyzer = LogAnalyzer::new(c_e_names_in_log.as_slice());
 
@@ -268,17 +268,20 @@ impl<'r> CEGISLoop<'r> {
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)
             .ok_or("Prepare work dir for library tracer failed")?;
         let mut retry_strategy = self.config.new_retry_strategy();
-        info!(target: "CEGISMainLoop", "Initialization complete");
-
         let mut base_path : Result<PathBuf, &str> = Err("Base name uninitialized");
+
+        info!(target: "CEGISMainLoop", "Initialization complete");
+        self.recorder.as_mut().map(|r| r.step_initialization());
         let solved = loop {
             info!(target: "CEGISMainLoop", "Entering iteration #{}", self.state.get_iter_count());
 
+            self.recorder.as_mut().map(|r| r.start_verification());
             info!(target: "CEGISMainLoop", "Verifying");
             let (verify_result, last_verification) = self.verify(&cand_encoder,
                 &log_analyzer, &mut sketch_runner)?;
             self.recorder.as_mut().map(|r| r.set_last_verification(&last_verification));
             self.recorder.as_mut().map(|r| r.set_verification_seed(sketch_runner.get_last_verification_seed_used()));
+            self.recorder.as_mut().map(|r| r.stop_verification());
             if let Some(new_c_e) = verify_result{
                 info!(target: "CEGISMainLoop", "Verification returned C.E.");
                 debug!(target: "CEGISMainLoop", "New C.E: {:?}", new_c_e);
@@ -300,6 +303,7 @@ impl<'r> CEGISLoop<'r> {
             }
 
             if self.state.get_iter_count() == 0 {
+                self.recorder.as_mut().map(|r| r.start_synthesis());
                 info!(target: "CEGISMainLoop", "Iter 0: Pre-run synthesis before tracing to generate runnable candidate");
                 info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
                 let synthesize_result = loop {
@@ -316,6 +320,7 @@ impl<'r> CEGISLoop<'r> {
                         warn!(target: "CEGISMainLoop", "Synthesis failed, retry initiated by RetryStrategy");
                     }
                 };
+                self.recorder.as_mut().map(|r| r.stop_pre_synthesis());
                 if let Some((new_holes, new_base_path)) = synthesize_result {
                     info!(target: "CEGISMainLoop", "Synthesis(Pre-run) returned candidate");
                     debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
@@ -333,31 +338,35 @@ impl<'r> CEGISLoop<'r> {
                 }
             }
 
+            self.recorder.as_mut().map(|r| r.start_trace());
             info!(target: "CEGISMainLoop", "Tracing");
             let (traces, timed_out) = self.trace(base_path?.as_path(), &mut library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
             self.recorder.as_mut().map(|r| r.set_new_traces(&traces));
             self.recorder.as_mut().map(|r| r.set_trace_timed_out(timed_out));
+            self.recorder.as_mut().map(|r| r.stop_trace());
             for trace in traces.into_iter() {
                 self.state.add_log(trace);
             }
 
+            self.recorder.as_mut().map(|r| r.start_synthesis());
             info!(target: "CEGISMainLoop", "Synthesizing");
-                let synthesize_result = loop {
-                    let (result, last_synthesis) = self.synthesize(&c_e_encoder,
-                        &mut hole_extractor, &mut sketch_runner)?;
-                    self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
-                    self.recorder.as_mut().map(|r| r.add_synthesis_seed(sketch_runner.get_last_synthesis_seed_used()));
-                    if result.is_some() {
-                        retry_strategy.succeed(&self.state);
-                        break result;
-                    } else if !retry_strategy.fail_and_retry(&mut self.state){
-                        break None;
-                    } else {
-                        warn!(target: "CEGISMainLoop", "Synthesis failed, retry initiated by RetryStrategy");
-                    }
-                };
+            let synthesize_result = loop {
+                let (result, last_synthesis) = self.synthesize(&c_e_encoder,
+                    &mut hole_extractor, &mut sketch_runner)?;
+                self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
+                self.recorder.as_mut().map(|r| r.add_synthesis_seed(sketch_runner.get_last_synthesis_seed_used()));
+                if result.is_some() {
+                    retry_strategy.succeed(&self.state);
+                    break result;
+                } else if !retry_strategy.fail_and_retry(&mut self.state){
+                    break None;
+                } else {
+                    warn!(target: "CEGISMainLoop", "Synthesis failed, retry initiated by RetryStrategy");
+                }
+            };
+            self.recorder.as_mut().map(|r| r.stop_synthesis());
             if let Some((new_holes, new_base_path)) = synthesize_result {
                 info!(target: "CEGISMainLoop", "Synthesis returned candidate");
                 debug!(target: "CEGISMainLoop", "Updated Holes: {:?}", new_holes);
@@ -382,6 +391,7 @@ impl<'r> CEGISLoop<'r> {
             let current_iter_nth = self.state.get_iter_count();
             self.recorder.as_mut().map(|r| {
                 r.set_iter_nth(current_iter_nth);
+                r.step_iteration();
                 r.commit();
             });
             self.state.incr_iteration();

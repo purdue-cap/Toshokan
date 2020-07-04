@@ -1,9 +1,46 @@
 use serde::Serialize;
 use std::io::Write;
-use std::time::Instant;
+use std::time::{Instant, Duration};
 use std::collections::HashMap;
 use super::TraceLog;
 use std::path::{Path, PathBuf};
+
+pub struct CEGISTimer {
+    elapsed_duration: Duration,
+    start_time: Option<Instant>
+}
+
+impl CEGISTimer {
+    pub fn new() -> Self{
+        CEGISTimer {
+            elapsed_duration: Duration::new(0, 0),
+            start_time: None
+        }
+    }
+
+    pub fn start(&mut self) {
+        self.start_time = Some(Instant::now());
+    }
+
+    pub fn stop(&mut self) -> Duration {
+        if let Some(start_time) = self.start_time.take() {
+            let new_elapse = start_time.elapsed();
+            self.elapsed_duration += new_elapse;
+            new_elapse
+        } else {
+            Duration::new(0, 0)
+        }
+    }
+
+    pub fn step(&mut self) -> Duration {
+        let elapse = self.stop();
+        self.start();
+        elapse
+    }
+
+    pub fn total_elapsed(&self) -> Duration {self.elapsed_duration}
+
+}
 
 #[derive(Serialize)]
 struct CEGISRecordEntry {
@@ -22,14 +59,28 @@ struct CEGISRecordEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     verification_seed: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pre_synthesis_seed: Option<Vec<u64>>
+    pre_synthesis_seed: Option<Vec<u64>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    synthesis_wall_time: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pre_synthesis_wall_time: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    verification_wall_time: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    trace_wall_time: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    total_wall_time: Option<f32>
 }
 
 #[derive(Serialize)]
 struct CEGISRecord {
     entries: Vec<CEGISRecordEntry>,
     solved: bool,
-    wall_time: f32,
+    total_wall_time: f32,
+    total_synthesis_time: f32,
+    total_verification_time: f32,
+    total_trace_time: f32,
+    initialization_time: f32,
     total_iter: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
     last_synthesis: Option<PathBuf>,
@@ -43,7 +94,16 @@ pub struct CEGISRecorder {
     new_c_e_s: Option<Vec<isize>>,
     new_traces: Option<Vec<TraceLog>>,
     holes: Option<HashMap<String, isize>>,
-    clock: Option<Instant>,
+    total_clock: CEGISTimer,
+    synthesis_clock: CEGISTimer,
+    verification_clock: CEGISTimer,
+    trace_clock: CEGISTimer,
+    current_total_cost: Option<Duration>,
+    current_synthesis_cost: Option<Duration>,
+    current_pre_synthesis_cost: Option<Duration>,
+    current_verification_cost: Option<Duration>,
+    current_trace_cost: Option<Duration>,
+    initialization_cost: Option<Duration>,
     last_synthesis: Option<PathBuf>,
     last_verification: Option<PathBuf>,
     trace_timed_out: Option<bool>,
@@ -74,7 +134,11 @@ impl CEGISRecorder {
             record: CEGISRecord {
                 entries: Vec::new(),
                 solved: false,
-                wall_time: std::f32::NAN,
+                total_wall_time: std::f32::NAN,
+                total_synthesis_time: std::f32::NAN,
+                total_verification_time: std::f32::NAN,
+                total_trace_time: std::f32::NAN,
+                initialization_time: std::f32::NAN,
                 total_iter: 0,
                 last_synthesis: None,
                 last_verification: None
@@ -83,7 +147,16 @@ impl CEGISRecorder {
             new_c_e_s: None,
             new_traces: None,
             holes: None,
-            clock: None,
+            total_clock: CEGISTimer::new(),
+            synthesis_clock: CEGISTimer::new(),
+            verification_clock: CEGISTimer::new(),
+            trace_clock: CEGISTimer::new(),
+            current_total_cost: None,
+            current_synthesis_cost: None,
+            current_pre_synthesis_cost: None,
+            current_verification_cost: None,
+            current_trace_cost: None,
+            initialization_cost: None,
             last_synthesis: None,
             last_verification: None,
             trace_timed_out: None,
@@ -156,21 +229,62 @@ impl CEGISRecorder {
             trace_timed_out: self.trace_timed_out.take(),
             synthesis_seed: self.synthesis_seed.take(),
             verification_seed: self.verification_seed.take(),
-            pre_synthesis_seed: self.pre_synthesis_seed.take()
+            pre_synthesis_seed: self.pre_synthesis_seed.take(),
+            synthesis_wall_time: self.current_synthesis_cost.take().map(|d| d.as_secs_f32()),
+            pre_synthesis_wall_time: self.current_pre_synthesis_cost.take().map(|d| d.as_secs_f32()),
+            verification_wall_time: self.current_verification_cost.take().map(|d| d.as_secs_f32()),
+            trace_wall_time: self.current_trace_cost.take().map(|d| d.as_secs_f32()),
+            total_wall_time: self.current_total_cost.take().map(|d| d.as_secs_f32())
         });
     }
 
-    pub fn reset_clock(&mut self) -> () {
-        self.clock = Some(Instant::now());
+    pub fn start_total_clock(&mut self) {self.total_clock.start();}
+
+    pub fn start_synthesis(&mut self) {self.synthesis_clock.start();}
+  
+    pub fn start_verification(&mut self) {self.verification_clock.start();}
+
+    pub fn start_trace(&mut self) {self.trace_clock.start();}
+
+    pub fn stop_synthesis(&mut self) {
+        self.current_synthesis_cost = Some(self.synthesis_clock.stop());
+    }
+
+    pub fn stop_pre_synthesis(&mut self) {
+        self.current_pre_synthesis_cost = Some(self.synthesis_clock.stop());
+    }
+
+    pub fn stop_verification(&mut self) {
+        self.current_verification_cost = Some(self.verification_clock.stop());
+    }
+
+    pub fn stop_trace(&mut self) {
+        self.current_trace_cost = Some(self.trace_clock.stop());
+    }
+    
+    pub fn step_iteration(&mut self) {
+        self.current_total_cost = Some(self.total_clock.step());
+    }
+
+    pub fn step_initialization(&mut self) {
+        self.initialization_cost = Some(self.total_clock.step());
     }
 
     pub fn commit_time(&mut self) -> Option<()> {
-        self.record.wall_time = self.clock?.elapsed().as_secs_f32();
+        self.total_clock.stop();
+        self.synthesis_clock.stop();
+        self.verification_clock.stop();
+        self.trace_clock.stop();
+        self.record.total_wall_time = self.total_clock.total_elapsed().as_secs_f32();
+        self.record.total_synthesis_time = self.synthesis_clock.total_elapsed().as_secs_f32();
+        self.record.total_verification_time = self.verification_clock.total_elapsed().as_secs_f32();
+        self.record.total_trace_time = self.trace_clock.total_elapsed().as_secs_f32();
+        self.record.initialization_time = self.initialization_cost?.as_secs_f32();
         Some(())
     }
 
     pub fn get_time(&self) -> f32 {
-        self.record.wall_time
+        self.record.total_wall_time
     }
 
     pub fn to_json(&self) -> serde_json::Result<String> {

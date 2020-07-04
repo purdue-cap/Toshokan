@@ -7,7 +7,7 @@ use std::fs::File;
 use std::collections::HashMap;
 use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
-use crate::cegis::TraceLog;
+use crate::cegis::{TraceLog, CEGISState};
 use log::{error, trace, warn};
 use mio::{Events, Poll, Interest, Token};
 use mio::unix::SourceFd;
@@ -54,6 +54,16 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
         self.add_static_file_to_work_dir("json.hpp", JSON_HPP)?;
         self.add_static_file_to_work_dir("vops.h", VOPS_H)?;
         Some(())
+    }
+
+    pub fn setup_compiler_flags(&mut self, state: &CEGISState) {
+        // Setup compiler flags according to current state
+        if let Some(largest_log_length) = 
+            state.get_params().logs.values().map(|logs| logs.len()).max() {
+            let estimated_nesting_level = largest_log_length + state.get_params().n_unknowns;
+            let new_depth_bound = std::cmp::max(self.flag_manager.get_bracket_depth(), estimated_nesting_level * 2);
+            self.flag_manager.set_bracket_depth(new_depth_bound)
+        }
     }
 
     pub fn add_static_file_to_work_dir(&self, filename: &'static str, content: &'static str) -> Option<()> {

@@ -4,14 +4,18 @@ use std::path::{Path, PathBuf};
 
 pub struct CFlagManager {
     compiler_bin: &'static str,
-    include_paths: Vec<PathBuf>
+    include_paths: Vec<PathBuf>,
+    additional_flags: Vec<String>,
+    bracket_depth: usize
 }
 
 impl CFlagManager {
     pub fn new(compiler: &'static str) -> Self{
         CFlagManager {
             compiler_bin: compiler,
-            include_paths: Vec::new()
+            include_paths: Vec::new(),
+            additional_flags: Vec::new(),
+            bracket_depth: 256
         }
     }
 
@@ -42,6 +46,12 @@ impl CFlagManager {
         self.include_paths.push(path.as_ref().to_path_buf())
     }
 
+    pub fn add_flag<S: AsRef<str>>(&mut self, flag: S) {self.additional_flags.push(flag.as_ref().to_string());}
+
+    pub fn set_bracket_depth(&mut self, depth: usize) {self.bracket_depth = depth;}
+
+    pub fn get_bracket_depth(&self) -> usize {self.bracket_depth}
+
     pub fn get_include_flags(&self) -> Option<Vec<String>> {
         let mut other_include_flags : Vec<String> = self.include_paths.iter()
             .map(|path| path.to_str())
@@ -51,6 +61,10 @@ impl CFlagManager {
         let mut include_flags : Vec<String> = self.get_include_paths()?.iter()
             .map(|path| format!("-I{}", path.trim())).collect();
         include_flags.append(&mut other_include_flags);
+
+        include_flags.push(format!("-fbracket-depth={}", self.bracket_depth));
+        let mut additional_flags = self.additional_flags.clone();
+        include_flags.append(&mut additional_flags);
         Some(include_flags)
     }
 

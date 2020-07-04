@@ -168,6 +168,9 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Trace", "Current base name: {}", base_name);
         library_tracer.set_base_name(&base_name);
 
+        info!(target: "Trace", "Setting up current compiler flags");
+        library_tracer.setup_compiler_flags(self.get_state());
+
         info!(target: "Trace", "Building tracer source");
         let tracer_src = library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
 
@@ -395,6 +398,7 @@ impl<'r> CEGISLoop<'r> {
                 r.set_iter_nth(current_iter_nth);
                 r.step_iteration();
                 r.commit();
+                println!("!!!!!!!!!!!!{}", r.get_ephemeral_record_path().map(|p| p.to_str()).flatten().unwrap_or("!!!"));
                 r.write_ephemeral_record().ok().map(
                     |_| info!(target:"CEGISMainLoop", "Ephemeral record logged to {}",
                         r.get_ephemeral_record_path().map(|p| p.to_str()).flatten().unwrap_or("<Failure>")));

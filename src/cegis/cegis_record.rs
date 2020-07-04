@@ -1,9 +1,10 @@
 use serde::Serialize;
-use std::io::Write;
+use std::io::{Seek, Write};
 use std::time::{Instant, Duration};
 use std::collections::HashMap;
 use super::TraceLog;
 use std::path::{Path, PathBuf};
+use tempfile::NamedTempFile;
 
 pub struct CEGISTimer {
     elapsed_duration: Duration,
@@ -109,7 +110,8 @@ pub struct CEGISRecorder {
     trace_timed_out: Option<bool>,
     synthesis_seed: Option<Vec<u64>>,
     verification_seed: Option<u64>,
-    pre_synthesis_seed: Option<Vec<u64>>
+    pre_synthesis_seed: Option<Vec<u64>>,
+    ephemeral_record: Option<NamedTempFile>
 }
 
 quick_error! {
@@ -129,7 +131,7 @@ quick_error! {
 }
 
 impl CEGISRecorder {
-    pub fn new() -> Self {
+    pub fn new(ephemeral_record: Option<NamedTempFile>) -> Self {
         CEGISRecorder {
             record: CEGISRecord {
                 entries: Vec::new(),
@@ -162,7 +164,8 @@ impl CEGISRecorder {
             trace_timed_out: None,
             synthesis_seed: None,
             verification_seed: None,
-            pre_synthesis_seed: None
+            pre_synthesis_seed: None,
+            ephemeral_record: ephemeral_record
         }
     }
 
@@ -304,6 +307,19 @@ impl CEGISRecorder {
         w.write(self.to_json_pretty()?.as_bytes())?;
         Ok(())
     }
+
+    pub fn write_ephemeral_record(&mut self) -> Result<(), Error> {
+        if self.ephemeral_record.is_some() {
+            let json_record = self.to_json_pretty()?;
+            let er_file = self.ephemeral_record.as_mut().unwrap().as_file_mut();
+            er_file.set_len(0)?;
+            er_file.seek(std::io::SeekFrom::Start(0))?;
+            er_file.write(json_record.as_bytes())?;
+        }
+        Ok(())
+    }
+
+    pub fn get_ephemeral_record_path(&self) -> Option<&Path> {self.ephemeral_record.as_ref().map(|r| r.path())}
 
     pub fn commit_last_files(&mut self) {
         self.record.last_synthesis = self.last_synthesis.clone();

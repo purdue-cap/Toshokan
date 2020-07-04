@@ -8,7 +8,7 @@ use super::CEGISState;
 use super::CEGISRecorder;
 use super::TraceLog;
 use handlebars::Handlebars;
-use tempfile::tempdir;
+use tempfile::{tempdir, Builder};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -249,7 +249,9 @@ impl<'r> CEGISLoop<'r> {
         self.state.set_h_names(h_names);
 
         if self.config.get_params().enable_record {
-            self.recorder = Some(CEGISRecorder::new());
+            self.recorder = Some(CEGISRecorder::new(Some(
+                Builder::new().prefix("emphermal_record.").suffix(".json").tempfile()?
+            )));
         } else {
             self.recorder = None;
         }
@@ -393,6 +395,9 @@ impl<'r> CEGISLoop<'r> {
                 r.set_iter_nth(current_iter_nth);
                 r.step_iteration();
                 r.commit();
+                r.write_ephemeral_record().ok().map(
+                    |_| info!(target:"CEGISMainLoop", "Ephemeral record logged to {}",
+                        r.get_ephemeral_record_path().map(|p| p.to_str()).flatten().unwrap_or("<Failure>")));
             });
             self.state.incr_iteration();
         };

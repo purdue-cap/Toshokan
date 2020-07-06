@@ -398,7 +398,6 @@ impl<'r> CEGISLoop<'r> {
                 r.set_iter_nth(current_iter_nth);
                 r.step_iteration();
                 r.commit();
-                println!("!!!!!!!!!!!!{}", r.get_ephemeral_record_path().map(|p| p.to_str()).flatten().unwrap_or("!!!"));
                 r.write_ephemeral_record().ok().map(
                     |_| info!(target:"CEGISMainLoop", "Ephemeral record logged to {}",
                         r.get_ephemeral_record_path().map(|p| p.to_str()).flatten().unwrap_or("<Failure>")));

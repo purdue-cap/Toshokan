@@ -89,27 +89,27 @@ namespace CryptoManager{
 extern void CryptoManager_CryptoManager(Object::Object* self, Object::Object*& _out);
 extern void encrypt_String(Object::Object* self, Object::Object* message, Object::Object*& _out);
 extern void decrypt_String(Object::Object* self, Object::Object* encryptedMessage, Object::Object*& _out);
-extern void readEncoded_String(Object::Object* self, Object::Object* encrypted, array::Array_char*& _out);
+extern void getCharset(Object::Object* self, Object::Object*& _out);
+extern void encode_String_String(Object::Object* self, Object::Object* string, Object::Object* charset, array::Array_char*& _out);
 extern void getCipherFactory(Object::Object* self, Object::Object*& _out);
 extern void appendEncryptionMark_byte(Object::Object* self, array::Array_char* bytesArray, array::Array_char*& _out);
 extern void cryptInCipher_Cipher_byte(Object::Object* self, Object::Object* cipher, array::Array_char* data, array::Array_char*& _out);
-extern void getCharset(Object::Object* self, Object::Object*& _out);
 extern void decode_byte_String(Object::Object* self, array::Array_char* string, Object::Object* charset, Object::Object*& _out);
 extern void isEncrypted_String(Object::Object* self, Object::Object* message, bool& _out);
-extern void encode_String_String(Object::Object* self, Object::Object* string, Object::Object* charset, array::Array_char*& _out);
+extern void readEncoded_String(Object::Object* self, Object::Object* encrypted, array::Array_char*& _out);
 extern void isEncryptedByte_byte(Object::Object* self, array::Array_char* data, bool& _out);
 extern void cutEncryptionMark_byte(Object::Object* self, array::Array_char* bytesArray, array::Array_char*& _out);
-extern void getBasicCharset(Object::Object* self, Object::Object*& _out);
-extern void processEscape_byte_boolean(Object::Object* self, array::Array_char* data, bool escape, array::Array_char*& _out);
 extern void getEncryptedMark(Object::Object* self, char& _out);
 extern void isUseEncryptionStrict(Object::Object* self, bool& _out);
+extern void getBasicCharset(Object::Object* self, Object::Object*& _out);
+extern void processEscape_byte_boolean(Object::Object* self, array::Array_char* data, bool escape, array::Array_char*& _out);
 }
 namespace String{
 extern void equals_Object(Object::Object* self, Object::Object* obj, bool& _out);
 extern void String_String_char_int_int(Object::Object* self, array::Array_char* ca, int offset, int count, Object::Object*& _out);
 extern void length(Object::Object* self, int& _out);
-extern void String_String_byte(Object::Object* self, array::Array_char* bytes, Object::Object*& _out);
 extern void getBytes(Object::Object* self, array::Array_char*& _out);
+extern void String_String_byte(Object::Object* self, array::Array_char* bytes, Object::Object*& _out);
 extern void toString(Object::Object* self, Object::Object*& _out);
 extern void getBytes_String(Object::Object* str, array::Array_char*& _out);
 extern void charAt_int(Object::Object* self, int index, char& _out);
@@ -240,15 +240,22 @@ class Object;
 class Object{
   public:
   int  __cid;
+  Object*  ALGORITHM_DefaultCipherFactory;
+  Object*  PADDING_DefaultCipherFactory;
+  Object*  algorithm_DefaultCipherFactory;
+  Object*  padding_DefaultCipherFactory;
+  Object*  key_DefaultCipherFactory;
+  bool  keyBase64_DefaultCipherFactory;
   bool  bool_Boolean;
   array::Array_Object*  elementData_ArrayList;
   int  DEFAULT_CAPACITY_ArrayList;
   int  capacity_ArrayList;
   int  size_ArrayList;
+  array::Array_char*  _value_String;
+  int  _count_String;
   Object*  key_HashMap_Node;
   Object*  value_HashMap_Node;
   int  hash_HashMap_Node;
-  char  value_Character;
   Object*  type_Cipher;
   Object*  key_Cipher;
   int  mode_Cipher;
@@ -256,26 +263,19 @@ class Object{
   int  ENCRYPT_MODE_Cipher;
   int  DECRYPT_MODE_Cipher;
   array::Array_char*  key_SecretKeySpec;
-  int  value_Integer;
-  array::Array_char*  _value_String;
-  int  _count_String;
-  array::Array_char*  _value_StringBuilder;
-  int  _count_StringBuilder;
-  Object*  ALGORITHM_DefaultCipherFactory;
-  Object*  PADDING_DefaultCipherFactory;
-  Object*  algorithm_DefaultCipherFactory;
-  Object*  padding_DefaultCipherFactory;
-  Object*  key_DefaultCipherFactory;
-  bool  keyBase64_DefaultCipherFactory;
   Object*  basicCharset_CryptoManager;
   Object*  charset_CryptoManager;
   char  encryptedMark_CryptoManager;
   bool  useEncryptionStrict_CryptoManager;
   Object*  cipherFactory_CryptoManager;
+  char  value_Character;
+  int  value_Integer;
   array::Array_Object*  elementData_HashMap;
   int  numPairs_HashMap;
   int  capacity_HashMap;
   char  b_Byte;
+  array::Array_char*  _value_StringBuilder;
+  int  _count_StringBuilder;
   array::Array_bit*  _array_bit;
   array::Array_char*  _array_char;
   array::Array_int*  _array_int;
@@ -288,7 +288,7 @@ class Object{
   float  _float;
   double  _double;
   Object(){}
-  static Object* create(  int  __cid_,   bool  bool_Boolean_,   array::Array_Object*  elementData_ArrayList_,   int  DEFAULT_CAPACITY_ArrayList_,   int  capacity_ArrayList_,   int  size_ArrayList_,   Object*  key_HashMap_Node_,   Object*  value_HashMap_Node_,   int  hash_HashMap_Node_,   char  value_Character_,   Object*  type_Cipher_,   Object*  key_Cipher_,   int  mode_Cipher_,   array::Array_bit*  updated_Cipher_,   int  ENCRYPT_MODE_Cipher_,   int  DECRYPT_MODE_Cipher_,   array::Array_char*  key_SecretKeySpec_,   int  value_Integer_,   array::Array_char*  _value_String_,   int  _count_String_,   array::Array_char*  _value_StringBuilder_,   int  _count_StringBuilder_,   Object*  ALGORITHM_DefaultCipherFactory_,   Object*  PADDING_DefaultCipherFactory_,   Object*  algorithm_DefaultCipherFactory_,   Object*  padding_DefaultCipherFactory_,   Object*  key_DefaultCipherFactory_,   bool  keyBase64_DefaultCipherFactory_,   Object*  basicCharset_CryptoManager_,   Object*  charset_CryptoManager_,   char  encryptedMark_CryptoManager_,   bool  useEncryptionStrict_CryptoManager_,   Object*  cipherFactory_CryptoManager_,   array::Array_Object*  elementData_HashMap_,   int  numPairs_HashMap_,   int  capacity_HashMap_,   char  b_Byte_,   array::Array_bit*  _array_bit_,   array::Array_char*  _array_char_,   array::Array_int*  _array_int_,   array::Array_float*  _array_float_,   array::Array_double*  _array_double_,   array::Array_Object*  _array_object_,   bool  _bit_,   char  _char_,   int  _int_,   float  _float_,   double  _double_);
+  static Object* create(  int  __cid_,   Object*  ALGORITHM_DefaultCipherFactory_,   Object*  PADDING_DefaultCipherFactory_,   Object*  algorithm_DefaultCipherFactory_,   Object*  padding_DefaultCipherFactory_,   Object*  key_DefaultCipherFactory_,   bool  keyBase64_DefaultCipherFactory_,   bool  bool_Boolean_,   array::Array_Object*  elementData_ArrayList_,   int  DEFAULT_CAPACITY_ArrayList_,   int  capacity_ArrayList_,   int  size_ArrayList_,   array::Array_char*  _value_String_,   int  _count_String_,   Object*  key_HashMap_Node_,   Object*  value_HashMap_Node_,   int  hash_HashMap_Node_,   Object*  type_Cipher_,   Object*  key_Cipher_,   int  mode_Cipher_,   array::Array_bit*  updated_Cipher_,   int  ENCRYPT_MODE_Cipher_,   int  DECRYPT_MODE_Cipher_,   array::Array_char*  key_SecretKeySpec_,   Object*  basicCharset_CryptoManager_,   Object*  charset_CryptoManager_,   char  encryptedMark_CryptoManager_,   bool  useEncryptionStrict_CryptoManager_,   Object*  cipherFactory_CryptoManager_,   char  value_Character_,   int  value_Integer_,   array::Array_Object*  elementData_HashMap_,   int  numPairs_HashMap_,   int  capacity_HashMap_,   char  b_Byte_,   array::Array_char*  _value_StringBuilder_,   int  _count_StringBuilder_,   array::Array_bit*  _array_bit_,   array::Array_char*  _array_char_,   array::Array_int*  _array_int_,   array::Array_float*  _array_float_,   array::Array_double*  _array_double_,   array::Array_Object*  _array_object_,   bool  _bit_,   char  _char_,   int  _int_,   float  _float_,   double  _double_);
   ~Object(){
   }
   void operator delete(void* p){ free(p); }

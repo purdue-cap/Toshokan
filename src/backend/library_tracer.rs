@@ -246,8 +246,16 @@ int main(int argc, char** argv) {{
         let mut logs = Vec::new();
         for line_result in err_reader.lines() {
             let line = line_result?;
-            let log = parse_log_from_json(line)?;
-            logs.push(log);
+            let log_parse_result = parse_log_from_json(line);
+            if let Ok(log) = log_parse_result {
+                logs.push(log);
+            } else if let Err(error) = log_parse_result {
+                if let TraceError::JSONError(_) = error {
+                    continue;
+                } else {
+                    return Err(error);
+                }
+            }
         }
         Ok((logs, trace_timed_out))
     }

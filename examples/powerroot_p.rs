@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sketch_be_bin.as_path(),
         sketch_home.as_ref().map(|p| p.as_path()),
         impl_file.as_path(),
-        &[("ANONYMOUS::sqrt", 1)],
+        &[("ANONYMOUS::sqrt_real", 1)],
         "main",
         1,
         VerifyPointsConfig::NoSpec,

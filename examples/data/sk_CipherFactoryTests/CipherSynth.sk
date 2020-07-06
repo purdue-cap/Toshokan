@@ -32,7 +32,10 @@ void init_int_Key(Object self, int opmode, Object key) {
 }
 
 Array_char doFinal_byte(Object self, Array_char text) {
+  assert self != null;
+  assert self.key_Cipher != null;
   assert self.key_Cipher.__cid == SecretKeySpec();
+  assert text != null;
 	{{#for-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}}
 	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && equals_Object_Object@Object(self, i_0_arr[{{@index}}]) && text.length == i_1_arr[{{@index}}].length && text.A == i_1_arr[{{@index}}].A ) {
 		return rarr[{{@index}}];

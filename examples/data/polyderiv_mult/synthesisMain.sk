@@ -4,56 +4,60 @@ int k = 3;
 //max degree of polynomials
 int BASE = 4;
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::mult_proxy")}};
-{{#each (range 20)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::mult_proxy_real") n_unknowns}};
+int mult_proxy_index(
+	{{#each (range 20)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+	{{#each (range 20)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+);
+int idx = 0;
+{{#each (range 20)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
 {{/each}}
-{{#each (range 20)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") (add @index 20) n_unknowns}} };
+{{#each (range 20)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") (add @index 20) "??(4)" n_unknowns}} };
 {{/each}}
-{{#each (range 40)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+{{#each (range 40)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
 {{/each}}
 
-{{#each (range 40)}}int[{{n_unknowns}}] unknown_{{@index}} = ??;
-{{/each}}
-int used_unknown = 0;
-
-int[2*n] mult_proxy(
+generator int[2*n] mult_proxy(
 	{{#each (range 20)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
 	{{#each (range 20)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
 ){
-	{{#for-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns as |i|}}
-	{{#unless @first}}else {{/unless}}if ( {{i}} < logged
-	{{#each (range 20)}} && x_{{@index}}_arr[{{i}}] == x_{{@index}}
-	{{/each}}
-	{{#each (range 20)}} && y_{{@index}}_arr[{{i}}] == y_{{@index}}
-	{{/each}}
-	) {
-		int[2*n] result = { {{#each (range 40)}}r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
-		return result;
-	}
-	{{/for-cap-logs}}
+	idx = mult_proxy_index(
+		{{#each (range 20)}}x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+		{{#each (range 20)}}y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+	);
+	assume 0 <= idx && idx < cap
+		{{#each (range 20)}}&& x_{{@index}} == x_{{@index}}_arr[idx]{{/each}}
+		{{#each (range 20)}}&& y_{{@index}} == y_{{@index}}_arr[idx]{{/each}};
+	return mult_proxy_real(
+		{{#each (range 20)}}x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+		{{#each (range 20)}}y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+	);
+}
 
-	assert logged < cap;
-	{{#each (range 40)}}int val_{{@index}} = unknown_{{@index}}[used_unknown];
-	{{/each}}
-	used_unknown++;
-	{{#each (range 20)}}x_{{@index}}_arr[logged] = x_{{@index}};
-	{{/each}}
-	{{#each (range 20)}}y_{{@index}}_arr[logged] = y_{{@index}};
-	{{/each}}
-	{{#each (range 40)}}r_{{@index}}_arr[logged] = val_{{@index}};
-	{{/each}}
-	logged ++;
-	int[2*n] result = { {{#each (range 40)}}val_{{@index}}{{#unless @last}}, {{/unless}}{{/each}} };
-	return result;
+int [2*n] mult_proxy_real (
+	{{#each (range 20)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+	{{#each (range 20)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+) {
+	return {
+		{{#each (range 40)}}r_{{@index}}_arr[idx]{{#unless @last}},{{/unless}}{{/each}}
+	};
 }
 
 //derivative computation for a polynomial represented by coefficient list
-int[2*n] mult(int[n] x, int[n] y){
+generator int[2*n] mult(int[n] x, int[n] y){
 	return mult_proxy(
 		{{#each (range 20)}}x[{{@index}}]{{#unless @last}},{{/unless}}{{/each}},
 		{{#each (range 20)}}y[{{@index}}]{{#unless @last}},{{/unless}}{{/each}}
 	);
+}
+
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+	assert 
+		{{#each (range 20)}}(x_{{@index}}_arr[idx1] != x_{{@index}}_arr[idx2]){{#unless @last}}||{{/unless}}{{/each}}||
+		{{#each (range 20)}}(y_{{@index}}_arr[idx1] != y_{{@index}}_arr[idx2]){{#unless @last}}||{{/unless}}{{/each}};
 }
 
 int[n] toBase(int z){

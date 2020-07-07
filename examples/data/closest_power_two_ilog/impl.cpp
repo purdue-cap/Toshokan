@@ -6,7 +6,7 @@ int pow(int a, int b){
     return result;
 }
 
-int ANONYMOUS__log_impl(int a){
+int ANONYMOUS__log_real_impl(int a){
  if(a == 0) return 0;
  for(int i=0; i<a; i++){
   if(pow(2,i)>=a) return i;

@@ -3,7 +3,7 @@
 constexpr int n = 5;
 constexpr int BASE = 4;
 
-std::vector<int> ANONYMOUS__mult_proxy_impl(
+std::vector<int> ANONYMOUS__mult_proxy_real_impl(
     int x_0,int x_1,int x_2,int x_3,int x_4,
     int y_0,int y_1,int y_2,int y_3,int y_4
 ) {
@@ -32,7 +32,7 @@ std::vector<int> toBase(
 	return out;
 }
 
-std::vector<int> ANONYMOUS__exp_impl(
+std::vector<int> ANONYMOUS__exp_real_impl(
     int x, int i
 ) {
 	int res = 1;

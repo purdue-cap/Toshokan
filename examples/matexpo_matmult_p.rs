@@ -37,7 +37,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         VerifyPointsConfig::NoSpec,
         10,
         vec![
-            ExcludedHole::Position(23, -1)
+            ExcludedHole::Position(16, -1),
+            ExcludedHole::Position(17, -1),
+            ExcludedHole::Position(18, -1)
         ].into_iter(),
         true,
         true,

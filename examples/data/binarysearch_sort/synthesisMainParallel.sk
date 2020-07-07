@@ -1,60 +1,39 @@
 pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt 16 --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
 int N =5;
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sort_proxy") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::sort_proxy")}};
-int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 0 n_unknowns}} };
-int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 1 n_unknowns}} };
-int[cap] i_2_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 2 n_unknowns}} };
-int[cap] i_3_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 3 n_unknowns}} };
-int[cap] i_4_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy") 4 n_unknowns}} };
-int[cap] r_0_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 0 n_unknowns}} };
-int[cap] r_1_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 1 n_unknowns}} };
-int[cap] r_2_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 2 n_unknowns}} };
-int[cap] r_3_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 3 n_unknowns}} };
-int[cap] r_4_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy") 4 n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sort_proxy_real") n_unknowns}};
+int sort_proxy_index(int i0, int i1, int i2, int i3, int i4);
+int idx = 0;
+int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy_real") 0 "??" n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy_real") 1 "??" n_unknowns}} };
+int[cap] i_2_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy_real") 2 "??" n_unknowns}} };
+int[cap] i_3_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy_real") 3 "??" n_unknowns}} };
+int[cap] i_4_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sort_proxy_real") 4 "??" n_unknowns}} };
+int[cap] r_0_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy_real") 0 "??" n_unknowns}} };
+int[cap] r_1_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy_real") 1 "??" n_unknowns}} };
+int[cap] r_2_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy_real") 2 "??" n_unknowns}} };
+int[cap] r_3_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy_real") 3 "??" n_unknowns}} };
+int[cap] r_4_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::sort_proxy_real") 4 "??" n_unknowns}} };
 
-
-int[{{n_unknowns}}] unknown_0 = ??;
-int[{{n_unknowns}}] unknown_1 = ??;
-int[{{n_unknowns}}] unknown_2 = ??;
-int[{{n_unknowns}}] unknown_3 = ??;
-int[{{n_unknowns}}] unknown_4 = ??;
-int used_unknown = 0;
-
-int[N] sort(int[N] input){
+generator int[N] sort(int[N] input){
     return sort_proxy(input[0],input[1],input[2],input[3],input[4]);
 }
 
-int[N] sort_proxy(int input_0,int input_1,int input_2,int input_3,int input_4) {
-   
-	{{#for-cap-logs (subtree logs "ANONYMOUS::sort_proxy") n_unknowns}}
-	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && i_0_arr[{{@index}}] == input_0 && i_1_arr[{{@index}}] == input_1 && i_2_arr[{{@index}}] == input_2 && i_3_arr[{{@index}}] == input_3&& i_4_arr[{{@index}}] == input_4) {
-		int[N] ind = {r_0_arr[{{@index}}], r_1_arr[{{@index}}], r_2_arr[{{@index}}], r_3_arr[{{@index}}], r_4_arr[{{@index}}]};
-		return ind;
-	}
-	{{/for-cap-logs}}
-	
-	assert logged < cap;
-   int val_0 = unknown_0[used_unknown];
-   int val_1 = unknown_1[used_unknown];
-   int val_2 = unknown_2[used_unknown];
-   int val_3 = unknown_3[used_unknown];
-   int val_4 = unknown_4[used_unknown];
-   used_unknown++;
-	i_0_arr[logged] = input_0;
-	i_1_arr[logged] = input_1;
-	i_2_arr[logged] = input_2;
-	i_3_arr[logged] = input_3;
-	i_4_arr[logged] = input_4;
-	r_0_arr[logged] = val_0;
-	r_1_arr[logged] = val_1;
-	r_2_arr[logged] = val_2;
-	r_3_arr[logged] = val_3;
-	r_4_arr[logged] = val_4;
-	logged ++;
-   int[N] ind = {val_0, val_1, val_2, val_3, val_4};
-   return ind;
+generator int[N] sort_proxy(int input_0,int input_1,int input_2,int input_3,int input_4) {
+	idx = sort_proxy_index(input_0, input_1, input_2, input_3, input_4);
+	assume 0 <= idx && idx < cap && i_0_arr[idx] == input_0 && i_1_arr[idx] == input_1 && i_2_arr[idx] == input_2 && i_3_arr[idx] == input_3 && i_4_arr[idx] == input_4;
+	return sort_proxy_real(input_0, input_1, input_2, input_3, input_4);
+}
+
+int[N] sort_proxy_real(int input_0,int input_1,int input_2,int input_3,int input_4) {
+	return { r_0_arr[idx], r_1_arr[idx], r_2_arr[idx], r_3_arr[idx], r_4_arr[idx] };
+}
+
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+	assert i_0_arr[idx1] != i_0_arr[idx2] || i_1_arr[idx1] != i_1_arr[idx2] || i_2_arr[idx1] != i_2_arr[idx2] || i_3_arr[idx1] != i_3_arr[idx2] || i_4_arr[idx1] != i_4_arr[idx2];
 }
 
 int linear_search(int[N] arr,int x){

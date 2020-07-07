@@ -3,90 +3,85 @@ int n = 5;
 int BASE = 4;
 int k=3;
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::mult_proxy")}};
-{{#each (range 5)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+int cap_mult = {{get-cap-logs (subtree logs "ANONYMOUS::mult_proxy_real") n_unknowns}};
+int mult_proxy_index(
+	{{#each (range 5)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+	{{#each (range 5)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+);
+int idx_mult = 0;
+{{#each (range 5)}}int[cap_mult] x_{{@index}}_mult = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
 {{/each}}
-{{#each (range 5)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy") (add @index 5) n_unknowns}} };
+{{#each (range 5)}}int[cap_mult] y_{{@index}}_mult = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") (add @index 5) "??(4)" n_unknowns}} };
 {{/each}}
-{{#each (range 10)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy") @index n_unknowns}} };
+{{#each (range 10)}}int[cap_mult] r_{{@index}}_mult = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
 {{/each}}
 
-{{#each (range 10)}}int[{{n_unknowns}}] unknown_{{@index}} = ??;
-{{/each}}
-int used_unknown = 0;
-
-int[2*n] mult_proxy(
+generator int[2*n] mult_proxy(
 	{{#each (range 5)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
 	{{#each (range 5)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
 ){
-	{{#for-cap-logs (subtree logs "ANONYMOUS::mult_proxy") n_unknowns as |i|}}
-	{{#unless @first}}else {{/unless}}if ( {{i}} < logged
-	{{#each (range 5)}} && x_{{@index}}_arr[{{i}}] == x_{{@index}}
-	{{/each}}
-	{{#each (range 5)}} && y_{{@index}}_arr[{{i}}] == y_{{@index}}
-	{{/each}}
-	) {
-		int[2*n] result = { {{#each (range 10)}}r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
-		return result;
-	}
-	{{/for-cap-logs}}
+	idx_mult = mult_proxy_index(
+		{{#each (range 5)}}x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+		{{#each (range 5)}}y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+	);
+	assume 0 <= idx_mult && idx_mult < cap_mult
+		{{#each (range 5)}}&& x_{{@index}} == x_{{@index}}_mult[idx_mult]{{/each}}
+		{{#each (range 5)}}&& y_{{@index}} == y_{{@index}}_mult[idx_mult]{{/each}};
+	return mult_proxy_real(
+		{{#each (range 5)}}x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+		{{#each (range 5)}}y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+	);
+}
 
-	assert logged < cap;
-	{{#each (range 10)}}int val_{{@index}} = unknown_{{@index}}[used_unknown];
-	{{/each}}
-	used_unknown++;
-	{{#each (range 5)}}x_{{@index}}_arr[logged] = x_{{@index}};
-	{{/each}}
-	{{#each (range 5)}}y_{{@index}}_arr[logged] = y_{{@index}};
-	{{/each}}
-	{{#each (range 10)}}r_{{@index}}_arr[logged] = val_{{@index}};
-	{{/each}}
-	logged ++;
-	int[2*n] result = { {{#each (range 10)}}val_{{@index}}{{#unless @last}}, {{/unless}}{{/each}} };
-	return result;
+int [2*n] mult_proxy_real (
+	{{#each (range 5)}}int x_{{@index}}{{#unless @last}},{{/unless}}{{/each}},
+	{{#each (range 5)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
+) {
+	return {
+		{{#each (range 10)}}r_{{@index}}_mult[idx_mult]{{#unless @last}},{{/unless}}{{/each}}
+	};
 }
 
 //derivative computation for a polynomial represented by coefficient list
-int[2*n] mult(int[n] x, int[n] y){
+generator int[2*n] mult(int[n] x, int[n] y){
 	return mult_proxy(
 		{{#each (range 5)}}x[{{@index}}]{{#unless @last}},{{/unless}}{{/each}},
 		{{#each (range 5)}}y[{{@index}}]{{#unless @last}},{{/unless}}{{/each}}
 	);
 }
 
-int e_cap = {{get-cap-logs (subtree logs "ANONYMOUS::exp") n_unknowns}};
-int e_logged = {{get-n-logs (subtree logs "ANONYMOUS::exp")}};
-int[e_cap] x_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp") 0 n_unknowns}} };
-int[e_cap] i_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp") 1 n_unknowns}} };
-{{#each (range 5)}}int[e_cap] e_r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::exp") @index n_unknowns}} };
+int cap_exp = {{get-cap-logs (subtree logs "ANONYMOUS::exp_real") n_unknowns}};
+int exp_index(int x, int i);
+int idx_exp = 0;
+int[cap_exp] x_exp = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp_real") 0 "??(4)" n_unknowns}} };
+int[cap_exp] i_exp = { {{expand-to-arg-array (subtree logs "ANONYMOUS::exp_real") 1 "??(4)" n_unknowns}} };
+{{#each (range 5)}}int[cap_exp] r_{{@index}}_exp = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::exp_real") @index "??(4)" n_unknowns}} };
 {{/each}}
 
-{{#each (range 5)}}int[{{n_unknowns}}] e_unknown_{{@index}} = ??;
-{{/each}}
-int e_used_unknown = 0;
+generator int[n] exp(int x,int i){
+	idx_exp = exp_index(x, i);
+	assume 0 <= idx_exp && idx_exp < cap_exp && x == x_exp[idx_exp] && i == i_exp[idx_exp];
+	return exp_real(x, i);
+}
 
+int[n] exp_real(int x, int i) {
+	return {
+		{{#each (range 5)}}r_{{@index}}_exp[idx_exp]{{#unless @last}},{{/unless}}{{/each}}
+	};
+}
 
-int[n] exp(int x,int i){
-	{{#for-cap-logs (subtree logs "ANONYMOUS::exp") n_unknowns as |i|}}
-	{{#unless @first}}else {{/unless}}if ( {{i}} < e_logged && x_arr[{{i}}] == x && i_arr[{{i}}] == i
-	) {
-		int[n] result = { {{#each (range 5)}}e_r_{{@index}}_arr[{{i}}]{{#unless @last}}, {{/unless}}{{/each}} };
-		return result;
-	}
-	{{/for-cap-logs}}
+harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
+    assume 0 <= idx1 && idx1 < cap_mult;
+    assume 0 <= idx2 && idx2 < cap_mult;
+    assume idx1 != idx2;
+	assert 
+		{{#each (range 5)}}(x_{{@index}}_mult[idx1] != x_{{@index}}_mult[idx2]){{#unless @last}}||{{/unless}}{{/each}}||
+		{{#each (range 5)}}(y_{{@index}}_mult[idx1] != y_{{@index}}_mult[idx2]){{#unless @last}}||{{/unless}}{{/each}};
 
-	assert e_logged < e_cap;
-	{{#each (range 5)}}int val_{{@index}} = e_unknown_{{@index}}[e_used_unknown];
-	{{/each}}
-	e_used_unknown++;
-	x_arr[e_logged] = x;
-	i_arr[e_logged] = i;
-	{{#each (range 5)}}e_r_{{@index}}_arr[e_logged] = val_{{@index}};
-	{{/each}}
-	e_logged ++;
-	int[n] result = { {{#each (range 5)}}val_{{@index}}{{#unless @last}}, {{/unless}}{{/each}} };
-	return result;
+    assume 0 <= idx3 && idx3 < cap_exp;
+    assume 0 <= idx4 && idx4 < cap_exp;
+    assume idx3 != idx4;
+	assert ( x_exp[idx3] != x_exp[idx4] ) || ( i_exp[idx3] != i_exp[idx4] );
 }
 
 int[2*n] plus(int[2*n] x, int[2*n] y){ 

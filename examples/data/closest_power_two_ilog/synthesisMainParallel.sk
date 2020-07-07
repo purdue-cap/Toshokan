@@ -1,28 +1,26 @@
 pragma options "--bnd-inbits 4 --bnd-inline-amnt 2 --bnd-unroll-amnt 16 --bnd-cbits 3 --slv-nativeints --slv-parallel --slv-p-cpus 4 --slv-randassign --slvranddegree 5";
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::log") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::log")}};
-int[cap] iarr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::log") 0 n_unknowns}} };
-int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::log") n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::log_real") n_unknowns}};
+int log_index(int i);
+int idx = 0;
+int[cap] iarr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::log_real") 0 "??(5)" n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::log_real") "??(5)" n_unknowns}} };
 
+generator int log(int i){
+    idx = log_index(i);
+    assume 0 <= idx && idx < cap && iarr[idx] == i;
+    return log_real(i);
+}
 
-int[{{n_unknowns}}] unknown = ??;
-int used_unknown = 0;
+int log_real(int i) {
+    return rarr[idx];
+}
 
-int log(int i){
-	{{#for-cap-logs (subtree logs "ANONYMOUS::log") n_unknowns}}
-	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && iarr[{{@index}}] == i) {
-		return rarr[{{@index}}];
-	}
-	{{/for-cap-logs}}
-    
-    assert logged < cap;
-    int val = unknown[used_unknown];
-    used_unknown++;
-    iarr[logged] = i;
-    rarr[logged] = val;
-    logged ++;
-    return val;
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+	assert iarr[idx1] != iarr[idx2];
 }
 
 int pow(int a, int b){

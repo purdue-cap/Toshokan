@@ -1,31 +1,28 @@
 pragma options "--bnd-inbits 4 --bnd-unroll-amnt 16 --bnd-cbits 3  --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
 int N = 5;
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::gcd") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::gcd")}};
-int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::gcd") 0 n_unknowns}} };
-int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::gcd") 1 n_unknowns}} };
-int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::gcd") n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::gcd_real") n_unknowns}};
+int gcd_index(int a, int b);
+int idx = 0;
+int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::gcd_real") 0 "??" n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::gcd_real") 1 "??" n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::gcd_real") "??" n_unknowns}} };
 
+generator int gcd(int a, int b){
+  idx = gcd_index(a, b);
+  assume 0 <= idx && idx < cap && i_0_arr[idx] == a && i_1_arr[idx] == b;
+  return gcd_real(a, b);
+}
 
-int[{{n_unknowns}}] unknown = ??;
-int used_unknown = 0;
+int gcd_real(int a, int b) {
+  return rarr[idx];
+}
 
-int gcd(int a, int b){
-	{{#for-cap-logs (subtree logs "ANONYMOUS::gcd") n_unknowns}}
-    {{#unless @first}}else {{/unless}}if ({{@index}} < logged && i_0_arr[{{@index}}] == a && i_1_arr[{{@index}}] == b) {
-        return rarr[{{@index}}];
-    }
-	{{/for-cap-logs}}
-
-    assert logged < cap;
-    int val = unknown[used_unknown];
-    used_unknown++;
-    i_0_arr[logged] = a;
-    i_1_arr[logged] = b;
-    rarr[logged] = val;
-    logged ++;
-    return val;
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+	assert (i_0_arr[idx1] != i_0_arr[idx2]) || (i_1_arr[idx1] != i_1_arr[idx2]);
 }
 
 // synthesize algorithm for computing gcd of N numbers

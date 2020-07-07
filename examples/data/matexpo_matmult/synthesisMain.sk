@@ -11,17 +11,11 @@ struct mat{
 }
 
 int cap = {{get-cap-logs (subtree logs "ANONYMOUS::matmul_real") n_unknowns}};
-int logged = {{get-n-logs (subtree logs "ANONYMOUS::matmul_real")}};
-int count = 0;
-int index(int i);
-bit match(int i);
-mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 0 true n_unknowns}} };
-mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 1 true n_unknowns}} };
-mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul_real") true n_unknowns}} };
-
-
-mat[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
-int used_unknown = 0;
+int matmul_index(mat arg1, mat arg2);
+int idx = 0;
+mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 0 "??" n_unknowns}} };
+mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 1 "??" n_unknowns}} };
+mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul_real") "??" n_unknowns}} };
 
 bit mat_equals(mat A, mat B) {
 	return A.k == B.k &&
@@ -33,35 +27,20 @@ bit mat_equals(mat A, mat B) {
 
 
 generator mat matmul(mat A,mat B){
-	if (match(count)) {
-		int idx = index(count);
-		assume 0 <= idx && idx < logged && mat_equals(A, i_0_arr[idx]) && mat_equals(B, i_1_arr[idx]);
-	}
-	else {
-		{{#for-cap-logs (subtree logs "ANONYMOUS::matmul_real") n_unknowns}}
-		assume ({{@index}} >= logged) || (! mat_equals(A, i_0_arr[{{@index}}])) || (! mat_equals(B, i_1_arr[{{@index}}]));{{/for-cap-logs}}
-	}
-
+	idx = matmul_index(A, B);
+	assume 0 <= idx && idx < cap && mat_equals(A, i_0_arr[idx]) && mat_equals(B, i_1_arr[idx]);
 	return matmul_real(A, B);
 }
 
 mat matmul_real(mat A,mat B){
-	if (match(count)) {
-		int idx = index(count);
-        count ++;
-		return rarr[idx];
-	}
-	else {
-		assert logged < cap;
-    		mat val = unknown[used_unknown];
-    		used_unknown++;
-		i_0_arr[logged] = A;
-		i_1_arr[logged] = B;
-		rarr[logged] = val;
-		logged ++;
-        count ++;
-		return val;
-	}
+	return rarr[idx];
+}
+
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+    assert (! mat_equals(i_0_arr[idx1], i_0_arr[idx2])) || (! mat_equals(i_1_arr[idx1], i_1_arr[idx2]));
 }
 
 

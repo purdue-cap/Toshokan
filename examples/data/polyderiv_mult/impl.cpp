@@ -3,7 +3,7 @@
 constexpr int n = 20;
 constexpr int BASE = 4;
 
-std::vector<int> ANONYMOUS__mult_proxy_impl(
+std::vector<int> ANONYMOUS__mult_proxy_real_impl(
     int x_0,int x_1,int x_2,int x_3,int x_4,int x_5,int x_6,int x_7,int x_8,int x_9,int x_10,int x_11,int x_12,int x_13,int x_14,int x_15,int x_16,int x_17,int x_18,int x_19,
     int y_0,int y_1,int y_2,int y_3,int y_4,int y_5,int y_6,int y_7,int y_8,int y_9,int y_10,int y_11,int y_12,int y_13,int y_14,int y_15,int y_16,int y_17,int y_18,int y_19
 ) {

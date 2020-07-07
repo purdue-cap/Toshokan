@@ -46,7 +46,7 @@ pub fn expand_to_arg_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, index_of_arg, optional(enforce_obj), optional(n_unknown)
+    // Expecting parameters: logs, index_of_arg, optional(fill_string), optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -57,7 +57,7 @@ pub fn expand_to_arg_array(h: &Helper,
         .ok_or(RenderError::new("Second parameter not an unsigned int"))?
         as usize;
     let mut n_unknown = 0;
-    let mut has_obj = false;
+    let mut fill_string = "0".to_string();
     if let Some(param_2) = h.param(2) {
         match param_2.value() {
             Value::Number(param_number) => {
@@ -65,8 +65,8 @@ pub fn expand_to_arg_array(h: &Helper,
                     .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
                     as usize;
             },
-            Value::Bool(param_bool) => {
-                has_obj = *param_bool;
+            Value::String(param_string) => {
+                fill_string = param_string.clone();
                 if let Some(param_3) = h.param(3) {
                     n_unknown = param_3.value().as_u64()
                         .ok_or(RenderError::new("Fourth parameter not an unsigned int"))?
@@ -82,12 +82,11 @@ pub fn expand_to_arg_array(h: &Helper,
         .and_then(|args_v| args_v.as_array())
         .and_then(|args| args.get(index_of_arg))
         .and_then(|arg_v| {
-            has_obj = has_obj || arg_v.is_object();
             format_value(arg_v)
         })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    arg_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
+    arg_array.append(&mut std::iter::repeat(fill_string).take(n_unknown).collect());
     out.write(arg_array.join(", ").as_str())?;
     Ok(())
 }
@@ -129,13 +128,13 @@ pub fn expand_to_rtn_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, optional(enforce_obj), optional(n_unknown)
+    // Expecting parameters: logs, optional(fill_string), optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
         .ok_or(RenderError::new("First parameter not array"))?;
     let mut n_unknown = 0;
-    let mut has_obj = false;
+    let mut fill_string = "0".to_string();
     if let Some(param_1) = h.param(1) {
         match param_1.value() {
             Value::Number(param_number) => {
@@ -143,8 +142,8 @@ pub fn expand_to_rtn_array(h: &Helper,
                     .ok_or(RenderError::new("Second parameter not an unsigned int or bool"))?
                     as usize;
             },
-            Value::Bool(param_bool) => {
-                has_obj = *param_bool;
+            Value::String(param_string) => {
+                fill_string = param_string.clone();
                 if let Some(param_2) = h.param(2) {
                     n_unknown = param_2.value().as_u64()
                         .ok_or(RenderError::new("Third parameter not an unsigned int"))?
@@ -158,12 +157,11 @@ pub fn expand_to_rtn_array(h: &Helper,
         j.as_object()
         .and_then(|obj| obj.get("rtn"))
         .and_then(|arg_v| {
-            has_obj = has_obj || arg_v.is_object();
             format_value(arg_v)
         })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    rtn_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
+    rtn_array.append(&mut std::iter::repeat(fill_string).take(n_unknown).collect());
     out.write(rtn_array.join(", ").as_str())?;
     Ok(())
 }
@@ -173,7 +171,7 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    // Expecting parameters: logs, index_of_rtn, optional(enforce_obj) optional(n_unknown)
+    // Expecting parameters: logs, index_of_rtn, optional(fill_string) optional(n_unknown)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -184,7 +182,7 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
         .ok_or(RenderError::new("Second parameter not an unsigned int"))?
         as usize;
     let mut n_unknown = 0;
-    let mut has_obj = false;
+    let mut fill_string = "0".to_string();
     if let Some(param_2) = h.param(2) {
         match param_2.value() {
             Value::Number(param_number) => {
@@ -192,8 +190,8 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
                     .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
                     as usize;
             },
-            Value::Bool(param_bool) => {
-                has_obj = *param_bool;
+            Value::String(param_string) => {
+                fill_string = param_string.clone();
                 if let Some(param_3) = h.param(3) {
                     n_unknown = param_3.value().as_u64()
                         .ok_or(RenderError::new("Fourth parameter not an unsigned int"))?
@@ -209,12 +207,11 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
         .and_then(|args_v| args_v.as_array())
         .and_then(|args| args.get(index_of_arg))
         .and_then(|arg_v| {
-            has_obj = has_obj || arg_v.is_object();
             format_value(arg_v)
         })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Arg array parse failed"))?;
-    rtn_array.append(&mut std::iter::repeat(if has_obj {"null".to_string()} else {"0".to_string()}).take(n_unknown).collect());
+    rtn_array.append(&mut std::iter::repeat(fill_string).take(n_unknown).collect());
     out.write(rtn_array.join(", ").as_str())?;
     Ok(())
 }
@@ -501,7 +498,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "args: {{expand-to-arg-array logs 0 2}}";
+        let template = r#"args: {{expand-to-arg-array logs 0 "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "args: new point( a=1, b=2 ), new point( a=3, b=4 ), new point( a=5, b=4 ), null, null");
         Ok(())
@@ -516,7 +513,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "args: {{expand-to-arg-array logs 0 true 2}}";
+        let template = r#"args: {{expand-to-arg-array logs 0 "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "args: null, null");
         Ok(())
@@ -606,7 +603,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "rtn: {{expand-to-rtn-array logs 2}}";
+        let template = r#"rtn: {{expand-to-rtn-array logs "null" 2 }}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "rtn: new vector@std( a=2, b=1 ), new vector@std( a=4, b=3 ), new vector@std( a=4, b=5 ), null, null");
         Ok(())
@@ -621,7 +618,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "rtn: {{expand-to-rtn-array logs true 2}}";
+        let template = r#"rtn: {{expand-to-rtn-array logs "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "rtn: null, null");
         Ok(())
@@ -708,7 +705,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "rtn: {{expand-to-ith-rtn-array logs 1 2}}";
+        let template = r#"rtn: {{expand-to-ith-rtn-array logs 1 "null" 2 }}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "rtn: new vector@std( a=0, b=1 ), new vector@std( a=0, b=2 ), new vector@std( a=0, b=3 ), null, null");
         Ok(())
@@ -723,7 +720,7 @@ mod tests {
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
 
-        let template = "rtn: {{expand-to-ith-rtn-array logs 0 true 2}}";
+        let template = r#"rtn: {{expand-to-ith-rtn-array logs 0 "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
             "rtn: null, null");
         Ok(())

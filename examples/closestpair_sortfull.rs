@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log_level == LevelFilter::Trace,
         synthesis.as_path(),
         verification.as_path(),
-        &["arr_0_5_5_0","arr_1_6_6_0","arr_2_7_7_0","arr_3_8_8_0","arr_4_9_9_0",], None);
+        &["arr_0_5_5_0","arr_1_6_6_0","arr_2_7_7_0","arr_3_8_8_0","arr_4_9_9_0",], Some(5.0));
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

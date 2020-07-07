@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         verification.as_path(),
         &["start_0_9_9_0", "start_1_a_a_0","start_2_b_b_0",
         "finish_0_c_c_0", "finish_1_d_d_0","finish_2_e_e_0",
-        "sel_0_f_f_0", "sel_1_10_10_0","sel_2_11_11_0"], None);
+        "sel_0_f_f_0", "sel_1_10_10_0","sel_2_11_11_0"], Some(5.0));
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

@@ -183,7 +183,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "p_2_17_71_71_0",
             "p_2_18_74_74_0",
             "p_2_19_77_77_0"
-        ], Some(1.0));
+        ], Some(5.0));
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

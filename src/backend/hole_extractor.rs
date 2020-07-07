@@ -4,6 +4,7 @@ use std::io::BufRead;
 use std::path::Path;
 use std::collections::{HashMap, HashSet};
 use crate::cegis::ExcludedHole;
+use log::trace;
 
 pub struct HoleExtractor {
     excluded_holes: HashSet<ExcludedHole>,
@@ -85,6 +86,8 @@ impl HoleExtractor {
                 .ok_or(quick_xml::Error::UnexpectedToken("Hole name parsing failed".to_string()))?;
             h_name_to.sort_by_cached_key(|t| t.1.clone());
             h_name_from.sort_by_cached_key(|t| t.1.clone());
+            trace!(target:"HoleExtractor", "Hole name from, len = {}: {:?}", h_name_from.len(), h_name_from);
+            trace!(target:"HoleExtractor", "Hole name to  , len = {}: {:?}", h_name_to.len(), h_name_to);
             self.hole_name_mapping = Some(
                 h_name_from.into_iter().zip(h_name_to.into_iter())
                     .map(|(n_from, n_to)| (n_from.0.clone(), n_to.0.clone())).collect()

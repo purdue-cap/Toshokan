@@ -19,7 +19,8 @@ pub struct LibraryTracer<'i, 'c, 'hn, 'w> {
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>,
     current_base_name: Option<String>,
-    trace_timeout: Option<f32>
+    trace_timeout: Option<f32>,
+    empty_harness_call: bool
 }
 
 pub fn parse_log_from_json<S: AsRef<str>>(line: S) -> Result<TraceLog, TraceError> {
@@ -33,7 +34,14 @@ static JSON_HPP: &'static str = include_str!("cpp/nlohmann/json.hpp");
 static VOPS_H: &'static str = include_str!("cpp/vops.h");
 
 impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
-    pub fn new(impl_file: &'i Path, func_config: &'c HashMap<String, usize>, harness_func_name: &'hn str, sketch_home: Option<&Path>, trace_timeout: Option<f32>) -> Self {
+    pub fn new(
+        impl_file: &'i Path,
+        func_config: &'c HashMap<String, usize>, 
+        harness_func_name: &'hn str, 
+        sketch_home: Option<&Path>, 
+        trace_timeout: Option<f32>,
+        empty_harness_call: bool
+    ) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
             func_config: func_config,
@@ -41,7 +49,8 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None,
             current_base_name: None,
-            trace_timeout: trace_timeout
+            trace_timeout: trace_timeout,
+            empty_harness_call: empty_harness_call
         };
         if let Some(p) = sketch_home {
             tracer.flag_manager.add_include_path(p.join("include"));
@@ -107,11 +116,18 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
         let mut func_calls_list: Vec<String> = Vec::new();
         let mut idx = 0;
         loop {
-            if let Some(joined_params) =
+            // TODO: support synthesized harness function that takes different input arguments than the counterexample list
+            // E.G. in verification main(a, b), getting C.E.s as [[a..],[b..]], but synthesized main function only takes b as main(b)
+            // Currently supporting empty harness call via a flag for JSketch benchmark encodings
+            // But broader, more general support needs to be added here.
+            if let Some(mut joined_params) =
                 c_e_s.iter().map(|values| {
                     values.get(idx).map(|value| value.to_string())
                 }).collect::<Option<Vec<String>>>().map(|params| params.join(", ")) {
-
+                
+                if self.empty_harness_call {
+                    joined_params.clear();
+                }
                 func_calls_list.push(format!(
 r#"
     try{{

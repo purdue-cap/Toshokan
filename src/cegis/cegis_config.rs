@@ -33,7 +33,8 @@ pub struct CEGISConfigParams {
     pub c_e_encoder_src: EncoderSource,
     pub generation_encoder_src: EncoderSource,
     pub c_e_names: Vec<String>,
-    pub trace_timeout: Option<f32>
+    pub trace_timeout: Option<f32>,
+    pub empty_harness_call: bool
 }
 
 pub enum VerifyPointsConfig {
@@ -89,7 +90,8 @@ impl CEGISConfig {
                 c_e_encoder_src: EncoderSource::LoadFromFile(synthesis_sk.as_ref().to_path_buf()),
                 generation_encoder_src: EncoderSource::LoadFromFile(verify_generation_sk.as_ref().to_path_buf()),
                 c_e_names: c_e_names.iter().map(|s| s.to_string()).collect(),
-                trace_timeout: trace_timeout
+                trace_timeout: trace_timeout,
+                empty_harness_call: false
             },
             input_tmp_path: None
         }

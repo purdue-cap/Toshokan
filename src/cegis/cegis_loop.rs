@@ -269,7 +269,8 @@ impl<'r> CEGISLoop<'r> {
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
             &self.config.get_params().func_config,
             self.config.get_params().harness_func_name.as_str(),
-            self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout);
+            self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout,
+            self.config.get_params().empty_harness_call);
         library_tracer.set_work_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)
             .ok_or("Prepare work dir for library tracer failed")?;
         let mut retry_strategy = self.config.new_retry_strategy();
@@ -308,10 +309,10 @@ impl<'r> CEGISLoop<'r> {
             }
 
             if self.state.get_iter_count() == 0 {
-                self.recorder.as_mut().map(|r| r.start_synthesis());
                 info!(target: "CEGISMainLoop", "Iter 0: Pre-run synthesis before tracing to generate runnable candidate");
                 info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
                 let synthesize_result = loop {
+                    self.recorder.as_mut().map(|r| r.start_synthesis());
                     let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                         &mut hole_extractor, &mut sketch_runner)?;
                     self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
@@ -355,9 +356,9 @@ impl<'r> CEGISLoop<'r> {
                 self.state.add_log(trace);
             }
 
-            self.recorder.as_mut().map(|r| r.start_synthesis());
             info!(target: "CEGISMainLoop", "Synthesizing");
             let synthesize_result = loop {
+                self.recorder.as_mut().map(|r| r.start_synthesis());
                 let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                     &mut hole_extractor, &mut sketch_runner)?;
                 self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));

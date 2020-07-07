@@ -82,7 +82,7 @@ impl CEGISConfig {
                 pure_function: pure_function,
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
-                retry_strategy_config: RetryStrategyConfig::Simple(5),
+                retry_strategy_config: RetryStrategyConfig::Simple(20),
                 cand_encoder_src: EncoderSource::Rewrite,
                 input_tmp_file: None,
                 be_verify_flags: None,

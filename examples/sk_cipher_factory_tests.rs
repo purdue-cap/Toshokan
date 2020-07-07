@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
         sketch_home = Some(PathBuf::from(env_path));
     }
-    let config = CEGISConfig::new(
+    let mut config = CEGISConfig::new(
         sketch_fe_bin.as_path(),
         sketch_be_bin.as_path(),
         sketch_home.as_ref().map(|p| p.as_path()),
@@ -36,13 +36,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         1,
         VerifyPointsConfig::NoSpec,
         10,
-        vec![ExcludedHole::Position(651, -1)].into_iter(),
+        vec![ExcludedHole::Position(655, -1)].into_iter(),
         true,
         true,
         log_level == LevelFilter::Trace,
         synthesis.as_path(),
         verification.as_path(),
-        &["p_i_4_68_0"], None);
+        &["p_i_4_68_0"], Some(10.0));
+    config.get_params_mut().empty_harness_call = true;
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

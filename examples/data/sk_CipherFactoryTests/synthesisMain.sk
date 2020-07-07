@@ -345,8 +345,12 @@ Object CipherFactoryTests_CipherFactoryTests(Object self) {
     return self;
 }
 
-harness void main(int p_i) {
-  {{expand-points-to-assume c_e_s.[0] "p_i"}}
+harness void main() {
+  {{#for-trans-c-e c_e_s as |arg|}}
+  test({{expand-comma-list arg}});{{/for-trans-c-e}}
+}
+
+generator void test(int p_i) {
   int x = 1;
   for (int i = 0; i < p_i; i++) {
     x = x * 9;
@@ -644,9 +648,9 @@ package Cipher {
   
 int cap = {{get-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}};
 int logged = {{get-n-logs (subtree logs "Cipher::doFinal_byte")}};
-Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 true n_unknowns}} };
-Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 true n_unknowns}} };
-Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") true n_unknowns}} };
+Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 "null" n_unknowns}} };
+Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 "null" n_unknowns}} };
+Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") "null" n_unknowns}} };
 
 Array_char[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
 int used_unknown = 0;

@@ -62,7 +62,7 @@ pub fn expand_to_arg_array(h: &Helper,
         match param_2.value() {
             Value::Number(param_number) => {
                 n_unknown = param_number.as_u64()
-                    .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
+                    .ok_or(RenderError::new("Third parameter not an unsigned int or string"))?
                     as usize;
             },
             Value::String(param_string) => {
@@ -73,7 +73,7 @@ pub fn expand_to_arg_array(h: &Helper,
                         as usize;
                 }
             },
-            _ => { return Err(RenderError::new("Third parameter not an unsigned int or bool"));}
+            _ => { return Err(RenderError::new("Third parameter not an unsigned int or string"));}
         }
     }
     let mut arg_array = logs_array.into_iter().map(|j|
@@ -139,7 +139,7 @@ pub fn expand_to_rtn_array(h: &Helper,
         match param_1.value() {
             Value::Number(param_number) => {
                 n_unknown = param_number.as_u64()
-                    .ok_or(RenderError::new("Second parameter not an unsigned int or bool"))?
+                    .ok_or(RenderError::new("Second parameter not an unsigned int or string"))?
                     as usize;
             },
             Value::String(param_string) => {
@@ -150,7 +150,7 @@ pub fn expand_to_rtn_array(h: &Helper,
                         as usize;
                 }
             },
-            _ => { return Err(RenderError::new("Second parameter not an unsigned int or bool"));}
+            _ => { return Err(RenderError::new("Second parameter not an unsigned int or string"));}
         }
     }
     let mut rtn_array = logs_array.into_iter().map(|j|
@@ -187,7 +187,7 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
         match param_2.value() {
             Value::Number(param_number) => {
                 n_unknown = param_number.as_u64()
-                    .ok_or(RenderError::new("Third parameter not an unsigned int or bool"))?
+                    .ok_or(RenderError::new("Third parameter not an unsigned int or string"))?
                     as usize;
             },
             Value::String(param_string) => {
@@ -198,7 +198,7 @@ pub fn expand_to_ith_rtn_array(h: &Helper,
                         as usize;
                 }
             },
-            _ => { return Err(RenderError::new("Third parameter not an unsigned int or bool"));}
+            _ => { return Err(RenderError::new("Third parameter not an unsigned int or string"));}
         }
     }
     let mut rtn_array = logs_array.into_iter().map(|j|
@@ -296,6 +296,22 @@ pub fn expand_holes(h: &Helper,
     Ok(())
 }
 
+pub fn expand_comma_list(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting argument: list_to_expand 
+    let array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?
+        .iter()
+        .map(|e| e.to_string()).collect::<Vec<_>>();
+    out.write(array.join(", ").as_str())?;
+    Ok(())
+}
+
 pub fn for_cap_logs<'reg, 'rc>(
     h: &Helper<'reg, 'rc>,
     r: &'reg Handlebars,
@@ -336,6 +352,56 @@ pub fn for_cap_logs<'reg, 'rc>(
     Ok(())
 }
 
+pub fn for_trans_c_e<'reg, 'rc>(
+    h: &Helper<'reg, 'rc>,
+    r: &'reg Handlebars,
+    ctx: &'rc Context,
+    rc: &mut RenderContext<'reg, 'rc>,
+    out: &mut dyn Output,
+) -> HelperResult {
+    // Expecting parameters: c_e_s
+    let c_e_s = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?
+        .iter()
+        .map(|one_c_e_vec| one_c_e_vec.as_array())
+        .collect::<Option<Vec<_>>>()
+        .ok_or(RenderError::new("c_e_s not a 2D array"))?
+        .iter()
+        .map(|one_c_e_vec|
+            one_c_e_vec.iter().map(
+                |each_c_e| each_c_e.as_i64()
+            ).collect::<Option<Vec<_>>>()
+        )
+        .collect::<Option<Vec<_>>>()
+        .ok_or(RenderError::new("c_e_s contains non integer element"))?;
+    let iter_count = c_e_s.iter().map(|one_c_e_vec| one_c_e_vec.len()).min().ok_or(RenderError::new("Error in resolving C.E. count"))?;
+    let inner_template = h.template().ok_or(RenderError::new("Not called as block helper"))?;
+    let block_context = BlockContext::new();
+    rc.push_block(block_context);
+    for i in 0..iter_count {
+        let block_context = rc.block_mut().ok_or(RenderError::new("Block context not found"))?;
+        let is_first = i == 0;
+        let is_last = i == iter_count - 1;
+        block_context.set_local_var("@index".to_string(), Value::from(i));
+        block_context.set_local_var("@first".to_string(), Value::from(is_first));
+        block_context.set_local_var("@last".to_string(), Value::from(is_last));
+        if let Some(bp_val) = h.block_param() {
+            let mut params = BlockParams::new();
+            let c_e_vec = c_e_s.iter().map(
+                |one_c_e_vec| one_c_e_vec.get(i).map(|n| *n)
+            ).collect::<Option<Vec<_>>>()
+            .ok_or(RenderError::new("Error in creating c_e_vec"))?;
+            params.add_value(bp_val, Value::from(c_e_vec))?;
+
+            block_context.set_block_params(params);
+        }
+        inner_template.render(r, ctx, rc, out)?;
+    }
+    rc.pop_block();
+    Ok(())
+}
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("range", Box::new(range));
     hb.register_helper("add", Box::new(add));
@@ -348,7 +414,9 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
     hb.register_helper("expand-x-d-points-to-assume", Box::new(expand_x_d_points_to_assume));
     hb.register_helper("expand-holes", Box::new(expand_holes));
+    hb.register_helper("expand-comma-list", Box::new(expand_comma_list));
     hb.register_helper("for-cap-logs", Box::new(for_cap_logs));
+    hb.register_helper("for-trans-c-e", Box::new(for_trans_c_e));
 }
 
 #[cfg(test)]
@@ -814,6 +882,22 @@ mod tests {
         let template = "indexes: {{#for-cap-logs array 3 as |i|}}{{#each (range 3)}}{{add @index i}}{{/each}} {{/for-cap-logs}}";
         assert_eq!(hb.render_template(template, &data)?,
             "indexes: 012 123 234 345 456 567 678 789 ");
+        Ok(())
+    }
+
+    #[test]
+    fn iters_over_c_e_s() -> Result<(), Box<dyn Error>> {
+        let data = json!( {
+            "c_e_s": [[1,2,3], [4,5,6]]
+        }
+        );
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+        
+        let template = r#"{{#for-trans-c-e c_e_s as |l|}}{{expand-comma-list l}}{{#unless @last}}|{{/unless}}{{/for-trans-c-e}}"#;
+        assert_eq!(hb.render_template(template, &data)?,
+            "1, 4|2, 5|3, 6");
         Ok(())
     }
 

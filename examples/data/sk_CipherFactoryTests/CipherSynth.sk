@@ -2,9 +2,9 @@ package Cipher {
   
 int cap = {{get-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}};
 int logged = {{get-n-logs (subtree logs "Cipher::doFinal_byte")}};
-Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 true n_unknowns}} };
-Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 true n_unknowns}} };
-Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") true n_unknowns}} };
+Object[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 0 "null" n_unknowns}} };
+Array_char[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "Cipher::doFinal_byte") 1 "null" n_unknowns}} };
+Array_char[cap] rarr = { {{expand-to-rtn-array (subtree logs "Cipher::doFinal_byte") "null" n_unknowns}} };
 
 Array_char[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
 int used_unknown = 0;

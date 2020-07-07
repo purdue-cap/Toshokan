@@ -4,8 +4,12 @@ Object CipherFactoryTests_CipherFactoryTests(Object self) {
     return self;
 }
 
-harness void main(int p_i) {
-  {{expand-points-to-assume c_e_s.[0] "p_i"}}
+harness void main() {
+  {{#for-trans-c-e c_e_s as |arg|}}
+  test({{expand-comma-list arg}});{{/for-trans-c-e}}
+}
+
+generator void test(int p_i) {
   int x = 1;
   for (int i = 0; i < p_i; i++) {
     x = x * 9;

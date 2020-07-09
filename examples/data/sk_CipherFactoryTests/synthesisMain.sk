@@ -1,6 +1,6 @@
 pragma options "--bnd-cbits 8 --bnd-inbits 3 --slv-nativeints";
 //pragma options "--bnd-unroll-amnt 35";
-pragma options "--bnd-inline-amnt 3 --bnd-unroll-amnt 9 --bnd-arr-size 32";
+pragma options "--bnd-inline-amnt 3 --bnd-unroll-amnt 32 --bnd-arr-size 32";
 pragma options "--fe-fpencoding AS_FIXPOINT";
 package meta {
 
@@ -145,7 +145,7 @@ struct Array_Object {
 }
 
 }
-package CryptoManager {
+package CryptoManager;
 
 Object CryptoManager_CryptoManager(Object self) {
   self.useEncryptionStrict_CryptoManager = true;
@@ -161,82 +161,42 @@ Object CryptoManager_CryptoManager(Object self) {
   return self;
 }
 
-generator Object genRetVal_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
+Object encrypt_String(Object self, Object message) {
+  Object cf = getCipherFactory@CryptoManager(self);
+  Object cipher;
   if (??) {
-    return plainText;
+    cipher = (cf.__cid == ConfigurableCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  else {
+    cipher = (cf.__cid == ConfigurableCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  Array_char bytes = encode_String_String@CryptoManager(self, message, getCharset@CryptoManager(self));
+  if (??) {
+    bytes = appendEncryptionMark_byte@CryptoManager(self, bytes);
   }
   if (??) {
-    return decode_byte_String@CryptoManager(self, bytes, getCharset@CryptoManager(self));
-  }
-  return null;
-}
-
-generator Object setCipher_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
-  if (??) {
-    return (cf.__cid == ConfigurableCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : null);
-  }
-  if (??) {
-    return (cf.__cid == ConfigurableCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : null);
-  }
-  if (??) {
-    return Cipher_Cipher_String(new Object(__cid=Cipher()), String_String_char_int_int(new Object(__cid=String()), new Array_char(length=0+1, A=""), 0, 0));
-  }
-  return null;
-}
-
-generator Object setICipherFactory_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
-  if (??) {
-    return getCipherFactory@CryptoManager(self);
-  }
-  return null;
-}
-
-generator Array_char setBytes_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
-  if (??) {
-    return readEncoded_String@CryptoManager(self, plainText);
-  }
-  if (??) {
-    return processEscape_byte_boolean@CryptoManager(self, bytes, true);
-  }
-  if (??) {
-    return encode_String_String@CryptoManager(self, plainText, getCharset@CryptoManager(self));
-  }
-  if (??) {
-    return appendEncryptionMark_byte@CryptoManager(self, bytes);
-  }
-  if (??) {
-    return cryptInCipher_Cipher_byte@CryptoManager(self, cipher, bytes);
-  }
-  if (??) {
-    bit guard = isEncryptedByte_byte@CryptoManager(self, bytes);
-    if (guard) {
-      return cutEncryptionMark_byte@CryptoManager(self, bytes);
+    if (isEncryptedByte_byte@CryptoManager(self, bytes)) {
+      bytes = cutEncryptionMark_byte@CryptoManager(self, bytes);
     }
   }
-  return new Array_char(length=1);
-}
-
-generator Object genStmtsRet_String_byte_ICipherFactory_Cipher(Object self, Object plainText, Array_char bytes, Object cf, Object cipher) {
   if (??) {
-    bytes = setBytes_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+    bytes = cryptInCipher_Cipher_byte@CryptoManager(self, cipher, bytes);
   }
   if (??) {
-    cf = setICipherFactory_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+    bytes = appendEncryptionMark_byte@CryptoManager(self, bytes);
   }
   if (??) {
-    cipher = setCipher_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+    if (isEncryptedByte_byte@CryptoManager(self, bytes)) {
+      bytes = cutEncryptionMark_byte@CryptoManager(self, bytes);
+    }
   }
   if (??) {
-    return genRetVal_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+    bytes = processEscape_byte_boolean@CryptoManager(self, bytes, true);
   }
-  if (??) {
-    return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, plainText, bytes, cf, cipher);
+  else {
+    bytes = bytes;
   }
-  return null;
-}
-
-Object encrypt_String(Object self, Object message) {
-  return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, message, new Array_char(length=1), null, null);
+  return decode_byte_String@CryptoManager(self, bytes, getCharset@CryptoManager(self));
 }
 
 Object encryptIfNotEncrypted_String(Object self, Object message) {
@@ -274,7 +234,35 @@ Object decrypt_String(Object self, Object encryptedMessage) {
   if (!isEncrypted_String@CryptoManager(self, encryptedMessage)) {
     return encryptedMessage;
   }
-  return genStmtsRet_String_byte_ICipherFactory_Cipher@CryptoManager(self, encryptedMessage, new Array_char(length=1), null, null);
+  Object cf = getCipherFactory@CryptoManager(self);
+  Object cipher;
+  if (??) {
+    cipher = (cf.__cid == ConfigurableCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? encryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  else {
+    cipher = (cf.__cid == ConfigurableCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : cf.__cid == DefaultCipherFactory() ? decryptionCipher@DefaultCipherFactory(cf) : null);
+  }
+  Array_char bytes = readEncoded_String@CryptoManager(self, encryptedMessage);
+  if (??) {
+    bytes = appendEncryptionMark_byte@CryptoManager(self, bytes);
+  }
+  if (??) {
+    if (isEncryptedByte_byte@CryptoManager(self, bytes)) {
+      bytes = cutEncryptionMark_byte@CryptoManager(self, bytes);
+    }
+  }
+  if (??) {
+    bytes = cryptInCipher_Cipher_byte@CryptoManager(self, cipher, bytes);
+  }
+  if (??) {
+    bytes = appendEncryptionMark_byte@CryptoManager(self, bytes);
+  }
+  if (??) {
+    if (isEncryptedByte_byte@CryptoManager(self, bytes)) {
+      bytes = cutEncryptionMark_byte@CryptoManager(self, bytes);
+    }
+  }
+  return decode_byte_String@CryptoManager(self, bytes, getCharset@CryptoManager(self));
 }
 
 bit isEncrypted_String(Object self, Object message) {
@@ -338,7 +326,6 @@ void setUseEncryptionStrict_boolean(Object self, bit useEncryptionStrict) {
   self.useEncryptionStrict_CryptoManager = useEncryptionStrict;
 }
 
-}
 package CipherFactoryTests {
 
 Object CipherFactoryTests_CipherFactoryTests(Object self) {
@@ -346,8 +333,7 @@ Object CipherFactoryTests_CipherFactoryTests(Object self) {
 }
 
 harness void main() {
-  {{#for-trans-c-e c_e_s as |arg|}}
-  test({{expand-comma-list arg}});{{/for-trans-c-e}}
+  {{#for-trans-c-e c_e_s as |arg|}}test({{expand-comma-list arg}});{{/for-trans-c-e}}
 }
 
 generator void test(int p_i) {
@@ -677,13 +663,30 @@ void init_int_Key(Object self, int opmode, Object key) {
   self.mode_Cipher = opmode;
 }
 
+bit equals_Cipher(Object a, Object b){
+  if (b == null || b.key_Cipher == null || b.key_Cipher.__cid != SecretKeySpec() || b.key_Cipher.key_SecretKeySpec == null) {
+    return 0;
+  }
+  if (a.__cid != Cipher() || b.__cid != Cipher()) {
+    return 0;
+  }
+  if (a.key_Cipher.key_SecretKeySpec.length != b.key_Cipher.key_SecretKeySpec.length || a.key_Cipher.key_SecretKeySpec.A != b.key_Cipher.key_SecretKeySpec.A) {
+    return 0;
+  }
+  if (a.mode_Cipher != b.mode_Cipher) {
+    return 0;
+  }
+  return 1;
+}
+
 Array_char doFinal_byte(Object self, Array_char text) {
   assert self != null;
   assert self.key_Cipher != null;
   assert self.key_Cipher.__cid == SecretKeySpec();
+  assert self.key_Cipher.key_SecretKeySpec != null;
   assert text != null;
 	{{#for-cap-logs (subtree logs "Cipher::doFinal_byte") n_unknowns}}
-	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && equals_Object_Object@Object(self, i_0_arr[{{@index}}]) && text.length == i_1_arr[{{@index}}].length && text.A == i_1_arr[{{@index}}].A ) {
+	{{#unless @first}}else {{/unless}}if ({{@index}} < logged && equals_Cipher(self, i_0_arr[{{@index}}]) && i_1_arr[{{@index}}] != null && text.length == i_1_arr[{{@index}}].length && text.A == i_1_arr[{{@index}}].A ) {
 		return rarr[{{@index}}];
 	}
 	{{/for-cap-logs}}

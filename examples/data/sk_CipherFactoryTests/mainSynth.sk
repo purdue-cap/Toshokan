@@ -1,6 +1,6 @@
 pragma options "--bnd-cbits 8 --bnd-inbits 3 --slv-nativeints";
 //pragma options "--bnd-unroll-amnt 35";
-pragma options "--bnd-inline-amnt 3 --bnd-unroll-amnt 9 --bnd-arr-size 32";
+pragma options "--bnd-inline-amnt 3 --bnd-unroll-amnt 32 --bnd-arr-size 32";
 pragma options "--fe-fpencoding AS_FIXPOINT";
 include "meta.sk";
 include "Object.sk";

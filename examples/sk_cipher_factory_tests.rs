@@ -36,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         1,
         VerifyPointsConfig::NoSpec,
         10,
-        vec![ExcludedHole::Position(655, -1)].into_iter(),
+        vec![ExcludedHole::Position(641, -1)].into_iter(),
         true,
         true,
         log_level == LevelFilter::Trace,

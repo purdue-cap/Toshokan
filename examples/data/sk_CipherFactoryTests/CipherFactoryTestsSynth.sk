@@ -5,8 +5,7 @@ Object CipherFactoryTests_CipherFactoryTests(Object self) {
 }
 
 harness void main() {
-  {{#for-trans-c-e c_e_s as |arg|}}
-  test({{expand-comma-list arg}});{{/for-trans-c-e}}
+  {{#for-trans-c-e c_e_s as |arg|}}test({{expand-comma-list arg}});{{/for-trans-c-e}}
 }
 
 generator void test(int p_i) {

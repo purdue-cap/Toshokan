@@ -1,4 +1,5 @@
 /target
+.envrc
 **/*.rs.bk
 Cargo.lock
 

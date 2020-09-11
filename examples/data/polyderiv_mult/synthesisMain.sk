@@ -10,11 +10,11 @@ int mult_proxy_index(
 	{{#each (range 20)}}int y_{{@index}}{{#unless @last}},{{/unless}}{{/each}}
 );
 int idx = 0;
-{{#each (range 20)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
+{{#each (range 20)}}int[cap] x_{{@index}}_arr = { {{expand-to-arg-array (subtree @root.logs "ANONYMOUS::mult_proxy_real") @index "??(4)" @root.n_unknowns}} };
 {{/each}}
-{{#each (range 20)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::mult_proxy_real") (add @index 20) "??(4)" n_unknowns}} };
+{{#each (range 20)}}int[cap] y_{{@index}}_arr = { {{expand-to-arg-array (subtree @root.logs "ANONYMOUS::mult_proxy_real") (add @index 20) "??(4)" @root.n_unknowns}} };
 {{/each}}
-{{#each (range 40)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree logs "ANONYMOUS::mult_proxy_real") @index "??(4)" n_unknowns}} };
+{{#each (range 40)}}int[cap] r_{{@index}}_arr = { {{expand-to-ith-rtn-array (subtree @root.logs "ANONYMOUS::mult_proxy_real") @index "??(4)" @root.n_unknowns}} };
 {{/each}}
 
 generator int[2*n] mult_proxy(

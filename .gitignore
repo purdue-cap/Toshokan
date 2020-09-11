@@ -13,3 +13,4 @@ src/backend/cpp/test.cpp
 *.data.csv
 *.log
 test_*/
+*_results/

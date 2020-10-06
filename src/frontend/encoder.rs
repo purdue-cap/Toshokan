@@ -37,18 +37,18 @@ pub trait Encoder {
     }
 
     fn render(&self, state: &CEGISState) -> Result<String, EncodeError> {
-        self.render_params(state.get_params())
+        self.render_params(state.get_params().ok_or(EncodeError::ParamError)?)
     }
     fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError>;
     fn render_to_write<W: Write>(&self, state:&CEGISState, writer: W) -> Result<(), EncodeError> {
-        self.render_params_to_write(state.get_params(), writer)
+        self.render_params_to_write(state.get_params().ok_or(EncodeError::ParamError)?, writer)
     }
     fn render_params_to_write<W: Write>(&self, params: &CEGISStateParams, mut writer: W) -> Result<(), EncodeError> {
         write!(writer, "{}", self.render_params(params)?)?;
         Ok(())
     }
     fn render_to_file<P: AsRef<Path>>(&self, state:&CEGISState, file_path: P) -> Result<(), EncodeError> {
-        self.render_params_to_file(state.get_params(), file_path)
+        self.render_params_to_file(state.get_params().ok_or(EncodeError::ParamError)?, file_path)
     }
     fn render_params_to_file<P: AsRef<Path>>(&self, params: &CEGISStateParams, file_path: P) -> Result<(), EncodeError> {
         self.render_params_to_write(params, File::create(file_path)?)

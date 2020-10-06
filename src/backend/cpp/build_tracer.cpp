@@ -221,6 +221,7 @@ R"({
     json log;
     std::vector<json> args;{% for arg in arg_list %}
     args.push_back(json({{ arg }}));{% endfor %}
+    log["meta"] = "FuncCall";
     log["args"] = args;
     log["rtn"] = rtn_vec;
     log["func"] = "{{ lib_func_name }}";
@@ -235,6 +236,7 @@ R"({
     json log;
     std::vector<json> args;{% for arg in arg_list %}
     args.push_back(json({{ arg }}));{% endfor %}
+    log["meta"] = "FuncCall";
     log["args"] = args;
     log["rtn"] = {{ rtn_arg }};
     log["func"] = "{{ lib_func_name }}";

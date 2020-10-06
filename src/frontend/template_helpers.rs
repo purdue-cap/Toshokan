@@ -22,6 +22,20 @@ pub fn get_n_logs(h: &Helper,
     Ok(())
 }
 
+pub fn get_encoding_offset(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting parameters: function encoding code mapping
+    let encoding_code_map = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_object()
+        .ok_or(RenderError::new("First parameter not object"))?;
+    out.write(format!("{}", encoding_code_map.len() + 1).as_str())?;
+    Ok(())
+}
+
 pub fn get_cap_logs(h: &Helper,
                     _: &Handlebars,
                     _: &Context,
@@ -121,6 +135,86 @@ pub fn format_value(val: &Value) -> Option<String> {
             Some(val.to_string())
         }
     }
+}
+
+pub fn expand_to_hist_arrays(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting parameters: logs, n_unknown, history_capacity, optional(unknown_fill_string), optional(hist_fill_string)
+    let logs_array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?;
+    let n_unknown = h.param(1)
+        .ok_or(RenderError::new("Second parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
+        as usize;
+    let hist_cap = h.param(2)
+        .ok_or(RenderError::new("Third parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Third parameter not an unsigned int"))?
+        as usize;
+    let mut unknown_fill_string = "??".to_string();
+    let mut hist_fill_string = "0".to_string();
+    if let Some(param_3) = h.param(3) {
+        unknown_fill_string = param_3.value().as_str().ok_or(RenderError::new("Fourth parameter not a string"))?.to_string();
+    }
+    if let Some(param_4) = h.param(4) {
+        hist_fill_string = param_4.value().as_str().ok_or(RenderError::new("Fifth parameter not a string"))?.to_string();
+    }
+    let mut arg_array = logs_array.into_iter().map(|j|
+        j.as_object()
+        .and_then(|obj| obj.get("args"))
+        .and_then(|args_v| args_v.as_array())
+        .and_then(|hist_v| hist_v.into_iter().map(|v| format_value(v)).collect::<Option<Vec<_>>>())
+        .and_then(|mut hist_v|
+            if hist_v.len() > hist_cap {
+                None
+            } else {
+                hist_v.append(&mut vec![hist_fill_string.clone(); hist_cap - hist_v.len()]);
+                Some(hist_v)
+            }
+        )
+        .map(|hist_v| format!("{{ {} }}", hist_v.join(", ")))
+    ).collect::<Option<Vec<_>>>()
+        .ok_or(RenderError::new("Hist array parse failed"))?;
+    arg_array.append(&mut std::iter::repeat(unknown_fill_string).take(n_unknown).collect());
+    out.write(arg_array.join(", ").as_str())?;
+    Ok(())
+}
+
+pub fn expand_to_hist_lens(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    // Expecting parameters: logs, n_unknown, optional(unknown_fill_string)
+    let logs_array = h.param(0)
+        .ok_or(RenderError::new("First parameter not found"))?
+        .value().as_array()
+        .ok_or(RenderError::new("First parameter not array"))?;
+    let n_unknown = h.param(1)
+        .ok_or(RenderError::new("Second parameter not found"))?
+        .value().as_u64()
+        .ok_or(RenderError::new("Second parameter not an unsigned int"))?
+        as usize;
+    let mut unknown_fill_string = "??".to_string();
+    if let Some(param_2) = h.param(2) {
+        unknown_fill_string = param_2.value().as_str().ok_or(RenderError::new("Third parameter not a string"))?.to_string();
+    }
+    let mut len_array = logs_array.into_iter().map(|j|
+        j.as_object()
+        .and_then(|obj| obj.get("args"))
+        .and_then(|args_v| args_v.as_array())
+        .map(|hist_v| format!("{}", hist_v.len()))
+    ).collect::<Option<Vec<_>>>()
+        .ok_or(RenderError::new("Hist array parse failed"))?;
+    len_array.append(&mut std::iter::repeat(unknown_fill_string).take(n_unknown).collect());
+    out.write(len_array.join(", ").as_str())?;
+    Ok(())
 }
 
 pub fn expand_to_rtn_array(h: &Helper,
@@ -407,8 +501,11 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("add", Box::new(add));
     hb.register_helper("subtree", Box::new(subtree));
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
+    hb.register_helper("get-encoding-offset", Box::new(get_encoding_offset));
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
+    hb.register_helper("expand-to-hist-arrays", Box::new(expand_to_hist_arrays));
+    hb.register_helper("expand-to-hist-lens", Box::new(expand_to_hist_lens));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
     hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
     hb.register_helper("expand-points-to-assume", Box::new(expand_points_to_assume));
@@ -424,7 +521,8 @@ mod tests {
     use std::error::Error;
     use serde::Serialize;
     use super::*;
-    use crate::cegis::TraceLog;
+    use crate::cegis::{TraceLog, FuncLog};
+    use std::collections::HashMap;
     
     #[derive(Serialize)]
     struct Param {
@@ -438,6 +536,12 @@ mod tests {
 
     #[derive(Serialize)]
     struct TraceLogParam {
+        logs: Vec<TraceLog>
+    }
+
+    #[derive(Serialize)]
+    struct HistLogParam {
+        encoding: HashMap<String, usize>,
         logs: Vec<TraceLog>
     }
 
@@ -471,6 +575,24 @@ mod tests {
     }
 
     #[test]
+    fn gets_encoding_offset() -> Result<(), Box<dyn Error>> {
+        let data = HistLogParam {
+            encoding: vec![
+                ("push".to_string(), 1usize), 
+                ("pop".to_string(), 2usize)].into_iter().collect(),
+            logs: vec![]
+        };
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"offset: {{get-encoding-offset encoding}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "offset: 3");
+
+        Ok(())
+    }
+
+    #[test]
     fn gets_cap_logs() -> Result<(), Box<dyn Error>> {
         let data = Param { array: vec![1, 2, 3, 4 ,5] };
         
@@ -486,21 +608,21 @@ mod tests {
     fn expands_to_arg_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
                     rtn: json!(1),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
                     rtn: json!(2),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
                     rtn: json!(5),
                     func: "sqrt".to_string()
-                }
+                })
             ]
         };
         let mut hb = Handlebars::new();
@@ -516,7 +638,7 @@ mod tests {
     fn expands_objects_to_arg_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -530,8 +652,8 @@ mod tests {
                         "b": 1
                     }),
                     func: "inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -545,8 +667,8 @@ mod tests {
                         "b": 3
                     }),
                     func: "inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -560,7 +682,7 @@ mod tests {
                         "b": 5
                     }),
                     func: "inv".to_string()
-                },
+                }),
             ]
         };
         let mut hb = Handlebars::new();
@@ -588,24 +710,82 @@ mod tests {
     }
 
     #[test]
+    fn expands_to_hist_arrays() -> Result<(), Box<dyn Error>> {
+        let data = HistLogParam {
+            encoding: vec![
+                ("push".to_string(), 1usize), 
+                ("pop".to_string(), 2usize)].into_iter().collect(),
+            logs: vec![
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(6)],
+                    rtn: json!(3),
+                    func: "pop".to_string()
+                }),
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
+                    rtn: json!(5),
+                    func: "pop".to_string()
+                })
+            ]
+        };
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"hist: {{expand-to-hist-arrays logs 2 8}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "hist: { 2, 1, 6, 0, 0, 0, 0, 0 }, { 2, 1, 1, 3, 8, 0, 0, 0 }, ??, ??");
+
+        Ok(())
+    }
+
+    #[test]
+    fn expands_to_hist_lens() -> Result<(), Box<dyn Error>> {
+        let data = HistLogParam {
+            encoding: vec![
+                ("push".to_string(), 1usize), 
+                ("pop".to_string(), 2usize)].into_iter().collect(),
+            logs: vec![
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(6)],
+                    rtn: json!(3),
+                    func: "pop".to_string()
+                }),
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
+                    rtn: json!(5),
+                    func: "pop".to_string()
+                })
+            ]
+        };
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"hist_len: {{expand-to-hist-lens logs 2}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "hist_len: 3, 5, ??, ??");
+
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
                     rtn: json!(1),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
                     rtn: json!(2),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
                     rtn: json!(5),
                     func: "sqrt".to_string()
-                }
+                })
             ]
         };
         let mut hb = Handlebars::new();
@@ -621,7 +801,7 @@ mod tests {
     fn expands_objects_to_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -635,8 +815,8 @@ mod tests {
                         "b": 1
                     }),
                     func: "inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -650,8 +830,8 @@ mod tests {
                         "b": 3
                     }),
                     func: "inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![
                         json!({
                             "@class_name": "ANONYMOUS::point",
@@ -665,7 +845,7 @@ mod tests {
                         "b": 5
                     }),
                     func: "inv".to_string()
-                },
+                })
             ]
         };
         let mut hb = Handlebars::new();
@@ -696,21 +876,21 @@ mod tests {
     fn expands_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1), json!(2)],
                     rtn: json!(vec![1, 2]),
                     func: "vec".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5), json!(2)],
                     rtn: json!(vec![2, 5]),
                     func: "vec".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25), json!(26)],
                     rtn: json!(vec![25, 26]),
                     func: "vec".to_string()
-                }
+                })
             ]
         };
         let mut hb = Handlebars::new();
@@ -726,7 +906,7 @@ mod tests {
     fn expands_objects_to_ith_rtn_array() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
                     rtn: json!([{
                         "@class_name": "std::vector",
@@ -739,8 +919,8 @@ mod tests {
                     }
                     ]),
                     func:"inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2)],
                     rtn: json!([{
                         "@class_name": "std::vector",
@@ -753,8 +933,8 @@ mod tests {
                     }
                     ]),
                     func:"inv".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(3)],
                     rtn: json!([{
                         "@class_name": "std::vector",
@@ -767,7 +947,7 @@ mod tests {
                     }
                     ]),
                     func:"inv".to_string()
-                },
+                })
             ]
         };
         let mut hb = Handlebars::new();
@@ -905,21 +1085,21 @@ mod tests {
     fn expands_nested_templates() -> Result<(), Box<dyn Error>> {
         let data = TraceLogParam {
             logs: vec![
-                TraceLog {
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
                     rtn: json!(1),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
                     rtn: json!(2),
                     func: "sqrt".to_string()
-                },
-                TraceLog {
+                }),
+                TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
                     rtn: json!(5),
                     func: "sqrt".to_string()
-                }
+                })
             ]
         };
         let mut hb = Handlebars::new();

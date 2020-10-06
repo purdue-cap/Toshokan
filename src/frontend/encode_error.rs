@@ -44,6 +44,9 @@ quick_error! {
         SimpleRenderError(desc: &'static str) {
             display("{}", desc)
         }
+        ParamError {
+            display("State Param not found")
+        }
     }
 }
 

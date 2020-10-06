@@ -7,14 +7,14 @@ use std::fs::File;
 use std::collections::HashMap;
 use super::{CFlagManager, TraceError};
 use super::build_tracer::{build_tracer_to_file, COMPILATION_DB_FILE_NAME};
-use crate::cegis::{TraceLog, CEGISState};
+use crate::cegis::{TraceLog, CEGISState, FuncConfig};
 use log::{error, trace, warn};
 use mio::{Events, Poll, Interest, Token};
 use mio::unix::SourceFd;
 
 pub struct LibraryTracer<'i, 'c, 'hn, 'w> {
     impl_file: &'i Path,
-    func_config: &'c HashMap<String, usize>,
+    func_config: &'c HashMap<String, FuncConfig>,
     harness_func_name: &'hn str,
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>,
@@ -36,7 +36,7 @@ static VOPS_H: &'static str = include_str!("cpp/vops.h");
 impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
     pub fn new(
         impl_file: &'i Path,
-        func_config: &'c HashMap<String, usize>, 
+        func_config: &'c HashMap<String, FuncConfig>, 
         harness_func_name: &'hn str, 
         sketch_home: Option<&Path>, 
         trace_timeout: Option<f32>,
@@ -67,12 +67,10 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
 
     pub fn setup_compiler_flags(&mut self, state: &CEGISState) {
         // Setup compiler flags according to current state
-        if let Some(largest_log_length) = 
-            state.get_params().logs.values().map(|logs| logs.len()).max() {
-            let estimated_nesting_level = largest_log_length + state.get_params().n_unknowns;
-            let new_depth_bound = std::cmp::max(self.flag_manager.get_bracket_depth(), estimated_nesting_level * 2);
-            self.flag_manager.set_bracket_depth(new_depth_bound)
-        }
+        let largest_log_length = state.get_max_log_length();
+        let estimated_nesting_level = largest_log_length + state.get_n_unknowns();
+        let new_depth_bound = std::cmp::max(self.flag_manager.get_bracket_depth(), estimated_nesting_level * 2);
+        self.flag_manager.set_bracket_depth(new_depth_bound)
     }
 
     pub fn add_static_file_to_work_dir(&self, filename: &'static str, content: &'static str) -> Option<()> {
@@ -131,9 +129,19 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
                 func_calls_list.push(format!(
 r#"
     try{{
+      json log_start;
+      log_start["meta"] = "TestStart";
+      std::cerr << log_start << std::endl;
       {harness_name}__WrapperNospec({arg_list});
       {harness_name}__Wrapper({arg_list});
-    }}catch(AssumptionFailedException& afe){{  }}
+      json log_end;
+      log_end["meta"] = "TestEnd";
+      std::cerr << log_end << std::endl;
+    }}catch(AssumptionFailedException& afe){{
+      json log_afe;
+      log_afe["meta"] = "TestAFE";
+      std::cerr << log_afe << std::endl;
+    }}
 "#,
                     arg_list = joined_params,
                     harness_name = if self.harness_func_name.contains("::")
@@ -149,8 +157,11 @@ r#"
         };
 
         let entry_src_content = format!(
-r#"#include "{base_name}.h"
+r#"#include <iostream>
+#include "json.hpp"
+#include "{base_name}.h"
 #include "vops.h"
+using nlohmann::json;
 int main(int argc, char** argv) {{
 {func_calls}
 }}
@@ -282,14 +293,15 @@ int main(int argc, char** argv) {{
 mod tests {
     use super::*;
     use std::error::Error;
+    use crate::cegis::FuncLog;
     #[test]
     fn parses_json_log_line() -> Result<(), Box<dyn Error>> {
-        let json_str = r#"{"args":[5],"rtn":2,"func":"sqrt"}"#;
-        let fixture = TraceLog {
+        let json_str = r#"{"meta":"FuncCall","args":[5],"rtn":2,"func":"sqrt"}"#;
+        let fixture = TraceLog::FuncCall(FuncLog {
             args: vec![json!(5)],
             rtn: json!(2),
             func: "sqrt".to_string()
-        };
+        });
         let result = parse_log_from_json(json_str)?;
         assert_eq!(result, fixture);
         Ok(())

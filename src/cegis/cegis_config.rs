@@ -12,18 +12,26 @@ pub enum ExcludedHole {
     Position(isize, isize)
 }
 
+#[derive(Clone)]
+pub enum FuncConfig {
+    Pure {args: usize},
+    NonPure {
+        args: usize,
+        state_arg_idx: usize
+    }
+}
+
 pub struct CEGISConfigParams {
     pub sketch_fe_bin: PathBuf,
     pub sketch_be_bin: PathBuf,
     pub sketch_home: Option<PathBuf>,
     pub impl_file: PathBuf,
     pub harness_func_name: String,
-    pub func_config: HashMap<String, usize>,
+    pub func_config: HashMap<String, FuncConfig>,
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
     pub excluded_holes: HashSet<ExcludedHole>,
-    pub pure_function: bool,
     pub enable_record: bool,
     pub keep_tmp: bool,
     pub retry_strategy_config: RetryStrategyConfig,
@@ -74,13 +82,20 @@ impl CEGISConfig {
                 sketch_be_bin: sketch_be_bin.as_ref().to_path_buf(),
                 sketch_home: sketch_home.as_ref().map(|p| p.as_ref().to_path_buf()),
                 impl_file: impl_file.as_ref().to_path_buf(),
-                func_config: func_config.iter().map(|(name, args)| (name.to_string(), *args)).collect(),
+                func_config: func_config.iter().map(|(name, args)| 
+                    (name.to_string(),
+                        if pure_function {
+                            FuncConfig::Pure{args: *args}
+                        } else {
+                            FuncConfig::NonPure{args: *args, state_arg_idx: 0}
+                        }
+                    )
+                ).collect(),
                 harness_func_name: harness_func_name.as_ref().to_string(),
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
                 excluded_holes: excluded_holes.collect(),
-                pure_function: pure_function,
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
                 retry_strategy_config: RetryStrategyConfig::Simple(20),

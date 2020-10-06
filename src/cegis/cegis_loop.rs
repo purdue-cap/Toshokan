@@ -38,10 +38,9 @@ impl<'r> CEGISLoop<'r> {
     pub fn new(config: CEGISConfig) -> Self{
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
-        let state = CEGISState::new(config.get_params().func_config.clone(),
+        let state = CEGISState::new(config.get_params().func_config.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
             config.get_params().n_inputs,
-            config.get_params().init_n_unknowns,
-            config.get_params().pure_function);
+            config.get_params().init_n_unknowns);
         CEGISLoop {
             hb: RefCell::new(hb),
             config: config,
@@ -175,7 +174,7 @@ impl<'r> CEGISLoop<'r> {
         let tracer_src = library_tracer.build_tracer_src(&main_src).ok_or("Build tracer source failed")?;
 
         info!(target: "Trace", "Building tracer entry source");
-        let entry_src = library_tracer.build_entry_src(&self.get_state().get_params().c_e_s)
+        let entry_src = library_tracer.build_entry_src(&self.get_state().get_params().ok_or("State params not available")?.c_e_s)
             .ok_or("Build entry source failed")?;
         trace!(target: "Trace", "Entry source: {}", 
             fs::read(entry_src.as_path()).ok()
@@ -228,6 +227,7 @@ impl<'r> CEGISLoop<'r> {
             let mut generation_encoder = GenerationEncoder::new(&self.hb);
             generation_encoder.setup_rewrite(&rewrite_controller)?;
             generation_encoder.load(&self.config.get_params().generation_encoder_src)?;
+            self.state.update_params().ok_or("State param update failed")?;
             let generated_input_tmp = self.generate(&generation_encoder, &mut sketch_runner)?;
             self.config.set_input_tmp_path(generated_input_tmp);
         }
@@ -237,7 +237,7 @@ impl<'r> CEGISLoop<'r> {
         rewrite_controller.update_with_config(&self.config);
         
         self.config.populate_v_p_s(&mut self.state);
-        debug!(target: "CEGISMainLoop", "Verify points: {:?}", self.state.get_params().verify_points);
+        debug!(target: "CEGISMainLoop", "Verify points: {:?}", self.state.get_v_p_set());
         warn!(target: "CEGISMainLoop", "Verify points are currently unused in sketch backend based verification phrase.");
 
         let mut cand_encoder = CandEncoder::new();
@@ -283,6 +283,7 @@ impl<'r> CEGISLoop<'r> {
 
             self.recorder.as_mut().map(|r| r.start_verification());
             info!(target: "CEGISMainLoop", "Verifying");
+            self.state.update_params().ok_or("State param update failed")?;
             let (verify_result, last_verification) = self.verify(&cand_encoder,
                 &log_analyzer, &mut sketch_runner)?;
             self.recorder.as_mut().map(|r| r.set_last_verification(&last_verification));
@@ -296,7 +297,7 @@ impl<'r> CEGISLoop<'r> {
             } else {
                 // Verification passed
                 info!(target: "CEGISMainLoop", "Verification successful, returning solution");
-                debug!(target: "CEGISMainLoop", "Final holes: {:?}", self.state.get_params().holes);
+                debug!(target: "CEGISMainLoop", "Final holes: {:?}", self.state.get_holes());
                 // Read code for final output
                 info!(target: "CEGISMainLoop", "Reading synthesized cpp code as final output");
                 let current_iter_nth = self.state.get_iter_count();
@@ -313,6 +314,7 @@ impl<'r> CEGISLoop<'r> {
                 info!(target: "CEGISMainLoop", "Synthesizing(Pre-run)");
                 let synthesize_result = loop {
                     self.recorder.as_mut().map(|r| r.start_synthesis());
+                    self.state.update_params().ok_or("State param update failed")?;
                     let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                         &mut hole_extractor, &mut sketch_runner)?;
                     self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
@@ -346,6 +348,7 @@ impl<'r> CEGISLoop<'r> {
 
             self.recorder.as_mut().map(|r| r.start_trace());
             info!(target: "CEGISMainLoop", "Tracing");
+            self.state.update_params().ok_or("State param update failed")?;
             let (traces, timed_out) = self.trace(base_path?.as_path(), &mut library_tracer)?;
             info!(target: "CEGISMainLoop", "Tracing successful");
             debug!(target: "CEGISMainLoop", "New Traces: {:?}", traces);
@@ -359,6 +362,7 @@ impl<'r> CEGISLoop<'r> {
             info!(target: "CEGISMainLoop", "Synthesizing");
             let synthesize_result = loop {
                 self.recorder.as_mut().map(|r| r.start_synthesis());
+                self.state.update_params().ok_or("State param update failed")?;
                 let (result, last_synthesis) = self.synthesize(&c_e_encoder,
                     &mut hole_extractor, &mut sketch_runner)?;
                 self.recorder.as_mut().map(|r| r.set_last_synthesis(&last_synthesis));
@@ -389,10 +393,10 @@ impl<'r> CEGISLoop<'r> {
                 break None;
             }
 
-            debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_params().c_e_s);
-            debug!(target: "CEGISMainLoop", "Current Holes: {:?}", self.state.get_params().holes);
-            debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_params().logs.len());
-            trace!(target: "CEGISMainLoop", "Current Traces: {:?}", self.state.get_params().logs);
+            debug!(target: "CEGISMainLoop", "Current C.E.s: {:?}", self.state.get_c_e_set());
+            debug!(target: "CEGISMainLoop", "Current Holes: {:?}", self.state.get_holes());
+            debug!(target: "CEGISMainLoop", "Current trace count: {}", self.state.get_n_logs());
+            trace!(target: "CEGISMainLoop", "Current Traces: {:?}", self.state.get_logs());
             info!(target: "CEGISMainLoop", "Exiting iteration #{}", self.state.get_iter_count());
             let current_iter_nth = self.state.get_iter_count();
             self.recorder.as_mut().map(|r| {

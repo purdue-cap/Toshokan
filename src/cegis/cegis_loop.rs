@@ -8,7 +8,7 @@ use super::CEGISState;
 use super::CEGISRecorder;
 use super::TraceLog;
 use handlebars::Handlebars;
-use tempfile::{tempdir, Builder};
+use tempfile::{tempdir, Builder, TempDir};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -31,6 +31,30 @@ fn validate_filled_template(path: &Path) -> Option<()> {
     match unfilled_var.find(content.as_str()) {
         Some(_) => None,
         None => Some(())
+    }
+}
+
+struct TempDirSaver{
+    temp_dir_obj: Option<TempDir>,
+}
+
+impl Drop for TempDirSaver {
+    fn drop(&mut self) {
+        if let Some(taken_temp_dir_obj) = self.temp_dir_obj.take() {
+            taken_temp_dir_obj.into_path();
+        }
+    }
+}
+
+impl TempDirSaver {
+    pub fn new() -> Self {
+        Self {
+            temp_dir_obj: None
+        }
+    }
+
+    pub fn set_temp_dir_obj(&mut self, temp_dir_obj: TempDir) {
+        self.temp_dir_obj = Some(temp_dir_obj);
     }
 }
 
@@ -210,7 +234,11 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "CEGISMainLoop", "Start initialization");
 
         let temp_dir_obj = tempdir()?;
+        let mut temp_dir_saver = TempDirSaver::new();
         self.work_dir = Some(temp_dir_obj.path().to_path_buf());
+        if self.config.get_params().keep_tmp {
+            temp_dir_saver.set_temp_dir_obj(temp_dir_obj);
+        }
         info!(target: "CEGISMainLoop", "Working directory: {:?}", self.work_dir);
         self.output_dir = Some(self.work_dir.as_ref().ok_or("Work dir unset")?.join("output"));
         fs::create_dir(self.output_dir.as_ref().ok_or("Output dir unset")?)?;
@@ -414,8 +442,7 @@ impl<'r> CEGISLoop<'r> {
         self.recorder.as_mut().map(|r| r.set_total_iter(final_iter_count));
         self.recorder.as_mut().map(|r| r.commit_time());
         self.recorder.as_ref().map(|r| info!(target:"CEGISMainLoop", "Total elapsed time: {}", r.get_time()));
-        if solved.is_none() || self.config.get_params().keep_tmp {
-            temp_dir_obj.into_path();
+        if self.config.get_params().keep_tmp {
             self.recorder.as_mut().map(|r| r.commit_last_files());
         }
         info!(target:"CEGISMainLoop", "Total iterations run: {}", self.state.get_iter_count() + 1);

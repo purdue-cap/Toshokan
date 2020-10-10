@@ -167,7 +167,7 @@ impl CEGISState {
                                     .map(|(_, v)| v.as_i64())
                                     .collect::<Option<Vec<_>>>()?;
                                 current_history.as_mut()?.extend(encoded_args.into_iter());
-                                current_history.as_mut()?.push_front(*self.func_hist_codes.get(name)? as i64);
+                                current_history.as_mut()?.push_front(*self.func_hist_codes.get(func_log.func.as_str())? as i64);
                                 if &func_log.func == name {
                                     hist_log_set.insert(FuncLog {
                                         args: current_history.as_ref()?.iter().map(|v| Value::from(*v)).collect(),

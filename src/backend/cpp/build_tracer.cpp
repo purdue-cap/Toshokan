@@ -122,7 +122,11 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
                 auto base_type = getBaseType(arg_type);
 
                 if (!buildJSONConversionForType(base_type)) {
-                    return false;
+                    // If part of the argument type is unconvertible, treat entire type as unconvertible
+                    // And put a placeholder for it
+                    if (!buildJSONPlaceholderForType(base_type)) {
+                        return false;
+                    }
                 }
 
                 if (StateArgNames.find(arg_name) != StateArgNames.end()) {
@@ -278,10 +282,12 @@ R"(
         string json_include = "#include \"json.hpp\"\n";
         string vector_include = "#include <vector>\n";
         string iostream_include = "#include <iostream>\n";
+        string cstdint_include = "#include <cstdint>\n";
         string json_use = "using nlohmann::json;\n";
         TopInsertions.push_back(std::move(json_include));
         TopInsertions.push_back(std::move(vector_include));
         TopInsertions.push_back(std::move(iostream_include));
+        TopInsertions.push_back(std::move(cstdint_include));
         TopInsertions.push_back(std::move(json_use));
         for (auto decl_str: JSONConvertorDecls) {
             TopInsertions.push_back(decl_str);
@@ -306,6 +312,50 @@ R"(
     string_set doneType;
     string_set doneFunc;
     PrintingPolicy printingPolicy;
+    bool buildJSONPlaceholderForType(QualType type) {
+        auto type_name = type.getUnqualifiedType().getAsString(printingPolicy);
+        if (type->isFundamentalType() || 
+            doneType.find(type_name) != doneType.end()) {
+            // It's fundamental type, or it is already traversed
+            return true;
+        }
+        doneType.insert(type_name);
+        json template_data;
+        template_data["type_name"] = type_name;
+        string decl_template(
+R"(
+template<>
+struct nlohmann::adl_serializer<{{ type_name }}>{
+    static void to_json(json &, const {{ type_name }}&);
+};
+template<>
+struct nlohmann::adl_serializer<{{ type_name }}*>{
+    static void to_json(json &, const {{ type_name }}*);
+};
+)"
+        );
+        string impl_template(
+R"(
+void nlohmann::adl_serializer<{{ type_name }}>::to_json(json &j, const {{ type_name }} &data){
+    j = { { "@placeholder", "UNSUPPORTED" },
+        { "@type_name", "{{ type_name }}"  }
+    };
+}
+void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_name }} *data){
+    if (data == nullptr) {
+        j = nullptr;
+    } else {
+        j = *data;
+        j["@address"] = reinterpret_cast<std::uintptr_t>(data);
+    }
+}
+)"
+        );
+        JSONConvertorDecls.push_back(inja::render(decl_template, template_data));
+        JSONConvertorImpls.push_back(inja::render(impl_template, template_data));
+        return true;
+    }
+
     bool buildJSONConversionForType(QualType type){
         auto type_name = type.getUnqualifiedType().getAsString(printingPolicy);
         if (type->isFundamentalType() || 
@@ -319,6 +369,7 @@ R"(
         const auto* record_decl = type->getAsRecordDecl();
         if (record_decl == nullptr) {
             // type is non-record non-fundamental type, we can't handle it at the moment
+            doneType.erase(type_name);
             return false;
         }
 
@@ -340,6 +391,7 @@ R"(
                 }
             }
             if (!length_found || !A_found) {
+                doneType.erase(type_name);
                 return false;
             }
             // Traverse its base type
@@ -348,6 +400,7 @@ R"(
             array_element_type_name = element_type.getUnqualifiedType().getAsString(printingPolicy);
             auto base_type = getBaseType(element_type);
             if (!buildJSONConversionForType(base_type)) {
+                doneType.erase(type_name);
                 return false;
             }
         } else {
@@ -355,6 +408,7 @@ R"(
             for (auto field: record_decl->fields()) {
                 auto base_type = getBaseType(field->getType());
                 if (!buildJSONConversionForType(base_type)) {
+                    doneType.erase(type_name);
                     return false;
                 }
                 field_names.push_back(field->getNameAsString());
@@ -401,6 +455,7 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
         j = nullptr;
     } else {
         j = *data;
+        j["@address"] = reinterpret_cast<std::uintptr_t>(data);
     }
 }
 )";
@@ -418,6 +473,7 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
         j = nullptr;
     } else {
         j = *data;
+        j["@address"] = reinterpret_cast<std::uintptr_t>(data);
     }
 }
 )";

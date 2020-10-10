@@ -5,23 +5,23 @@ struct Stack {
    int pos;
 }
 
-int HIST_CAP = {{ hist_caps }}
+int HIST_CAP = {{ hist_cap }};
 int[HIST_CAP] hist;
 int hist_len = 0;
 
 int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::s_push_real") n_unknowns}};
 int s_push_index(int[HIST_CAP] hist);
 int idx0 = 0;
-int[HIST_CAP][cap0] hist0 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::s_push_real") n_unknowns hist_caps}} };
-int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_push_real") n_unknowns }}  }
-int[cap] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_push_real") "??" n_unknowns}} };
+int[HIST_CAP][cap0] hist0 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::s_push_real") n_unknowns hist_cap}} };
+int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_push_real") n_unknowns }}  };
+int[cap0] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_push_real") "??" n_unknowns}} };
 
 int cap1 = {{get-cap-logs (subtree logs "ANONYMOUS::s_pop_real") n_unknowns}};
 int s_pop_index(int[HIST_CAP] hist);
 int idx1 = 0;
-int[HIST_CAP][cap1] hist1 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::s_pop_real") n_unknowns hist_caps}} };
-int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_pop_real") n_unknowns }}  }
-int[cap] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_pop_real") "??" n_unknowns}} };
+int[HIST_CAP][cap1] hist1 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::s_pop_real") n_unknowns hist_cap}} };
+int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_pop_real") n_unknowns }}  };
+int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_pop_real") "??" n_unknowns}} };
 generator int s_push(Stack s, int i) {
     if (hist_len > 0) {
         hist[1::hist_len] = hist[0::hist_len];
@@ -31,7 +31,10 @@ generator int s_push(Stack s, int i) {
     hist_len = hist_len + 2;
 
 	idx0 = s_push_index(hist);
-	assume 0 <= idx0 && idx0 < cap0 && hist0_len[idx0] == hist_len && hist0[idx0][0::hist_len] == hist[0::hist_len];
+	assume 0 <= idx0;
+    assume idx0 < cap0;
+    assume hist0_len[idx0] == hist_len;
+    assume hist0[idx0][0::hist_len] == hist[0::hist_len];
     return s_push_real(s, i);
 }
 
@@ -43,12 +46,15 @@ generator int s_pop(Stack s) {
     if (hist_len > 0) {
         hist[1::hist_len] = hist[0::hist_len];
     }
-    hist[0] = 2;
+    hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_pop_real" }};
     hist_len = hist_len + 1;
     // What if hist_len overflows
 
 	idx1 = s_pop_index(hist);
-	assume 0 <= idx1 && idx1 < cap1 && hist1_len[idx1] == hist_len && hist1[idx1][0::hist_len] == hist[0::hist_len];
+	assume 0 <= idx1;
+    assume idx1 < cap1;
+    assume hist1_len[idx1] == hist_len;
+    assume hist1[idx1][0::hist_len] == hist[0::hist_len];
     return s_pop_real(s);
 }
 
@@ -56,20 +62,23 @@ int s_pop_real(Stack s) {
     return rarr1[idx1];
 }
 
-harness void sanity_check(int idx1, int idx2) {
-    assume 0 <= idx1 && idx1 <= cap;
-    assume 0 <= idx2 && idx2 <= cap;
+harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
+    assume 0 <= idx1 && idx1 < cap0;
+    assume 0 <= idx2 && idx2 < cap0;
     assume idx1 != idx2;
-    assert hist0_len[idx1] != hist0_len[idx2] || hist0[idx1][0::hist0_len[idx1]] != hist0[idx2][0::hist0_len[idx1]];
-    assert hist1_len[idx1] != hist1_len[idx2] || hist1[idx1][0::hist1_len[idx1]] != hist1[idx2][0::hist1_len[idx1]];
+    assert hist0_len[idx1] != hist0_len[idx2] || ( hist0_len[idx1] < HIST_CAP && hist0_len[idx1] >= 0 && hist0[idx1][0::hist0_len[idx1]] != hist0[idx2][0::hist0_len[idx1]]);
+
+    assume 0 <= idx3 && idx3 < cap1;
+    assume 0 <= idx4 && idx4 < cap1;
+    assume idx3 != idx4;
+    assert hist1_len[idx3] != hist1_len[idx4] || ( hist1_len[idx3] < HIST_CAP && hist1_len[idx3] >= 0 && hist1[idx3][0::hist1_len[idx3]] != hist1[idx4][0::hist1_len[idx3]]);
 }
 
 // Below are original code from benchmark
 
 
 harness void main(int p, int s, int offset) {
-    assume p >= 2 && p <= 10;
-    assume s >= 1 && s <= 4;
+    {{expand-x-d-points-to-assume c_e_s "p" "s" "offset" }}
     Stack st = new Stack();
     // Stack st = s_new();
     for (int i = 0; i < p; i++) {

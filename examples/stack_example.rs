@@ -50,7 +50,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log_level == LevelFilter::Trace,
         synthesis.as_path(),
         verification.as_path(),
-        &[], Some(5.0));
+        &[
+            "p_3_9_0",
+            "s_4_a_0",
+            "offset_5_b_0"
+        ], Some(5.0));
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

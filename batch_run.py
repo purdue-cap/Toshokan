@@ -108,7 +108,7 @@ def main():
     parser = optparse.OptionParser("Usage: %prog [options] <target>")
     parser.add_option("-n", "--num_job", dest="num_jobs", default=1, type="int", help="Numbers of parallel jobs")
     parser.add_option("-r", "--repeat", dest="repeat", default=1, type="int", help="Repeat time of each job")
-    parser.add_option("-f", "--fastest", dest="fastest", default=False, action="store_true", help="Return when we have results, yielding just the fastest results, ignores --repeat")
+    parser.add_option("-F", "--fastest", dest="fastest", default=False, action="store_true", help="Return when we have results, yielding just the fastest results, ignores --repeat")
     parser.add_option("-t", "--timeout", dest="timeout", default=0, type="int", help="Timeout when waiting for result, in seconds")
     parser.add_option("-c", "--command", dest="command", default=COMMAND, type="string", help="Command to run, subsitute target with '{}'")
     parser.add_option("-L", "--log_file_postfix", dest="log_file_postfix", default=".log", type="string", help="Log file postfix")

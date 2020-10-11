@@ -102,6 +102,8 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
         print("Output for {} finished".format(target))
     
     if finish_event is not None:
+        with print_lock:
+            print("Signaling for other threads to timeout")
         finish_event.set()
 
 def main():
@@ -134,6 +136,7 @@ def main():
             if not finish_event.wait(timeout):
                 with print_lock:
                     print("Job {} timeout".format(job))
+                    print("Signaling for all threads to timeout")
                 finish_event.set()
             pool.close()
             pool.join()

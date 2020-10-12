@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Lock, Event
+import os, signal
 import optparse
 from select import poll
 import subprocess
@@ -38,7 +39,7 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
     with print_lock:
         print("Running on {}".format(target))
 
-    process = subprocess.Popen(command.format(target), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(command.format(target), preexec_fn=os.setsid, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     begin_wall = time.time()
     elapsed = 0
     pollobj = select.epoll()
@@ -83,8 +84,8 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
     pollobj.close()
 
     if timeouted:
-        process.terminate()
-        process.kill()
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
         with print_lock:
             print("Timeout with {} after {} seconds".format(target, elapsed))
             return

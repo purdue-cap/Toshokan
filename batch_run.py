@@ -16,7 +16,7 @@ import tempfile
 COMMAND="target/debug/examples/{}"
 DATA_MOD="extract_record"
 DATA_FUNC="extract"
-POLL_INTERNAL=500
+POLL_INTERNAL=0.5 # Unit in seconds
 
 def lock_file(fd):
     while True:

@@ -31,15 +31,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         sketch_be_bin.as_path(),
         sketch_home.as_ref().map(|p| p.as_path()),
         impl_file.as_path(),
-        &[("ANONYMOUS::matmul_real", 2)],
+        &[("ANONYMOUS::matmul", 2)],
         "main",
         7,
         VerifyPointsConfig::NoSpec,
         10,
         vec![
-            ExcludedHole::Position(16, -1),
-            ExcludedHole::Position(17, -1),
-            ExcludedHole::Position(18, -1)
+            ExcludedHole::Position(20, -1)
         ].into_iter(),
         true,
         true,

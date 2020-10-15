@@ -1,28 +1,30 @@
 pragma options "--bnd-inbits 8 --bnd-cbits 3 --bnd-unroll-amnt 256 --bnd-inline-amnt 3 --slv-nativeints";
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sqrt_real") n_unknowns}};
-int sqrt_index(int i);
-int idx = 0;
-int[cap] iarr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sqrt_real") 0 "??(5)" n_unknowns}} };
-int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::sqrt_real") "??(5)" n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sqrt") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::sqrt")}};
+int[cap] iarr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::sqrt") 0 n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::sqrt") n_unknowns}} };
 
 
-generator int sqrt(int i){
-	idx = sqrt_index(i);
-	assume 0 <= idx && idx < cap && iarr[idx] == i;
-    return sqrt_real(i);
+int[{{n_unknowns}}] unknown = ??;
+int used_unknown = 0;
+
+int sqrt(int i){
+	{{#for-cap-logs (subtree logs "ANONYMOUS::sqrt") n_unknowns}}
+	if ({{@index}} < logged && iarr[{{@index}}] == i) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
+    
+    assert logged < cap;
+    int val = unknown[used_unknown];
+    used_unknown++;
+    iarr[logged] = i;
+    rarr[logged] = val;
+    logged ++;
+    return val;
 }
 
-int sqrt_real(int i) {
-	return rarr[idx];
-}
-
-harness void sanity_check(int idx1, int idx2) {
-    assume 0 <= idx1 && idx1 < cap;
-    assume 0 <= idx2 && idx2 < cap;
-    assume idx1 != idx2;
-    assert iarr[idx1] != iarr[idx2];
-} 
 
 generator int linexp(int N, int[N] vals){
     int[N+1] t;

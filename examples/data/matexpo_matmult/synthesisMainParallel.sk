@@ -10,12 +10,15 @@ struct mat{
 	int k;
 }
 
-int cap = {{get-cap-logs (subtree logs "ANONYMOUS::matmul_real") n_unknowns}};
-int matmul_index(mat arg1, mat arg2);
-int idx = 0;
-mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 0 "??" n_unknowns}} };
-mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul_real") 1 "??" n_unknowns}} };
-mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul_real") "??" n_unknowns}} };
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}};
+int logged = {{get-n-logs (subtree logs "ANONYMOUS::matmul")}};
+mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 0 true n_unknowns}} };
+mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 1 true n_unknowns}} };
+mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul") true n_unknowns}} };
+
+
+mat[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };
+int used_unknown = 0;
 
 bit mat_equals(mat A, mat B) {
 	return A.k == B.k &&
@@ -25,24 +28,22 @@ bit mat_equals(mat A, mat B) {
 			A.R_1_1 == B.R_1_1;
 }
 
+mat matmul(mat A,mat B){
+	{{#for-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}}
+	if ({{@index}} < logged && mat_equals(A, i_0_arr[{{@index}}]) && mat_equals(B, i_1_arr[{{@index}}])) {
+		return rarr[{{@index}}];
+	}
+	{{/for-cap-logs}}
 
-generator mat matmul(mat A,mat B){
-	idx = matmul_index(A, B);
-	assume 0 <= idx && idx < cap && mat_equals(A, i_0_arr[idx]) && mat_equals(B, i_1_arr[idx]);
-	return matmul_real(A, B);
+	assert logged < cap;
+    mat val = unknown[used_unknown];
+    used_unknown++;
+	i_0_arr[logged] = A;
+	i_1_arr[logged] = B;
+	rarr[logged] = val;
+	logged ++;
+    return val;
 }
-
-mat matmul_real(mat A,mat B){
-	return rarr[idx];
-}
-
-harness void sanity_check(int idx1, int idx2) {
-    assume 0 <= idx1 && idx1 < cap;
-    assume 0 <= idx2 && idx2 < cap;
-    assume idx1 != idx2;
-    assert (! mat_equals(i_0_arr[idx1], i_0_arr[idx2])) || (! mat_equals(i_1_arr[idx1], i_1_arr[idx2]));
-}
-
 
 harness void main(int T_0_0,int T_0_1,int T_1_0,int T_1_1,
     int p_0, int p_1, int p_2) {

@@ -78,13 +78,12 @@ fn point_set_transpose(point_set: &HashSet<Vec<isize>>) -> Option<Vec<Vec<isize>
         for point in point_set.iter() {
             if result.is_empty() {
                 result.extend(repeat(vec![]).take(point.len()));
-            } else {
-                if result.len() != point.len() {
-                    return None;
-                }
-                for (i, v) in point.iter().enumerate() {
-                    result.get_mut(i)?.push(*v);
-                }
+            }
+            if result.len() != point.len() {
+                return None;
+            }
+            for (i, v) in point.iter().enumerate() {
+                result.get_mut(i)?.push(*v);
             }
         }
         Some(result)

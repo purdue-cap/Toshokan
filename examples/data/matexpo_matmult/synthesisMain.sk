@@ -12,9 +12,9 @@ struct mat{
 
 int cap = {{get-cap-logs (subtree logs "ANONYMOUS::matmul") n_unknowns}};
 int logged = {{get-n-logs (subtree logs "ANONYMOUS::matmul")}};
-mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 0 true n_unknowns}} };
-mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 1 true n_unknowns}} };
-mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul") true n_unknowns}} };
+mat[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 0 "null" n_unknowns}} };
+mat[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::matmul") 1 "null" n_unknowns}} };
+mat[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::matmul") "null" n_unknowns}} };
 
 
 mat[{{n_unknowns}}] unknown = { {{expand-holes n_unknowns}} };

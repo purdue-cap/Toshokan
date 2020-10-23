@@ -1,0 +1,54 @@
+pragma options "--bnd-inbits 3 --bnd-inline-amnt 2 --bnd-unroll-amnt 8 --bnd-cbits 3 --slv-nativeints";
+
+int N = 4;
+
+int cap = {{get-cap-logs (subtree logs "ANONYMOUS::pow_real") n_unknowns}};
+int pow_index(int a, int b);
+int idx = 0;
+int[cap] i_0_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::pow_real") 0 "??" n_unknowns}} };
+int[cap] i_1_arr = { {{expand-to-arg-array (subtree logs "ANONYMOUS::pow_real") 1 "??" n_unknowns}} };
+int[cap] rarr = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::pow_real") "??" n_unknowns}} };
+
+generator int pow(int a, int b){
+  idx = pow_index(a, b);
+  assume 0 <= idx && idx < cap && i_0_arr[idx] == a && i_1_arr[idx] == b;
+  return pow_real(a, b);
+}
+
+int pow_real(int a, int b) {
+  return rarr[idx];
+}
+
+harness void sanity_check(int idx1, int idx2) {
+    assume 0 <= idx1 && idx1 < cap;
+    assume 0 <= idx2 && idx2 < cap;
+    assume idx1 != idx2;
+	assert (i_0_arr[idx1] != i_0_arr[idx2]) || (i_1_arr[idx1] != i_1_arr[idx2]);
+}
+
+int evalPoly(int[N] p, int x) {
+    int num = p[0];
+    int i = N - 1;
+    while ({| i (>=|<=|>|<) ?? |}) {
+        num += p[i] * pow(x, i);
+        i = i - 1;
+    }
+    return num;
+}
+
+int evalPoly_ref(int[N] p, int x) {
+    int num = 0;
+    for (int i=0; i < N; i++){
+        num += p[i] * pow(x, i);
+    }
+    return num;
+}
+
+harness void main(int p_0, int p_1, int p_2, int p_3, int x) {
+
+    {{expand-x-d-points-to-assume c_e_s "p_0" "p_1" "p_2" "p_3" "x"}}
+
+    int[N] poly = {p_0, p_1, p_2, p_3};
+
+    assert evalPoly(poly, x) == evalPoly_ref(poly, x);
+}

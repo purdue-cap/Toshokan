@@ -1,0 +1,36 @@
+pragma options "--bnd-inbits 3 --bnd-inline-amnt 2 --bnd-unroll-amnt 8 --bnd-cbits 3 --slv-nativeints";
+
+int N = 4;
+
+int pow(int a, int b){
+    int result = 1;
+    for(int i=0; i<b; i++)
+       result = result * a;
+    return result;
+}
+
+
+int evalPoly(int[N] p, int x) {
+    int num = p[0];
+    int i = N - 1;
+    while ({| i (>=|<=|>|<) ?? |}) {
+        num += p[i] * pow(x, i);
+        i = i - 1;
+    }
+    return num;
+}
+
+int evalPoly_ref(int[N] p, int x) {
+    int num = 0;
+    for (int i=0; i < N; i++){
+        num += p[i] * pow(x, i);
+    }
+    return num;
+}
+
+harness void main(int p_0, int p_1, int p_2, int p_3, int x) {
+
+    int[N] poly = {p_0, p_1, p_2, p_3};
+
+    assert evalPoly(poly, x) == evalPoly_ref(poly, x);
+}

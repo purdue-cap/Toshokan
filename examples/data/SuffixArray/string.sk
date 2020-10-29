@@ -1,0 +1,20 @@
+struct String {
+    Array_char _value;
+    int _count;
+}
+
+String String_From_char_offset(Array_char ca, int offset, int count) {
+    String self = new String();
+    if (offset > 0 && offset < ca.length) {
+        Array_char tmp = new Array_char(length=count);
+        for (int i = 0; i < count; i++) {
+            tmp.A[i] = ca.A[i + offset];
+        }
+        self._value = tmp;
+    }
+    else {
+        self._value = ca;
+    }
+    self._count = count;
+    return self;
+}

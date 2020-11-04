@@ -46,6 +46,26 @@ impl Hash for FuncLog {
     }
 }
 
+fn remove_key_from_json(val: &mut Value, key: &str) {
+    if let Some(obj) = val.as_object_mut() {
+        obj.remove(key);
+        for (_name, value) in obj.iter_mut() {
+            remove_key_from_json(value, key);
+        }
+    }
+}
+
+impl FuncLog {
+    pub fn remove_key_from_data(&mut self, key: &str) {
+        self.args.iter_mut().for_each(|arg| remove_key_from_json(arg, key));
+        remove_key_from_json(&mut self.rtn, key);
+    }
+    // Remove all non-atomic @ fields to atomize the Log
+    pub fn atomize(&mut self) {
+        self.remove_key_from_data("@address")
+    }
+}
+
 pub struct CEGISState {
     // Param for use with template engines, generate on demand
     params: Option<CEGISStateParams>,
@@ -58,6 +78,8 @@ pub struct CEGISState {
     // Configurations
     // Function configurations, should preserve order since history encoding scheme is dependent on it
     func_config: Vec<(String, FuncConfig)>,
+    // Function Configurations lookup map, for quicker access
+    func_config_lookup: HashMap<String, FuncConfig>,
     // Map from function name to their code in history, for easy access, initialized and never changed
     func_hist_codes: HashMap<String, usize>,
     n_input: usize,
@@ -99,6 +121,7 @@ impl CEGISState {
             max_hist_length: 0,
             max_log_length: 0,
             func_hist_codes: func_config.iter().enumerate().map(|(i, (name, _))| (name.clone(), i + 1)).collect(),
+            func_config_lookup: func_config.iter().cloned().collect(),
             func_config: func_config,
             n_input: n_input,
             n_unknowns: n_unknowns,
@@ -128,65 +151,99 @@ impl CEGISState {
 
     // Builds log maps for each function that are ready to be encoded by template engine
     fn unpack_logs(&mut self) -> Option<HashMap<String, Vec<FuncLog>>> {
-        let mut log_map : HashMap<String, Vec<FuncLog>> = HashMap::new();
-        for (name, config) in self.func_config.iter() {
-            match config {
-                FuncConfig::Pure{args: _} => {
-                    // If function is pure
-                    // Use a hash set to de-dup the func logs
-                    let mut pure_log_set : HashSet<FuncLog> = HashSet::new();
-                    for log in self.logs.iter() {
-                        if let TraceLog::FuncCall(ref func_log) = log {
-                            if &func_log.func == name {
-                                pure_log_set.insert(func_log.clone());
-                            }
-                        }
-                    }
-                    // Collect de-duped logs to vec and insert into log map
-                    if self.max_log_length < pure_log_set.len() {
-                        self.max_log_length = pure_log_set.len();
-                    }
-                    log_map.insert(name.clone(), pure_log_set.into_iter().collect());
+        let mut pure_logs: HashMap<String, HashSet<FuncLog>> = HashMap::new();
+        let mut provisioned_logs: HashSet<Vec<FuncLog>> = HashSet::new();
+
+        let mut current_logs: Option<HashMap<usize, Vec<FuncLog>>> = None;
+        for log in self.logs.iter() {
+            match log {
+                TraceLog::TestStart => {
+                    current_logs = Some(HashMap::new());
                 },
-                FuncConfig::NonPure {args: _, state_arg_idx} => {
-                    // Building encodings for history
-                    let mut current_history : Option<LinkedList<i64>> = None;
-                    let mut hist_log_set : HashSet<FuncLog> = HashSet::new();
-                    for log in self.logs.iter() {
-                        match log {
-                            TraceLog::TestStart => {
-                                current_history = Some(LinkedList::new());
-                            },
-                            TraceLog::TestEnd | TraceLog::TestAFE => {
-                                current_history = None;
+                TraceLog::FuncCall(ref func_log) => {
+                    let config = self.func_config_lookup.get(&func_log.func)?;
+                    match config {
+                        FuncConfig::Pure{args: _} => {
+                            if !pure_logs.contains_key(&func_log.func) {
+                                pure_logs.insert(func_log.func.clone(), HashSet::new());
                             }
-                            TraceLog::FuncCall(ref func_log) => {
-                                let encoded_args = func_log.args.iter().enumerate()
-                                    .filter(|(i, _) | i != state_arg_idx)
-                                    .map(|(_, v)| v.as_i64())
-                                    .collect::<Option<Vec<_>>>()?;
-                                current_history.as_mut()?.extend(encoded_args.into_iter());
-                                current_history.as_mut()?.push_front(*self.func_hist_codes.get(func_log.func.as_str())? as i64);
-                                if &func_log.func == name {
-                                    hist_log_set.insert(FuncLog {
-                                        args: current_history.as_ref()?.iter().map(|v| Value::from(*v)).collect(),
-                                        func: func_log.func.clone(),
-                                        rtn: func_log.rtn.clone()
-                                    });
-                                }
-                                if current_history.as_ref()?.len() > self.max_hist_length {
-                                    self.max_hist_length = current_history.as_ref()?.len();
-                                }
+                            let mut atomic_func_log = func_log.clone();
+                            atomic_func_log.atomize();
+                            pure_logs.get_mut(&func_log.func).expect("Should ensured key").insert(atomic_func_log);
+                        },
+                        FuncConfig::NonPure{args: _, state_arg_idx} => {
+                            let address = func_log.args.get(*state_arg_idx)?.as_object()?.get("@address")?.as_u64()? as usize;
+                            if !current_logs.as_ref()?.contains_key(&address) {
+                                current_logs.as_mut()?.insert(address, vec![]);
                             }
+                            let mut atomic_func_log = func_log.clone();
+                            atomic_func_log.atomize();
+                            current_logs.as_mut()?.get_mut(&address).expect("Should ensured key").push(atomic_func_log);
+                        },
+                        FuncConfig::Init{args: _} => {
+                            let address = func_log.rtn.as_object()?.get("@address")?.as_u64()? as usize;
+                            if !current_logs.as_ref()?.contains_key(&address) {
+                                current_logs.as_mut()?.insert(address, vec![]);
+                            }
+                            let mut atomic_func_log = func_log.clone();
+                            atomic_func_log.atomize();
+                            current_logs.as_mut()?.get_mut(&address).expect("Should ensured key").push(atomic_func_log);
                         }
-                    };
-                    if self.max_log_length < hist_log_set.len() {
-                        self.max_log_length = hist_log_set.len();
                     }
-                    log_map.insert(name.clone(), hist_log_set.into_iter().collect());
+
+                },
+                TraceLog::TestEnd | TraceLog::TestAFE => {
+                    for (_key, value) in current_logs.take()?.into_iter() {
+                        provisioned_logs.insert(value);
+                    }
                 }
-            };
+            }
         }
+
+        let mut log_map: HashMap<String, Vec<FuncLog>> = self.func_config.iter().map(|(k, _)| (k.clone(), vec![])).collect();
+        log_map.extend(pure_logs.into_iter().map(|(k, v)| (k, v.into_iter().collect())));
+
+        let mut non_pure_logs: HashMap<String, HashSet<FuncLog>> = self.func_config.iter().map(|(k, _)| (k.clone(), HashSet::new())).collect();
+        for hist in provisioned_logs.into_iter() {
+            let mut current_history : LinkedList<i64> = LinkedList::new();
+            for entry in hist.into_iter() {
+                match &self.func_config_lookup.get(&entry.func)? {
+                    FuncConfig::Pure{args: _} => {
+                        return None;
+                    },
+                    FuncConfig::NonPure{args: _, state_arg_idx} => {
+                        let encoded_args = entry.args.iter().enumerate()
+                            .filter(|(i, _) | i != state_arg_idx)
+                            .map(|(_, v)| v.as_i64())
+                            .collect::<Option<Vec<_>>>()?;
+                        current_history.extend(encoded_args.into_iter());
+                        current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);
+                        non_pure_logs.get_mut(&entry.func)?.insert(FuncLog {
+                            args: current_history.iter().map(|v| Value::from(*v)).collect(),
+                            func: entry.func,
+                            rtn: entry.rtn
+                        });
+                    },
+                    FuncConfig::Init{args: _} => {
+                        let encoded_args = entry.args.iter().enumerate()
+                            .map(|(_, v)| v.as_i64())
+                            .collect::<Option<Vec<_>>>()?;
+                        current_history.extend(encoded_args.into_iter());
+                        current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);
+                        non_pure_logs.get_mut(&entry.func)?.insert(FuncLog {
+                            args: current_history.iter().map(|v| Value::from(*v)).collect(),
+                            func: entry.func,
+                            rtn: entry.rtn
+                        });
+                    }
+                }
+            }
+            if current_history.len() > self.max_hist_length {
+                self.max_hist_length = current_history.len();
+            }
+        }
+
+        log_map.extend(non_pure_logs.into_iter().map(|(k, v)| (k, v.into_iter().collect())));
         Some(log_map)
     }
 

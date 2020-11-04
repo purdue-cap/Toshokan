@@ -12,13 +12,14 @@ pub enum ExcludedHole {
     Position(isize, isize)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum FuncConfig {
     Pure {args: usize},
     NonPure {
         args: usize,
         state_arg_idx: usize
-    }
+    },
+    Init {args: usize}
 }
 
 pub struct CEGISConfigParams {

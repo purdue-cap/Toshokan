@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <system_error>
 
+#include "clang/Basic/SourceLocation.h"
 #include "clang/AST/AST.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/Comment.h"
@@ -15,6 +16,7 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Tooling/Tooling.h"
 #include "clang/Tooling/CompilationDatabase.h"
+#include "clang/Lex/Lexer.h"
 
 #include "inja.hpp"
 
@@ -105,12 +107,14 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             && SM.isInMainFile(f->getBeginLoc())) {
 
             vector<string> arg_name_list;
+            vector<string> unchanged_arg_name_list;
             vector<string> arg_type_list;
             vector<string> arg_decl_list;
             const ParmVarDecl* rtn_arg = nullptr;
             vector<const ParmVarDecl*> state_args;
             for (const auto* arg : f->parameters()) {
                 auto arg_name = arg->getName().str();
+                unchanged_arg_name_list.push_back(arg_name);
                 if (arg_name == "_out") {
                     rtn_arg = arg;
                     continue;
@@ -184,13 +188,30 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
 
             json data;
             data["lib_func_name"] = f->getQualifiedNameAsString();
+            bool trace_only = false;
+            // trace_only: this function only needs to be traced of, does not need to be replaced with implementation
+            // Tracer would try to move the existing body of this function to a new function postfixed with _impl
+            // i.e. Tracer would try to automatically generate a implementation from source for this function
+            // TODO: Use a better way to indicate trace-only status
+            if (f->getQualifiedNameAsString().find("_TRACE_ONLY_") != string::npos) {
+                trace_only = true;
+            }
+
             data["lib_func_formatted_name"] = reformatName(data["lib_func_name"]);
             data["arg_list"] = arg_name_list;
+            data["unchanged_arg_list"] = unchanged_arg_name_list;
             data["rtn_arg"] = rtn_arg_name;
-            data["arg_list_rendered"] = inja::render(
-                R"({% for arg in arg_list %}{{ arg }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
-                data
-            );
+            if (trace_only) {
+                data["arg_list_rendered"] = inja::render(
+                    R"({% for arg in unchanged_arg_list %}{{ arg }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
+                    data
+                );
+            } else {
+                data["arg_list_rendered"] = inja::render(
+                    R"({% for arg in arg_list %}{{ arg }}{% if not loop.is_last %}, {% endif %}{% endfor %})",
+                    data
+                );
+            }
             data["arg_types"] = arg_type_list;
             data["rtn_type"] = rtn_type_name;
             data["arg_types_rendered"] = inja::render(
@@ -216,12 +237,28 @@ R"(
 
             if (out_is_array) {
                 data["array_length"] = array_length_str;
-                body_template = 
-R"({
+                if (trace_only) {
+                data["impl_call_rendered"] = inja::render(
+R"(
+    {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});
+    {{ rtn_type }} rtn_vec;
+    for (int i = 0; i < {{ array_length }}; i++) {
+        rtn_vec[i] = {{ rtn_arg }}[i];
+    }
+)", data);
+                } else {
+                data["impl_call_rendered"] = inja::render(
+R"(
     {{ rtn_type }} rtn_vec = {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});
     for (int i = 0; i < {{ array_length }}; i++) {
         {{ rtn_arg }}[i] = rtn_vec[i];
     }
+)", data);
+                }
+
+                body_template = 
+R"({
+    {{ impl_call_rendered }}
     json log;
     std::vector<json> args;{% for arg in arg_list %}
     args.push_back(json({{ arg }}));{% endfor %}
@@ -234,9 +271,14 @@ R"({
 }
 )";
             } else {
+                if (trace_only) {
+                    data["impl_call_rendered"] = inja::render("{{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});", data);
+                } else {
+                    data["impl_call_rendered"] = inja::render("{{ rtn_arg }} = {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});", data);
+                }
                 body_template = 
 R"({
-    {{ rtn_arg }} = {{ lib_func_formatted_name }}_impl({{ arg_list_rendered }});
+    {{ impl_call_rendered }}
     json log;
     std::vector<json> args;{% for arg in arg_list %}
     args.push_back(json({{ arg }}));{% endfor %}
@@ -249,11 +291,23 @@ R"({
 }
 )";
             }
-            string decl_template(
+            string decl_template;
+            if (trace_only) {
+                data["decl_return"] = getSourceFromRange(f->getReturnTypeSourceRange());
+                data["decl_parens"] = getSourceFromRange(f->getFunctionTypeLoc().getParensRange());
+                data["decl_throw"] = getSourceFromRange(f->getFunctionTypeLoc().getExceptionSpecRange());
+                data["def_body"] = getSourceFromRange(f->getBody()->getSourceRange());
+                decl_template =
+R"(
+{{ decl_return }} {{ lib_func_formatted_name }}_impl{{ decl_parens }} {{ decl_throw }} {{ def_body }}
+)";
+            } else {
+                decl_template =
 R"(
 {{ rtn_type }} {{ lib_func_formatted_name }}_impl({{ arg_types_rendered }});
-)"
-            );
+)";
+            }
+
 
             auto range = f->getBody()->getSourceRange();
             TheRewriter.ReplaceText(range, inja::render(body_template, data));
@@ -274,6 +328,9 @@ R"(
         return true;
     }
 
+    string getSourceFromRange(SourceRange range) {
+        return Lexer::getSourceText(CharSourceRange::getTokenRange(range), TheRewriter.getSourceMgr(), TheRewriter.getLangOpts());
+    }
     SourceLocation getInsertionPoint() {
         return insertionPoint;
     }

@@ -4,10 +4,12 @@ class Stack;
 class Stack{
   public:
   int  pos;
-  int  storage[];
+  int  _hist_len;
+  int*  storage;
+  int  _hist[];
   Stack(){}
-template<typename T_0>
-  static Stack* create(  T_0* storage_, int storage_len,   int  pos_);
+template<typename T_0, typename T_1>
+  static Stack* create(  T_0* storage_, int storage_len,   int  pos_,   T_1* _hist_, int _hist_len,   int  _hist_len_);
   ~Stack(){
   }
   void operator delete(void* p){ free(p); }

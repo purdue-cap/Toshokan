@@ -172,7 +172,11 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             rtn_type = rtn_type.getNonReferenceType();
             // Returning type must be traversed for JSON conversion as well
             if (!buildJSONConversionForType(getBaseType(rtn_type))) {
-                return false;
+                // If part of the return type is unconvertible, treat entire type as unconvertible
+                // And put a placeholder for it
+                if (!buildJSONPlaceholderForType(getBaseType(rtn_type))) {
+                    return false;
+                }
             }
 
             auto rtn_type_name = rtn_type.getAsString(printingPolicy);
@@ -322,7 +326,11 @@ R"(
                 insertionPoint = insert_loc;
             }
 
-            FuncDecls.push_back(inja::render(decl_template, data));
+            if (trace_only) {
+                TheRewriter.InsertText(f->getSourceRange().getBegin(), inja::render(decl_template, data));
+            } else {
+                FuncDecls.push_back(inja::render(decl_template, data));
+            }
             doneFunc.insert(f->getQualifiedNameAsString());
         }
         return true;

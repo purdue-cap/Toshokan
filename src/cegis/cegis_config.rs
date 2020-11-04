@@ -113,6 +113,44 @@ impl CEGISConfig {
         }
     }
 
+    pub fn new_full_config<P: AsRef<Path>, S: AsRef<str>, I: Iterator<Item=ExcludedHole>>(
+            sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
+            func_config: &[(&str, FuncConfig)], harness_func_name: S,
+            n_inputs: usize, v_p_config: VerifyPointsConfig,
+            init_n_unknowns: usize, excluded_holes: I,
+            enable_record: bool, keep_tmp: bool,
+            synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str],
+            trace_timeout: Option<f32>) -> Self {
+        CEGISConfig {
+            params: CEGISConfigParams {
+                sketch_fe_bin: sketch_fe_bin.as_ref().to_path_buf(),
+                sketch_be_bin: sketch_be_bin.as_ref().to_path_buf(),
+                sketch_home: sketch_home.as_ref().map(|p| p.as_ref().to_path_buf()),
+                impl_file: impl_file.as_ref().to_path_buf(),
+                func_config: func_config.iter().map(|(name, config)| 
+                    (name.to_string(), config.clone())
+                ).collect(),
+                harness_func_name: harness_func_name.as_ref().to_string(),
+                n_inputs: n_inputs,
+                v_p_config: v_p_config,
+                init_n_unknowns: init_n_unknowns,
+                excluded_holes: excluded_holes.collect(),
+                enable_record: enable_record,
+                keep_tmp: keep_tmp,
+                retry_strategy_config: RetryStrategyConfig::Simple(20),
+                cand_encoder_src: EncoderSource::Rewrite,
+                input_tmp_file: None,
+                be_verify_flags: None,
+                c_e_encoder_src: EncoderSource::LoadFromFile(synthesis_sk.as_ref().to_path_buf()),
+                generation_encoder_src: EncoderSource::LoadFromFile(verify_generation_sk.as_ref().to_path_buf()),
+                c_e_names: c_e_names.iter().map(|s| s.to_string()).collect(),
+                trace_timeout: trace_timeout,
+                empty_harness_call: false
+            },
+            input_tmp_path: None
+        }
+    }
+
     pub fn get_params(&self) -> &CEGISConfigParams {&self.params}
 
     pub fn get_params_mut(&mut self) -> &mut CEGISConfigParams {&mut self.params}

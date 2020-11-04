@@ -1,13 +1,13 @@
 pragma options "--bnd-inline-amnt 16 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
 int CAP=20;
+
+int HIST_CAP = {{ hist_cap }};
 struct Stack {
    int[CAP] storage;
    int pos;
+   int[HIST_CAP] _hist;
+   int _hist_len;
 }
-
-int HIST_CAP = {{ hist_cap }};
-int[HIST_CAP] hist;
-int hist_len = 0;
 
 int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::s_push_real") n_unknowns}};
 int s_push_index(int[HIST_CAP] hist);
@@ -23,18 +23,18 @@ int[HIST_CAP][cap1] hist1 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::
 int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_pop_real") n_unknowns }}  };
 int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_pop_real") "??" n_unknowns}} };
 generator int s_push(Stack s, int i) {
-    if (hist_len > 0) {
-        hist[1::hist_len] = hist[0::hist_len];
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
     }
-    hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_push_real" }};
-    hist[hist_len+1] = i;
-    hist_len = hist_len + 2;
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_push_real" }};
+    s._hist[s._hist_len+1] = i;
+    s._hist_len = s._hist_len + 2;
 
-	idx0 = s_push_index(hist);
+	idx0 = s_push_index(s._hist);
 	assume 0 <= idx0;
     assume idx0 < cap0;
-    assume hist0_len[idx0] == hist_len;
-    assume hist0[idx0][0::hist_len] == hist[0::hist_len];
+    assume hist0_len[idx0] == s._hist_len;
+    assume hist0[idx0][0::s._hist_len] == s._hist[0::s._hist_len];
     return s_push_real(s, i);
 }
 
@@ -43,23 +43,34 @@ int s_push_real(Stack s, int i) {
 }
 
 generator int s_pop(Stack s) {
-    if (hist_len > 0) {
-        hist[1::hist_len] = hist[0::hist_len];
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
     }
-    hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_pop_real" }};
-    hist_len = hist_len + 1;
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_pop_real" }};
+    s._hist_len = s._hist_len + 1;
     // What if hist_len overflows
 
-	idx1 = s_pop_index(hist);
+	idx1 = s_pop_index(s._hist);
 	assume 0 <= idx1;
     assume idx1 < cap1;
-    assume hist1_len[idx1] == hist_len;
-    assume hist1[idx1][0::hist_len] == hist[0::hist_len];
+    assume hist1_len[idx1] == s._hist_len;
+    assume hist1[idx1][0::s._hist_len] == s._hist[0::s._hist_len];
     return s_pop_real(s);
 }
 
 int s_pop_real(Stack s) {
     return rarr1[idx1];
+}
+
+Stack s_new_real_TRACE_ONLY_(){
+    Stack s = new Stack();
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_new_real_TRACE_ONLY_" }};
+    s._hist_len = 1;
+    return s;
+}
+
+Stack s_new() {
+    return s_new_real_TRACE_ONLY_();
 }
 
 harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
@@ -79,8 +90,7 @@ harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
 
 harness void main(int p, int s, int offset) {
     {{expand-x-d-points-to-assume c_e_s "p" "s" "offset" }}
-    Stack st = new Stack();
-    // Stack st = s_new();
+    Stack st = s_new();
     for (int i = 0; i < p; i++) {
         s_push(st, i * (?? * s + ??) + offset);
     }

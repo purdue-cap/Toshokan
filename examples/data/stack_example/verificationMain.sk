@@ -22,10 +22,14 @@ int s_pop(Stack s) {
     return s.storage[s.pos];
 }
 
+Stack s_new() {
+    return new Stack();
+}
+
 harness void main(int p, int s, int offset) {
     assume p >= 2 && p <= 10;
     assume s >= 1 && s <= 4;
-    Stack st = new Stack();
+    Stack st = s_new();
     for (int i = 0; i < p; i++) {
         s_push(st, i * (?? * s + ??) + offset);
     }

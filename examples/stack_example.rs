@@ -1,5 +1,5 @@
 extern crate libpartlibspec;
-use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole};
+use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole, FuncConfig};
 use std::path::PathBuf;
 use simplelog::{SimpleLogger, LevelFilter, Config};
 use tempfile::Builder;
@@ -26,13 +26,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
         sketch_home = Some(PathBuf::from(env_path));
     }
-    let config = CEGISConfig::new(
+    let config = CEGISConfig::new_full_config(
         sketch_fe_bin.as_path(),
         sketch_be_bin.as_path(),
         sketch_home.as_ref().map(|p| p.as_path()),
         impl_file.as_path(),
-        &[("ANONYMOUS::s_push_real", 2),
-        ("ANONYMOUS::s_pop_real", 1)],
+        &[("ANONYMOUS::s_push_real", FuncConfig::NonPure{args:2, state_arg_idx: 0}),
+        ("ANONYMOUS::s_pop_real", FuncConfig::NonPure{args:1, state_arg_idx: 0}),
+        ("ANONYMOUS::s_new_real_TRACE_ONLY_", FuncConfig::Init{args: 0})],
         "main",
         3,
         VerifyPointsConfig::NoSpec,
@@ -45,7 +46,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ExcludedHole::Position(23, -1),
             ExcludedHole::Position(24, -1)
         ].into_iter(),
-        false,
         true,
         log_level == LevelFilter::Trace,
         synthesis.as_path(),

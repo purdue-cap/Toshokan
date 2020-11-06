@@ -203,7 +203,7 @@ impl CEGISState {
         let mut log_map: HashMap<String, Vec<FuncLog>> = self.func_config.iter().map(|(k, _)| (k.clone(), vec![])).collect();
         log_map.extend(pure_logs.into_iter().map(|(k, v)| (k, v.into_iter().collect())));
 
-        let mut non_pure_logs: HashMap<String, HashSet<FuncLog>> = self.func_config.iter().map(|(k, _)| (k.clone(), HashSet::new())).collect();
+        let mut non_pure_logs: HashMap<String, HashSet<FuncLog>> = HashMap::new();
         for hist in provisioned_logs.into_iter() {
             let mut current_history : LinkedList<i64> = LinkedList::new();
             for entry in hist.into_iter() {
@@ -218,7 +218,10 @@ impl CEGISState {
                             .collect::<Option<Vec<_>>>()?;
                         current_history.extend(encoded_args.into_iter());
                         current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);
-                        non_pure_logs.get_mut(&entry.func)?.insert(FuncLog {
+                        if !non_pure_logs.contains_key(&entry.func) {
+                            non_pure_logs.insert(entry.func.clone(), HashSet::new());
+                        }
+                        non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
                             args: current_history.iter().map(|v| Value::from(*v)).collect(),
                             func: entry.func,
                             rtn: entry.rtn
@@ -230,7 +233,10 @@ impl CEGISState {
                             .collect::<Option<Vec<_>>>()?;
                         current_history.extend(encoded_args.into_iter());
                         current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);
-                        non_pure_logs.get_mut(&entry.func)?.insert(FuncLog {
+                        if !non_pure_logs.contains_key(&entry.func) {
+                            non_pure_logs.insert(entry.func.clone(), HashSet::new());
+                        }
+                        non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
                             args: current_history.iter().map(|v| Value::from(*v)).collect(),
                             func: entry.func,
                             rtn: entry.rtn

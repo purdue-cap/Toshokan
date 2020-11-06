@@ -12,9 +12,9 @@ use log::{error, trace, warn};
 use mio::{Events, Poll, Interest, Token};
 use mio::unix::SourceFd;
 
-pub struct LibraryTracer<'i, 'c, 'hn, 'w> {
+pub struct LibraryTracer<'i, 'hn, 'w> {
     impl_file: &'i Path,
-    func_config: &'c HashMap<String, FuncConfig>,
+    trace_configs: Vec<String>, 
     harness_func_name: &'hn str,
     flag_manager: CFlagManager,
     work_dir: Option<&'w Path>,
@@ -33,10 +33,10 @@ pub fn parse_log_from_json<S: AsRef<str>>(line: S) -> Result<TraceLog, TraceErro
 static JSON_HPP: &'static str = include_str!("cpp/nlohmann/json.hpp");
 static VOPS_H: &'static str = include_str!("cpp/vops.h");
 
-impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
+impl<'i, 'hn, 'w> LibraryTracer<'i, 'hn, 'w> {
     pub fn new(
         impl_file: &'i Path,
-        func_config: &'c HashMap<String, FuncConfig>, 
+        trace_configs: Vec<String>,
         harness_func_name: &'hn str, 
         sketch_home: Option<&Path>, 
         trace_timeout: Option<f32>,
@@ -44,7 +44,7 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
     ) -> Self {
         let mut tracer = LibraryTracer {
             impl_file: impl_file,
-            func_config: func_config,
+            trace_configs: trace_configs,
             harness_func_name: harness_func_name,
             flag_manager: CFlagManager::new("clang++"),
             work_dir: None,
@@ -101,7 +101,7 @@ impl<'i, 'c, 'hn, 'w> LibraryTracer<'i, 'c, 'hn, 'w> {
             self.flag_manager.get_compilation_cmd_line(main_file.as_ref())?,
             main_file.as_ref().to_str()?
         ).ok()?;
-        match build_tracer_to_file(self.func_config.keys().cloned().collect(), main_file.as_ref(), output_file.as_path()) {
+        match build_tracer_to_file(self.trace_configs.clone(), main_file.as_ref(), output_file.as_path()) {
             Ok(()) => {Some(output_file)}
             Err(code) => {
                 error!(target: "LibraryTracer", "CPP function error code: {}", code);

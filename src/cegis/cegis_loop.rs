@@ -295,7 +295,7 @@ impl<'r> CEGISLoop<'r> {
             self.state.get_h_names().clone());
 
         let mut library_tracer = LibraryTracer::new(self.config.get_params().impl_file.as_path(),
-            &self.config.get_params().func_config,
+            self.config.get_params().get_trace_config_strings(),
             self.config.get_params().harness_func_name.as_str(),
             self.config.get_params().sketch_home.as_ref().map(|p| p.as_path()), self.config.get_params().trace_timeout,
             self.config.get_params().empty_harness_call);

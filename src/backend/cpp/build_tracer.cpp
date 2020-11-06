@@ -93,8 +93,10 @@ class CopyArrLookUpCallback : public MatchFinder::MatchCallback {
 
 class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
     public:
-    ImplFuncInjector(Rewriter &R, string_set &func_names, string_set states = string_set())
-        : TheRewriter(R), FuncNames(func_names), StateArgNames(std::move(states)), 
+    ImplFuncInjector(Rewriter &R, string_set &func_names,
+        string_set states = string_set(), string_set hashcode_types = string_set(), string_set trace_only_funcs = string_set())
+        :   TheRewriter(R), FuncNames(func_names),
+            StateArgNames(std::move(states)), HashCodeTypes(std::move(hashcode_types)), TraceOnlyFuncs(std::move(trace_only_funcs)),
           compare(R.getSourceMgr()), printingPolicy(LangOptions()) {
             printingPolicy.SuppressTagKeyword = true;
         }
@@ -197,7 +199,7 @@ class ImplFuncInjector : public RecursiveASTVisitor<ImplFuncInjector> {
             // Tracer would try to move the existing body of this function to a new function postfixed with _impl
             // i.e. Tracer would try to automatically generate a implementation from source for this function
             // TODO: Use a better way to indicate trace-only status
-            if (f->getQualifiedNameAsString().find("_TRACE_ONLY_") != string::npos) {
+            if (TraceOnlyFuncs.find(f->getQualifiedNameAsString()) != TraceOnlyFuncs.end()) {
                 trace_only = true;
             }
 
@@ -369,6 +371,8 @@ R"(
     Rewriter &TheRewriter;
     string_set &FuncNames;
     string_set StateArgNames;
+    string_set HashCodeTypes;
+    string_set TraceOnlyFuncs;
     vector<string> JSONConvertorDecls;
     vector<string> JSONConvertorImpls;
     vector<string> FuncDecls;
@@ -421,8 +425,57 @@ void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_
         return true;
     }
 
+    bool buildJSONHashcodeForType(QualType type) {
+        auto type_name = type.getUnqualifiedType().getAsString(printingPolicy);
+        if (doneType.find(type_name) != doneType.end()) {
+            // It's already traversed
+            return true;
+        }
+        doneType.insert(type_name);
+        json template_data;
+        template_data["type_name"] = type_name;
+        template_data["hashcode_func"] = reformatName(type_name) + "_HASHCODE";
+        string decl_template(
+R"(
+template<>
+struct nlohmann::adl_serializer<{{ type_name }}>{
+    static void to_json(json &, const {{ type_name }}&);
+};
+template<>
+struct nlohmann::adl_serializer<{{ type_name }}*>{
+    static void to_json(json &, const {{ type_name }}*);
+};
+int {{ hashcode_func }}(const {{ type_name }} &data);
+)"
+        );
+        string impl_template(
+R"(
+void nlohmann::adl_serializer<{{ type_name }}>::to_json(json &j, const {{ type_name }} &data){
+    j = { { "@placeholder", "HASHCODE" },
+        { "@hashcode", {{ hashcode_func }}(data) },
+        { "@type_name", "{{ type_name }}"  }
+    };
+}
+void nlohmann::adl_serializer<{{ type_name }}*>::to_json(json &j, const {{ type_name }} *data){
+    if (data == nullptr) {
+        j = nullptr;
+    } else {
+        j = *data;
+        j["@address"] = reinterpret_cast<std::uintptr_t>(data);
+    }
+}
+)"
+        );
+        JSONConvertorDecls.push_back(inja::render(decl_template, template_data));
+        JSONConvertorImpls.push_back(inja::render(impl_template, template_data));
+        return true;
+    }
+
     bool buildJSONConversionForType(QualType type){
         auto type_name = type.getUnqualifiedType().getAsString(printingPolicy);
+        if (HashCodeTypes.find(type_name) != HashCodeTypes.end()) {
+            return buildJSONHashcodeForType(type);
+        }
         if (type->isFundamentalType() || 
             doneType.find(type_name) != doneType.end()) {
             // It's fundamental type, or it is already traversed
@@ -667,8 +720,10 @@ class TracerBuilderASTConsumer : public ASTConsumer {
 
 class TracerBuilderFrontendAction : public ASTFrontendAction {
     public:
-    TracerBuilderFrontendAction(string_set &func_names, llvm::raw_ostream &out, bool& done, string_set states = string_set())
-        :impl_func_injector(TheRewriter, func_names, std::move(states)), OutStream(out), done(done) {}
+    TracerBuilderFrontendAction(string_set &func_names, llvm::raw_ostream &out, bool& done,
+        string_set states = string_set(), string_set hashcode_types = string_set(), string_set trace_only_funcs = string_set())
+        :   impl_func_injector(TheRewriter, func_names, std::move(states), std::move(hashcode_types), std::move(trace_only_funcs)),
+            OutStream(out), done(done) {}
 
     void EndSourceFileAction() override {
         impl_func_injector.fillTopLevelInsertions(TopLevelInsertions);
@@ -699,32 +754,61 @@ class TracerBuilderFrontendAction : public ASTFrontendAction {
 
 class TracerBuilderFrontendActionFactory : public FrontendActionFactory {
     public:
-    TracerBuilderFrontendActionFactory(string_set func_names, llvm::raw_ostream &out, bool& done, string_set states = string_set())
-        : FuncNames(func_names), StateArgNames(std::move(states)), OutStream(out), done(done) {}
+    TracerBuilderFrontendActionFactory(string_set func_names, llvm::raw_ostream &out, bool& done,
+        string_set states = string_set(), string_set hashcode_types = string_set(), string_set trace_only_funcs = string_set())
+        :   FuncNames(func_names), StateArgNames(std::move(states)), HashCodeTypes(std::move(hashcode_types)), TraceOnlyFuncs(std::move(trace_only_funcs)),
+            OutStream(out), done(done) {}
 
     std::unique_ptr<FrontendAction> create() {
-        return  std::make_unique<TracerBuilderFrontendAction>(FuncNames, OutStream, done, StateArgNames);
+        return  std::make_unique<TracerBuilderFrontendAction>(FuncNames, OutStream, done, StateArgNames, HashCodeTypes, TraceOnlyFuncs);
     }
 
     private:
     string_set FuncNames;
     string_set StateArgNames;
+    string_set HashCodeTypes;
+    string_set TraceOnlyFuncs;
     llvm::raw_ostream &OutStream;
     bool& done;
 };
 
-int BuildTracer(string_set &func_names, string& input_file, llvm::raw_ostream &out, string_set states = string_set()) {
+int BuildTracer(string_set &configs, string& input_file, llvm::raw_ostream &out) {
     string source_path_list[1] = {input_file};
     auto dir_path = llvm::sys::path::parent_path(input_file);
     string error_msg;
     auto db = CompilationDatabase::loadFromDirectory(dir_path, error_msg);
+
+    string_set func_names;
+    string_set hashcode_types;
+    string_set states;
+    string_set trace_only_funcs;
+    for (auto str: configs) {
+        if (str.find("@") == string::npos)  {
+            func_names.insert(str);
+            continue;
+        }
+        if (str.substr(0, 14) == "hashcode_type@") {
+            hashcode_types.insert(str.substr(14, string::npos));
+            continue;
+        }
+        if (str.substr(0, 10) == "state_arg@") {
+            states.insert(str.substr(10, string::npos));
+            continue;
+        }
+        if (str.substr(0, 11) == "trace_only@") {
+            func_names.insert(str.substr(11, string::npos));
+            trace_only_funcs.insert(str.substr(11, string::npos));
+        }
+    }
+
     if (db == nullptr) {
         llvm::errs() << error_msg;
         return 1;
     }
     ClangTool tool(*db, source_path_list);
     bool done;
-    TracerBuilderFrontendActionFactory factory(func_names, out, done, std::move(states));
+    TracerBuilderFrontendActionFactory factory(func_names, out, done,
+        std::move(states), std::move(hashcode_types), std::move(trace_only_funcs));
     int rtn_code = tool.run(&factory);
     if (rtn_code != 0){
         return rtn_code;
@@ -735,13 +819,13 @@ int BuildTracer(string_set &func_names, string& input_file, llvm::raw_ostream &o
     }
 }
 
-int BuildTracer(string_set &func_names, string& input_file, string& output_file, string_set states = string_set()) {
+int BuildTracer(string_set &configs, string& input_file, string& output_file) {
     std::error_code EC;
     llvm::raw_fd_ostream out_stream(output_file, EC);
     if (EC) {
         return EC.value();
     }
-    return BuildTracer(func_names, input_file, out_stream, std::move(states));
+    return BuildTracer(configs, input_file, out_stream);
 }
 
 } // namespace TracerBuilder
@@ -751,10 +835,10 @@ int BuildTracer(string_set &func_names, string& input_file, string& output_file,
 
 extern "C" {
 
-int build_tracer(const char** func_names, int func_names_len, const char* input_file, const char* output_file){
+int build_tracer(const char** configs, int configs_len, const char* input_file, const char* output_file){
     std::unordered_set<std::string> FuncNames;
-    for (int i = 0; i < func_names_len; i++) {
-        FuncNames.insert(std::string(func_names[i]));
+    for (int i = 0; i < configs_len; i++) {
+        FuncNames.insert(std::string(configs[i]));
     }
     std::string InputFile(input_file);
     std::string OutputFile(output_file);

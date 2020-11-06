@@ -29,6 +29,7 @@ pub struct CEGISConfigParams {
     pub impl_file: PathBuf,
     pub harness_func_name: String,
     pub func_config: HashMap<String, FuncConfig>,
+    pub hashcode_types: HashSet<String>,
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
@@ -44,6 +45,27 @@ pub struct CEGISConfigParams {
     pub c_e_names: Vec<String>,
     pub trace_timeout: Option<f32>,
     pub empty_harness_call: bool
+}
+
+impl CEGISConfigParams {
+    pub fn get_trace_config_strings(&self) -> Vec<String> {
+        let mut config : Vec<String> = self.func_config.iter().map(|(name, config)| {
+            match config {
+                FuncConfig::Init{args: _} => {
+                    format!("trace_only@{}", name)
+                },
+                FuncConfig::NonPure{args:_, state_arg_idx: _} | FuncConfig::Pure{args: _}  => {
+                    name.clone()
+                }
+            }
+        }).collect();
+        config.extend(
+            self.hashcode_types.iter().map(|type_name| {
+                format!("hashcode_type@{}", type_name)
+            })
+        );
+        config
+    }
 }
 
 pub enum VerifyPointsConfig {
@@ -92,6 +114,7 @@ impl CEGISConfig {
                         }
                     )
                 ).collect(),
+                hashcode_types: HashSet::new(),
                 harness_func_name: harness_func_name.as_ref().to_string(),
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
@@ -115,7 +138,7 @@ impl CEGISConfig {
 
     pub fn new_full_config<P: AsRef<Path>, S: AsRef<str>, I: Iterator<Item=ExcludedHole>>(
             sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
-            func_config: &[(&str, FuncConfig)], harness_func_name: S,
+            func_config: &[(&str, FuncConfig)], hashcode_types: &[&str], harness_func_name: S,
             n_inputs: usize, v_p_config: VerifyPointsConfig,
             init_n_unknowns: usize, excluded_holes: I,
             enable_record: bool, keep_tmp: bool,
@@ -130,6 +153,7 @@ impl CEGISConfig {
                 func_config: func_config.iter().map(|(name, config)| 
                     (name.to_string(), config.clone())
                 ).collect(),
+                hashcode_types: hashcode_types.iter().map(|t| t.to_string()).collect(),
                 harness_func_name: harness_func_name.as_ref().to_string(),
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,

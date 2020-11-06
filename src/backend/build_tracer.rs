@@ -5,24 +5,24 @@ use std::path::Path;
 use log::debug;
 
 extern {
-    fn build_tracer(func_names: *const *const c_char,
-            func_names_len: c_int,
+    fn build_tracer(configs: *const *const c_char,
+            configs_len: c_int,
             input_file: *const c_char,
             output_file: *const c_char) -> c_int;
 }
 
 pub fn build_tracer_to_file<P: AsRef<Path>>(
-            func_names: Vec<String>, input_file: P, output_file: P) -> Result<(), c_int> {
-    let vec_c_string_func_names : Vec<CString> = func_names.iter().map(|n| CString::new(n.as_str())).collect::<Result<_,_>>().or(Err(-128))?;
-    let vec_c_func_names : Vec<*const c_char> =  vec_c_string_func_names.iter().map(|c_string| c_string.as_ptr()).collect();
+            configs: Vec<String>, input_file: P, output_file: P) -> Result<(), c_int> {
+    let vec_c_string_configs : Vec<CString> = configs.iter().map(|n| CString::new(n.as_str())).collect::<Result<_,_>>().or(Err(-128))?;
+    let vec_c_configs : Vec<*const c_char> =  vec_c_string_configs.iter().map(|c_string| c_string.as_ptr()).collect();
    
-    let c_func_names_len = func_names.len() as i32;
+    let c_configs_len = configs.len() as i32;
     let c_input_file = CString::new(input_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
     let c_output_file = CString::new(output_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
-    debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?}, {:?})", func_names, c_func_names_len, c_input_file, c_output_file); 
+    debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?}, {:?})", configs, c_configs_len, c_input_file, c_output_file); 
     let rtn_val = unsafe { build_tracer(
-        vec_c_func_names.as_slice().as_ptr(),
-        c_func_names_len,
+        vec_c_configs.as_slice().as_ptr(),
+        c_configs_len,
         c_input_file.as_ptr(),
         c_output_file.as_ptr())
     };

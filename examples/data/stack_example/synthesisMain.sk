@@ -62,15 +62,15 @@ int s_pop_real(Stack s) {
     return rarr1[idx1];
 }
 
-Stack s_new_real_TRACE_ONLY_(){
+Stack s_new_real(){
     Stack s = new Stack();
-    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_new_real_TRACE_ONLY_" }};
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_new_real" }};
     s._hist_len = 1;
     return s;
 }
 
 Stack s_new() {
-    return s_new_real_TRACE_ONLY_();
+    return s_new_real();
 }
 
 harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {

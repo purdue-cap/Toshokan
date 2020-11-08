@@ -1,0 +1,217 @@
+struct String {
+    Array_char _value;
+    int _count;
+}
+
+String String_From_bytes_offset(Array_char ca, int offset, int count) {
+    String self = new String();
+    if (offset > 0 && offset < ca.length) {
+        Array_char tmp = new Array_char(length=count);
+        for (int i = 0; i < count; i++) {
+            tmp.A[i] = ca.A[i + offset];
+        }
+        self._value = tmp;
+    }
+    else {
+        self._value = ca;
+    }
+    self._count = count;
+    return self;
+}
+
+Object String_From_bytes(Array_char bytes) {
+    String self = new String();
+    int len = bytes.length;
+    self._value = new Array_char(length=len);
+    for (int i = 0; i < len; i++) {
+        self._value.A[i] = (char)(bytes.A[i]);
+    }
+    self._count = len;
+    return self;
+}
+
+char String_charAt(String self, int index) {
+    if (0 <= index && index < self._count) return self._value.A[index];
+    return '\0';
+}
+
+int String_length(String self) {
+    return self._count;
+}
+
+void String_setCharAt(String self, int i, char c) {
+    self._value.A[i] = c;
+}
+
+int String_indexOf_String(String self, String s) {
+    return String_indexOf_String_offset(self, s, 0);
+}
+
+int String_indexOf_String_offset(String self, String s, int i) {
+    int tLen = String_length(self);
+    int sLen = String_length(s);
+    int index = i;
+    int mLen = 0;
+    int j;
+    if (i >= tLen || i < 0 || sLen == 0) {
+        return -1;
+    }
+    for (j = i; (j < tLen) && (mLen < sLen) && ((j - index) < sLen); ) {
+        if (String_charAt(self, j) != String_charAt(s, j - index)) {
+            mLen = 0;
+            index++;
+            j = index;
+        }
+        else {
+            mLen++;
+            j++;
+        }
+    }
+    if (mLen != sLen) {
+        index = -1;
+    }
+    return index;
+}
+
+int String_indexOf_char(String self, char c) {
+    return String_indexOf_char_offset(self, c, 0);
+}
+
+int String_indexOf_char_offset(String self, char c, int i) {
+    int len = String_length(self);
+    int index = -1;
+    if (i >= len || i < 0) {
+        return index;
+    }
+    for (int j = i; j < len; j++) {
+        if (String_charAt(self, j) == c) {
+            return j;
+        }
+    }
+    return index;
+}
+
+int String_compareTo(String self, String str) {
+    return String_compare(self, str);
+}
+
+int String_compare(String s1, String s2) {
+    int l1 = String_length(s1);
+    int l2 = String_length(s2);
+    int lendiff = l1 - l2;
+    int smaller = l1;
+    if (l1 > l2) {
+        smaller = l2;
+    }
+    else {
+        for (int i = 0; i < smaller; i++) {
+            char c1 = String_charAt(s1, i);
+            char c2 = String_charAt(s2, i);
+            if (c1 != c2) {
+                return c1 - c2;
+            }
+        }
+        if (lendiff != 0) return lendiff;
+        return 0;
+    }
+}
+
+String String_concat(String self, String str) {
+    int otherLen = String_length(str);
+    if (otherLen == 0) {
+        return self;
+    }
+    int thisLen = String_length(self);
+    int totalLen = thisLen + otherLen;
+    Array_char ret = new Array_char(length=totalLen);
+    for (int i = 0; i < thisLen; i++) {
+        ret.A[i] = String_charAt(self, i);
+    }
+    for (int i = thisLen; i < totalLen; i++) {
+        ret.A[i] = String_charAt(str, i-thisLen);
+    }
+    return String_From_bytes_offset(ret, 0, totalLen);
+}
+
+bit String_equalsIgnoreCase(String self, String str) {
+    return String_equals(self, str);
+}
+
+bit String_equals(String self, String s) {
+    bit isEqual = true;
+    int sLen = String_length(s);
+    int tLen = String_length(self);
+    if (sLen != tLen) isEqual = false;
+    for (int i = 0; (i < sLen) && (isEqual == true); i++) {
+        if (s._value.A[i] != self._value.A[i]) {
+            isEqual = false;
+        }
+    }
+    return isEqual;
+}
+
+int String_hashCode(String self) {
+    int n = self._count,  hash = 0,  temp = 0;
+    if (n == 0) {
+        return 0;
+    }
+    for (int i = 0; i < n; i++) {
+        temp = String_charAt(self, i);
+        for (int j = 0; j < n - 1 - i; j++) {
+            temp = temp * 31;
+        }
+        hash = hash + temp;
+    }
+    return hash;
+}
+
+String replace_char_char(String self, char oldChar, char newChar) {
+    if (oldChar != newChar) {
+        int len = self._count;
+        int i = -1;
+        int stop = 0;
+        Array_char val = self._value;
+        while (i < len) {
+            i = i + 1;
+            if (val.A[i] == oldChar && stop == 0) {
+                stop = i;
+            }
+        }
+        if (stop < len) {
+            Array_char buf = new Array_char(length=len);
+            for (int j = 0; j < stop; j++) {
+                buf.A[j] = val.A[j];
+            }
+            while (stop < len) {
+                char c = val.A[stop];
+                buf.A[stop] = ((c == oldChar) ? newChar : c);
+                stop++;
+            }
+            return String_From_bytes_offset(buf, 0, len);
+        }
+    }
+    return self;
+}
+
+Array_char String_getBytes(String str) {
+    int len = String_length(str);
+    Array_char bytes = new Array_char(length=len);
+    for (int i = 0; i < len; i++) {
+        bytes.A[i] = (char)String_charAt(str, i);
+    }
+    return bytes;
+}
+
+String String_substring_to_end(String self, int beginIndex) {
+    int subLen = self._count - beginIndex;
+    assert subLen > 0;
+    return String_From_bytes_offset(self._value, beginIndex, subLen);
+}
+
+String String_substring(String self, int beginIndex, int endIndex) {
+    assert beginIndex >= 0 && endIndex <= self._value.length;
+    int subLen = endIndex - beginIndex;
+    assert subLen > 0;
+    return String_String_char_int_int(self._value, beginIndex, subLen);
+}
+

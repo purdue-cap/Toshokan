@@ -55,6 +55,15 @@ fn remove_key_from_json(val: &mut Value, key: &str) {
     }
 }
 
+// Use @hashcode field if it is present
+fn encode_json_to_i64(val: &Value) -> Option<i64> {
+    if let Some(obj) = val.as_object() {
+        obj.get("@hashcode").and_then(|code_v| code_v.as_i64())
+    } else {
+        val.as_i64()
+    }
+}
+
 impl FuncLog {
     pub fn remove_key_from_data(&mut self, key: &str) {
         self.args.iter_mut().for_each(|arg| remove_key_from_json(arg, key));
@@ -214,7 +223,7 @@ impl CEGISState {
                     FuncConfig::NonPure{args: _, state_arg_idx} => {
                         let encoded_args = entry.args.iter().enumerate()
                             .filter(|(i, _) | i != state_arg_idx)
-                            .map(|(_, v)| v.as_i64())
+                            .map(|(_, v)| encode_json_to_i64(v))
                             .collect::<Option<Vec<_>>>()?;
                         current_history.extend(encoded_args.into_iter());
                         current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);
@@ -229,7 +238,7 @@ impl CEGISState {
                     },
                     FuncConfig::Init{args: _} => {
                         let encoded_args = entry.args.iter().enumerate()
-                            .map(|(_, v)| v.as_i64())
+                            .map(|(_, v)| encode_json_to_i64(v))
                             .collect::<Option<Vec<_>>>()?;
                         current_history.extend(encoded_args.into_iter());
                         current_history.push_front(*self.func_hist_codes.get(entry.func.as_str())? as i64);

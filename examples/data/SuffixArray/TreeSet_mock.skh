@@ -1,0 +1,71 @@
+struct TreeSet {
+    Array_String set;
+    int capacity;
+    int size;
+}
+
+int TreeSet_INITIAL_CAPACITY = 16;
+int TreeSet_RESIZE_FACTOR = 2;
+
+TreeSet TreeSet_init() {
+    TreeSet self = new TreeSet();
+    self.set = new Array_String(length=TreeSet_INITIAL_CAPACITY);
+    self.size = 0;
+    self.capacity = TreeSet_INITIAL_CAPACITY;
+    return self;
+}
+
+void TreeSet_resize(TreeSet self) {
+    int new_size = self.capacity * TreeSet_RESIZE_FACTOR;
+    Array_String new_set = new Array_String(length=new_size);
+    for (int i = 0; i < self.capacity; i++) {
+        new_set.A[i] = self.set.A[i];
+    }
+    self.set = new_set;
+    self.capacity = new_size;
+}
+
+void TreeSet_check_size(TreeSet self) {
+    if (self.size >= self.capacity) {
+        TreeSet_resize(self);
+    }
+}
+
+int TreeSet_add(TreeSet self, String e) {
+    if (TreeSet_contains(self, e) == 1 || e == null) {
+        return 0;
+    }
+    else {
+        self.set.A[self.size] = e;
+        self.size++;
+        TreeSet_check_size(self);
+        return 1;
+    }
+}
+
+int TreeSet_get_Index(TreeSet self, String o) {
+    for (int i = 0; i < self.size; i++) {
+        if (String_equals(o, self.set.A[i])) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int TreeSet_contains(TreeSet self, String o) {
+    if (TreeSet_get_Index(self, o) >= 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+void TreeSet_clear(TreeSet self) {
+    self.set = new Array_String(length=TreeSet_INITIAL_CAPACITY);
+    self.size = 0;
+    self.capacity = TreeSet_INITIAL_CAPACITY;
+}
+
+int TreeSet_size(TreeSet self) {
+    return self.size;
+}

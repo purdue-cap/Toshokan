@@ -137,11 +137,7 @@ pub fn format_value(val: &Value) -> Option<String> {
     }
 }
 
-pub fn expand_to_hist_arrays(h: &Helper,
-                    _: &Handlebars,
-                    _: &Context,
-                    _: &mut RenderContext,
-                    out: &mut dyn Output) -> HelperResult {
+pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool) -> HelperResult {
     // Expecting parameters: logs, n_unknown, history_capacity, optional(unknown_fill_string), optional(hist_fill_string)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
@@ -181,9 +177,31 @@ pub fn expand_to_hist_arrays(h: &Helper,
         .map(|hist_v| format!("{{ {} }}", hist_v.join(", ")))
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Hist array parse failed"))?;
-    arg_array.append(&mut std::iter::repeat(unknown_fill_string).take(n_unknown).collect());
+    let unknown_hist_string = if full_expand {
+        format!("{{ {} }}", std::iter::repeat(unknown_fill_string).take(hist_cap).collect::<Vec<_>>().join(", "))
+    } else {
+        unknown_fill_string
+    };
+    arg_array.append(&mut std::iter::repeat(unknown_hist_string).take(n_unknown).collect());
     out.write(arg_array.join(", ").as_str())?;
     Ok(())
+}
+
+pub fn expand_to_full_hist_arrays(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    hist_array_handler(h, out, true)
+}
+
+
+pub fn expand_to_hist_arrays(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    hist_array_handler(h, out, false)
 }
 
 pub fn expand_to_hist_lens(h: &Helper,
@@ -505,6 +523,7 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("get-cap-logs", Box::new(get_cap_logs));
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
     hb.register_helper("expand-to-hist-arrays", Box::new(expand_to_hist_arrays));
+    hb.register_helper("expand-to-full-hist-arrays", Box::new(expand_to_full_hist_arrays));
     hb.register_helper("expand-to-hist-lens", Box::new(expand_to_hist_lens));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
     hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
@@ -734,6 +753,35 @@ mod tests {
 
         let template = r#"hist: {{expand-to-hist-arrays logs 2 8}}"#;
         assert_eq!(hb.render_template(template, &data)?, "hist: { 2, 1, 6, 0, 0, 0, 0, 0 }, { 2, 1, 1, 3, 8, 0, 0, 0 }, ??, ??");
+
+        Ok(())
+    }
+
+    #[test]
+    fn expands_to_full_hist_arrays() -> Result<(), Box<dyn Error>> {
+        let data = HistLogParam {
+            encoding: vec![
+                ("push".to_string(), 1usize), 
+                ("pop".to_string(), 2usize)].into_iter().collect(),
+            logs: vec![
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(6)],
+                    rtn: json!(3),
+                    func: "pop".to_string()
+                }),
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
+                    rtn: json!(5),
+                    func: "pop".to_string()
+                })
+            ]
+        };
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"hist: {{expand-to-full-hist-arrays logs 2 8}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "hist: { 2, 1, 6, 0, 0, 0, 0, 0 }, { 2, 1, 1, 3, 8, 0, 0, 0 }, { ??, ??, ??, ??, ??, ??, ??, ?? }, { ??, ??, ??, ??, ??, ??, ??, ?? }");
 
         Ok(())
     }

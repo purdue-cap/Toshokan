@@ -1,0 +1,13 @@
+struct RomlistParser {
+    int totalGames;
+    int totalGamesAvailable;
+    int missingWheel;
+    int missingVideo;
+    int missingCart;
+    int missingBox;
+    ArrayList missingGames;
+    ArrayList games;
+    bit complete;
+    String description;
+    String romPath;
+}

@@ -1,0 +1,121 @@
+struct SuffixArray {
+    int N;
+    Array_int T;
+    Array_int sa;
+    Array_int lcp;
+}
+
+Array_int clone_int(Array_int arr) {
+    int l = arr.length;
+    Array_int arr_cp = new Array_int(length=l);
+    for (int i = 0; i < l; i++) {
+        arr_cp.A[i] = arr.A[i];
+    }
+    return arr_cp;
+}
+
+
+String intArrToString(Array_int text) {
+    Array_char tmp = new Array_char(length=text.length);
+    for (int i = 0; i < text.length; i++) {
+        tmp.A[i] = (char)text.A[i];
+    }
+    return String_From_bytes_offset(tmp, 0, text.length);
+}
+
+Array_int StringtoIntArray(String s) {
+    Array_int text = new Array_int(length=String_length(s));
+    for (int i = 0; i < String_length(s); i++) text.A[i] = String_charAt(s, i);
+    return text;
+}
+
+SuffixArray SuffixArray_From_String(String text) {
+    return SuffixArray_From_Int(StringtoIntArray(text));
+}
+
+SuffixArray SuffixArray_From_Int(Array_int text) {
+    SuffixArray self = new SuffixArray();
+    self.T = clone_int(text);
+    self.N = text.length;
+    SuffixArray_construct(self);
+    SuffixArray_kasai(self);
+    return self;
+}
+
+void SuffixArray_construct(SuffixArray self) {
+    self.sa = new Array_int(length=self.N);
+    TwoDArray suffixRanks = TwoDArray_init(2, self.N);
+    Array_SuffixRankTuple ranks = new Array_SuffixRankTuple(length = self.N);
+    for (int i = 0; i < self.N; i++) {
+        TwoDArray_set(suffixRanks, 0, i, self.T.A[i]);
+        ranks.A[i] = new SuffixRankTuple();
+    }
+    for (int pos = 1; pos < self.N; pos = pos * 2) {
+        for (int i = 0; i < self.N; i++) {
+            SuffixRankTuple suffixRank = ranks.A[i];
+            suffixRank.firstHalf = TwoDArray_get(suffixRanks, 0, i);
+            suffixRank.secondHalf = i + pos < self.N ? TwoDArray_get(suffixRanks, 0, i + pos) : -1;
+            suffixRank.originalIndex = i;
+        }
+        ranks = sort_SuffixRankTuple(ranks, ranks.length);
+        int newRank = 0;
+        TwoDArray_set(suffixRanks, 1, ranks.A[0].originalIndex, 0);
+        for (int i = 1; i < self.N; i++) {
+            SuffixRankTuple lastSuffixRank = ranks.A[i - 1];
+            SuffixRankTuple currSuffixRank = ranks.A[i];
+            if (currSuffixRank.firstHalf != lastSuffixRank.firstHalf
+                || currSuffixRank.secondHalf != lastSuffixRank.secondHalf)
+                newRank++;
+            TwoDArray_set(suffixRanks, 1, currSuffixRank.originalIndex, newRank);
+        }
+        TwoDArray_setRow(suffixRanks, 0, TwoDArray_getRow(suffixRanks, 1));
+        if (newRank == self.N - 1) pos = self.N;
+    }
+    for (int i = 0; i < self.N; i++) {
+        self.sa.A[i] = ranks.A[i].originalIndex;
+        ranks.A[i] = null;
+    }
+    suffixRanks = null;
+    ranks = null;
+}
+
+void SuffixArray_kasai(SuffixArray self) {
+    self.lcp = new Array_int(length=self.N);
+    Array_int inv = new Array_int(length=self.N);
+    for (int i = 0; i < self.N; i++)
+        inv.A[self.sa.A[i]] = i;
+    int len = 0;
+    for (int i = 0; i < self.N; i++) {
+        if (inv.A[i] > 0) {
+            int k = self.sa.A[inv.A[i] - 1];
+            while ((i + len < self.N) && (k + len < self.N) && self.T.A[i + len] == self.T.A[k + len]) len++;
+            self.lcp.A[inv.A[i] - 1] = len;
+            if (len > 0) len--;
+        }
+    }
+}
+
+generator TreeSet SuffixArray_lrs(SuffixArray self) {
+    int max_len = 0;
+    TreeSet lrss = TreeSet_init();
+    Array_char tmp = new Array_char(length=self.T.length);
+
+    for (int i = 0; i < self.T.length; i++) {
+        tmp.A[i] = (char) self.T.A[i];
+    }
+
+    for (int i = 0; i < self.N; i++) {
+        //if (self.lcp.A[i] > 0 && self.lcp.A[i] >= max_len) {
+        int cur_len = self.lcp.A[i];
+        if ( {|  cur_len (< | > | <= | >=)  (max_len | 0) |} && {| cur_len (< | > | <= | >=)  (max_len | 0) |} ) {
+            //if (self.lcp.A[i] > max_len) {
+            if ({| cur_len (< | > | <= | >=)  (max_len | 0) |}) {
+                TreeSet_clear(lrss);
+            }
+            max_len = cur_len;
+            TreeSet_add(lrss, String_From_bytes_offset(tmp, self.sa.A[i], max_len));
+        }
+    }
+
+    return lrss;
+}

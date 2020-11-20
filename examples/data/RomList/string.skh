@@ -166,20 +166,20 @@ bit String_equals(String self, String s) {
     return isEqual;
 }
 
-//int String_hashCode(String self) {
-//    int n = self._count,  hash = 0,  temp = 0;
-//    if (n == 0) {
-//        return 0;
-//    }
-//    for (int i = 0; i < n; i++) {
-//        temp = String_charAt(self, i);
-//        for (int j = 0; j < n - 1 - i; j++) {
-//            temp = (temp * 31) % 65521;
-//        }
-//        hash = (hash + temp) % 65521;
-//    }
-//    return hash;
-//}
+int String_hashCode(String self) {
+    int n = self._count,  hash = 0,  temp = 0;
+    if (n == 0) {
+        return 0;
+    }
+    for (int i = 0; i < n; i++) {
+        temp = String_charAt(self, i);
+        for (int j = 0; j < n - 1 - i; j++) {
+            temp = temp * 31;
+        }
+        hash = hash + temp;
+    }
+    return hash;
+}
 
 String replace_char_char(String self, char oldChar, char newChar) {
     if (oldChar != newChar) {

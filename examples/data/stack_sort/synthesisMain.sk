@@ -1,0 +1,191 @@
+pragma options "--bnd-inline-amnt 16 --bnd-inbits 2 --bnd-cbits 4 --bnd-unroll-amnt 32 --slv-nativeints";
+int CAP=20;
+int N=3;
+
+int HIST_CAP = {{ hist_cap }};
+struct Stack {
+   int[CAP] storage;
+   int pos;
+   int[HIST_CAP] _hist;
+   int _hist_len;
+}
+
+int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::s_push_real") n_unknowns}};
+int s_push_index(int[HIST_CAP] hist);
+int idx0 = 0;
+int[HIST_CAP][cap0] hist0 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_push_real") n_unknowns hist_cap}} };
+int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_push_real") n_unknowns }}  };
+int[cap0] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_push_real") "??" n_unknowns}} };
+
+int cap1 = {{get-cap-logs (subtree logs "ANONYMOUS::s_pop_real") n_unknowns}};
+int s_pop_index(int[HIST_CAP] hist);
+int idx1 = 0;
+int[HIST_CAP][cap1] hist1 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_pop_real") n_unknowns hist_cap}} };
+int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_pop_real") n_unknowns }}  };
+int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_pop_real") "??" n_unknowns}} };
+
+int cap2 = {{get-cap-logs (subtree logs "ANONYMOUS::s_empty_real") n_unknowns}};
+int s_empty_index(int[HIST_CAP] hist);
+int idx2 = 0;
+int[HIST_CAP][cap2] hist2 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_empty_real") n_unknowns hist_cap}} };
+int[cap2] hist2_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_empty_real") n_unknowns }}  };
+int[cap2] rarr2 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_empty_real") "??" n_unknowns}} };
+
+int cap3 = {{get-cap-logs (subtree logs "ANONYMOUS::s_peek_real") n_unknowns}};
+int s_peek_index(int[HIST_CAP] hist);
+int idx3 = 0;
+int[HIST_CAP][cap3] hist3 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_peek_real") n_unknowns hist_cap}} };
+int[cap3] hist3_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_peek_real") n_unknowns }}  };
+int[cap3] rarr3 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_peek_real") "??" n_unknowns}} };
+
+generator int s_push(Stack s, int i) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_push_real" }};
+    s._hist[s._hist_len+1] = i;
+    s._hist_len = s._hist_len + 2;
+
+	idx0 = s_push_index(s._hist);
+	assume 0 <= idx0;
+    assume idx0 < cap0;
+    assume hist0_len[idx0] == s._hist_len;
+    assume hist0[idx0][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_push_real(s, i);
+}
+
+int s_push_real(Stack s, int i) {
+    return rarr0[idx0];
+}
+
+generator int s_pop(Stack s) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_pop_real" }};
+    s._hist_len = s._hist_len + 1;
+    // What if hist_len overflows
+
+	idx1 = s_pop_index(s._hist);
+	assume 0 <= idx1;
+    assume idx1 < cap1;
+    assume hist1_len[idx1] == s._hist_len;
+    assume hist1[idx1][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_pop_real(s);
+}
+
+int s_pop_real(Stack s) {
+    return rarr1[idx1];
+}
+
+generator int s_empty(Stack s) {
+	idx2 = s_pop_index(s._hist);
+	assume 0 <= idx2;
+    assume idx2 < cap2;
+    assume hist2_len[idx2] == s._hist_len;
+    assume hist2[idx2][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_empty_real(s);
+}
+
+int s_empty_real(Stack s) {
+    return rarr2[idx2];
+}
+
+generator int s_peek(Stack s) {
+	idx3 = s_pop_index(s._hist);
+	assume 0 <= idx3;
+    assume idx3 < cap3;
+    assume hist3_len[idx3] == s._hist_len;
+    assume hist3[idx3][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_peek_real(s);
+}
+
+int s_peek_real(Stack s) {
+    return rarr3[idx3];
+}
+
+Stack s_new_real(){
+    Stack s = new Stack();
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_new_real" }};
+    s._hist_len = 1;
+    return s;
+}
+
+Stack s_new() {
+    return s_new_real();
+}
+
+
+harness void sanity_check(int idx1, int idx2, int idx3, int idx4,
+    int idx5, int idx6, int idx7, int idx8) {
+    assume 0 <= idx1 && idx1 < cap0;
+    assume 0 <= idx2 && idx2 < cap0;
+    assume idx1 != idx2;
+    assert hist0_len[idx1] != hist0_len[idx2] || ( hist0_len[idx1] < HIST_CAP && hist0_len[idx1] >= 0 && hist0[idx1][0::hist0_len[idx1]] != hist0[idx2][0::hist0_len[idx1]]);
+
+    assume 0 <= idx3 && idx3 < cap1;
+    assume 0 <= idx4 && idx4 < cap1;
+    assume idx3 != idx4;
+    assert hist1_len[idx3] != hist1_len[idx4] || ( hist1_len[idx3] < HIST_CAP && hist1_len[idx3] >= 0 && hist1[idx3][0::hist1_len[idx3]] != hist1[idx4][0::hist1_len[idx3]]);
+    
+    assume 0 <= idx5 && idx5 < cap2;
+    assume 0 <= idx6 && idx6 < cap2;
+    assume idx5 != idx6;
+    assert hist2_len[idx5] != hist2_len[idx6] || ( hist2_len[idx5] < HIST_CAP && hist2_len[idx5] >= 0 && hist2[idx5][0::hist2_len[idx5]] != hist2[idx6][0::hist2_len[idx5]]);
+
+    assume 0 <= idx7 && idx7 < cap3;
+    assume 0 <= idx8 && idx8 < cap3;
+    assume idx7 != idx8;
+    assert hist3_len[idx7] != hist3_len[idx8] || ( hist3_len[idx7] < HIST_CAP && hist3_len[idx7] >= 0 && hist3[idx7][0::hist3_len[idx7]] != hist3[idx8][0::hist3_len[idx7]]);
+}
+
+generator int[N] sort(int[N] input) {
+    int[N] out;
+    Stack input_stack = s_new();
+    Stack temp_stack = s_new();
+
+    for (int i = 0; i < N; i++) {
+        s_push(input_stack, input[i]);
+    }
+
+    Stack stack1 = {| (input_stack | temp_stack) |};
+    Stack stack2 = {| (input_stack | temp_stack) |};
+    while(s_empty(stack1) == 0) {
+        int tmp = s_pop(stack1);
+        int top = s_peek(stack2);
+        while (s_empty(stack2) == 0 &&  top < tmp) {
+            s_push(stack1, s_pop(stack2));
+            top = s_peek(stack2);
+        }
+        s_push(stack2, tmp);
+    }
+
+    for (int i = 0; i < N; i++) {
+        out[i] = s_pop(temp_stack);
+    }
+    return out;
+}
+
+generator int[N] sort_ref(int[N] input){
+   int[N] output=input;
+   int k=0;
+   for(int i=0; i<N; ++i){
+      for(int j=i+1; j<N; ++j){
+         if( output[j]< output[i]){
+            int tmp = output[j];
+            output[j] = output[i];
+            output[i] = tmp;
+         }
+      }
+   }
+   return output;
+}
+
+harness void main(int i0, int i1, int i2) {
+    {{expand-x-d-points-to-assume c_e_s "i0" "i1" "i2" }}
+    
+    int[N] input = {i0, i1, i2};
+    int[N] sorted = sort(input);
+    int[N] sorted_ref = sort_ref(input);
+    assert sorted == sorted_ref;
+}

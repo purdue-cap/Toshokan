@@ -1,0 +1,61 @@
+
+harness void main(int choice) {
+    String s;
+    if (choice == 0) {
+        s = String_From_cbytes(new Array_char(length=7, A="aabaab"));
+    } else if (choice == 1) {
+        s = String_From_cbytes(new Array_char(length=9, A="babababa"));
+    } else if (choice == 2) {
+        s = String_From_cbytes(new Array_char(length=6, A="abcba"));
+    } else if (choice == 3) {
+        s = String_From_cbytes(new Array_char(length=7, A="abccdd"));
+    } else if (choice == 4) {
+        s = String_From_cbytes(new Array_char(length=5, A="aaab"));
+    } else if (choice == 5) {
+        s = String_From_cbytes(new Array_char(length=6, A="ababa"));
+    } else {
+        return;
+    }
+
+    SuffixArray sa = SuffixArray_From_String(s);
+    TreeSet lrss = SuffixArray_lrs(sa);
+
+    int size;
+    int flag;
+    if (choice == 0) {
+        size = TreeSet_size(lrss);
+        assert size == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=4, A="aab")));
+        assert flag == 1;
+    } else if (choice == 1) {
+        size = TreeSet_size(lrss);
+        assert size == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=7, A="bababa")));
+        assert flag == 1;
+    } else if (choice == 2) {
+        size = TreeSet_size(lrss);
+        assert size == 2;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=2, A="a")));
+        assert flag == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=2, A="b")));
+        assert flag == 1;
+    } else if (choice == 3) {
+        size = TreeSet_size(lrss);
+        assert size == 2;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=2, A="c")));
+        assert flag == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=2, A="d")));
+        assert flag == 1;
+    } else if (choice == 4) {
+        size = TreeSet_size(lrss);
+        assert size == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=3, A="aa")));
+        assert flag == 1;
+    } else if (choice == 5) {
+        size = TreeSet_size(lrss);
+        assert size == 1;
+        flag = TreeSet_contains(lrss, String_From_cbytes(new Array_char(length=4, A="aba")));
+        assert flag == 1;
+    }
+    
+}

@@ -1,0 +1,149 @@
+int String_hashCode(String str) {
+if (String_length(str) == 0) return 0;
+if (String_charAt(str, 0) == 'a') {
+ if (String_length(str) == 1) return 1;
+ if (String_charAt(str, 1) == 'a') {
+  if (String_length(str) == 2) return 2;
+  if (String_charAt(str, 2) == 'a') {
+   if (String_length(str) == 3) return 3;
+   if (String_charAt(str, 3) == 'b') {
+    if (String_length(str) == 4) return 4;
+   }
+  }
+  if (String_charAt(str, 2) == 'b') {
+   if (String_length(str) == 3) return 5;
+   if (String_charAt(str, 3) == 'a') {
+    if (String_length(str) == 4) return 6;
+    if (String_charAt(str, 4) == 'a') {
+     if (String_length(str) == 5) return 7;
+     if (String_charAt(str, 5) == 'b') {
+      if (String_length(str) == 6) return 8;
+     }
+    }
+   }
+  }
+ }
+ if (String_charAt(str, 1) == 'b') {
+  if (String_length(str) == 2) return 9;
+  if (String_charAt(str, 2) == 'c') {
+   if (String_length(str) == 3) return 10;
+   if (String_charAt(str, 3) == 'c') {
+    if (String_length(str) == 4) return 11;
+    if (String_charAt(str, 4) == 'd') {
+     if (String_length(str) == 5) return 12;
+     if (String_charAt(str, 5) == 'd') {
+      if (String_length(str) == 6) return 13;
+     }
+    }
+   }
+   if (String_charAt(str, 3) == 'b') {
+    if (String_length(str) == 4) return 14;
+    if (String_charAt(str, 4) == 'a') {
+     if (String_length(str) == 5) return 15;
+    }
+   }
+  }
+  if (String_charAt(str, 2) == 'a') {
+   if (String_length(str) == 3) return 16;
+   if (String_charAt(str, 3) == 'a') {
+    if (String_length(str) == 4) return 17;
+    if (String_charAt(str, 4) == 'b') {
+     if (String_length(str) == 5) return 18;
+    }
+   }
+   if (String_charAt(str, 3) == 'b') {
+    if (String_length(str) == 4) return 19;
+    if (String_charAt(str, 4) == 'a') {
+     if (String_length(str) == 5) return 20;
+     if (String_charAt(str, 5) == 'b') {
+      if (String_length(str) == 6) return 21;
+      if (String_charAt(str, 6) == 'a') {
+       if (String_length(str) == 7) return 22;
+      }
+     }
+    }
+   }
+  }
+ }
+}
+if (String_charAt(str, 0) == 'b') {
+ if (String_length(str) == 1) return 23;
+ if (String_charAt(str, 1) == 'c') {
+  if (String_length(str) == 2) return 24;
+  if (String_charAt(str, 2) == 'c') {
+   if (String_length(str) == 3) return 25;
+   if (String_charAt(str, 3) == 'd') {
+    if (String_length(str) == 4) return 26;
+    if (String_charAt(str, 4) == 'd') {
+     if (String_length(str) == 5) return 27;
+    }
+   }
+  }
+  if (String_charAt(str, 2) == 'b') {
+   if (String_length(str) == 3) return 28;
+   if (String_charAt(str, 3) == 'a') {
+    if (String_length(str) == 4) return 29;
+   }
+  }
+ }
+ if (String_charAt(str, 1) == 'a') {
+  if (String_length(str) == 2) return 30;
+  if (String_charAt(str, 2) == 'a') {
+   if (String_length(str) == 3) return 31;
+   if (String_charAt(str, 3) == 'b') {
+    if (String_length(str) == 4) return 32;
+   }
+  }
+  if (String_charAt(str, 2) == 'b') {
+   if (String_length(str) == 3) return 33;
+   if (String_charAt(str, 3) == 'a') {
+    if (String_length(str) == 4) return 34;
+    if (String_charAt(str, 4) == 'b') {
+     if (String_length(str) == 5) return 35;
+     if (String_charAt(str, 5) == 'a') {
+      if (String_length(str) == 6) return 36;
+      if (String_charAt(str, 6) == 'b') {
+       if (String_length(str) == 7) return 37;
+       if (String_charAt(str, 7) == 'a') {
+        if (String_length(str) == 8) return 38;
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}
+if (String_charAt(str, 0) == 'c') {
+ if (String_length(str) == 1) return 39;
+ if (String_charAt(str, 1) == 'c') {
+  if (String_length(str) == 2) return 40;
+  if (String_charAt(str, 2) == 'd') {
+   if (String_length(str) == 3) return 41;
+   if (String_charAt(str, 3) == 'd') {
+    if (String_length(str) == 4) return 42;
+   }
+  }
+ }
+ if (String_charAt(str, 1) == 'd') {
+  if (String_length(str) == 2) return 43;
+  if (String_charAt(str, 2) == 'd') {
+   if (String_length(str) == 3) return 44;
+  }
+ }
+ if (String_charAt(str, 1) == 'b') {
+  if (String_length(str) == 2) return 45;
+  if (String_charAt(str, 2) == 'a') {
+   if (String_length(str) == 3) return 46;
+  }
+ }
+}
+if (String_charAt(str, 0) == 'd') {
+ if (String_length(str) == 1) return 47;
+ if (String_charAt(str, 1) == 'd') {
+  if (String_length(str) == 2) return 48;
+ }
+}
+return -1;
+
+}

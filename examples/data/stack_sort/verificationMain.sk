@@ -1,0 +1,93 @@
+pragma options "--bnd-inline-amnt 16 --bnd-inbits 2 --bnd-cbits 4 --bnd-unroll-amnt 32 --slv-nativeints";
+int CAP=20;
+int N=3;
+struct Stack {
+   int[CAP] storage;
+   int pos;
+}
+
+int s_push(Stack s, int i) {
+    if (s.pos >= CAP) {
+        return 0;
+    }
+    s.storage[s.pos] = i;
+    s.pos = s.pos + 1;
+    return 1;
+}
+
+int s_pop(Stack s) {
+    if (s.pos == 0) {
+        return 0;
+    }
+    s.pos = s.pos - 1;
+    return s.storage[s.pos];
+}
+
+int s_empty(Stack s) {
+    if (s.pos > 0) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+int s_peek(Stack s) {
+    if (s.pos == 0) {
+        return 0;
+    }
+    return s.storage[s.pos - 1];
+}
+
+Stack s_new() {
+    return new Stack();
+}
+
+generator int[N] sort(int[N] input) {
+    int[N] out;
+    Stack input_stack = s_new();
+    Stack temp_stack = s_new();
+
+    for (int i = 0; i < N; i++) {
+        s_push(input_stack, input[i]);
+    }
+
+    Stack stack1 = {| (input_stack | temp_stack) |};
+    Stack stack2 = {| (input_stack | temp_stack) |};
+    while(s_empty(stack1) == 0) {
+        int tmp = s_pop(stack1);
+        int top = s_peek(stack2);
+        while (s_empty(stack2) == 0 &&  top < tmp) {
+            s_push(stack1, s_pop(stack2));
+            top = s_peek(stack2);
+        }
+        s_push(stack2, tmp);
+    }
+
+    for (int i = 0; i < N; i++) {
+        out[i] = s_pop(temp_stack);
+    }
+    return out;
+}
+
+generator int[N] sort_ref(int[N] input){
+   int[N] output=input;
+   int k=0;
+   for(int i=0; i<N; ++i){
+      for(int j=i+1; j<N; ++j){
+         if( output[j]< output[i]){
+            int tmp = output[j];
+            output[j] = output[i];
+            output[i] = tmp;
+         }
+      }
+   }
+   return output;
+}
+
+harness void main(int i0, int i1, int i2) {
+
+    int[N] input = {i0, i1, i2};
+    int[N] sorted = sort(input);
+    int[N] sorted_ref = sort_ref(input);
+    assert sorted == sorted_ref;
+}

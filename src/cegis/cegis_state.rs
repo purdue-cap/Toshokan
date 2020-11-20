@@ -180,7 +180,7 @@ impl CEGISState {
                             atomic_func_log.atomize();
                             pure_logs.get_mut(&func_log.func).expect("Should ensured key").insert(atomic_func_log);
                         },
-                        FuncConfig::NonPure{args: _, state_arg_idx} => {
+                        FuncConfig::NonPure{args: _, state_arg_idx} | FuncConfig::StateQuery{args: _, state_arg_idx} => {
                             let address = func_log.args.get(*state_arg_idx)?.as_object()?.get("@address")?.as_u64()? as usize;
                             if !current_logs.as_ref()?.contains_key(&address) {
                                 current_logs.as_mut()?.insert(address, vec![]);
@@ -206,6 +206,13 @@ impl CEGISState {
                         provisioned_logs.insert(value);
                     }
                 }
+            }
+        }
+
+        // Take any remaining (due to timeout, crash, etc.) logs in
+        if let Some(remaining) = current_logs {
+            for (_key, value) in remaining.into_iter() {
+                provisioned_logs.insert(value);
             }
         }
 
@@ -236,6 +243,22 @@ impl CEGISState {
                             rtn: entry.rtn
                         });
                     },
+                    FuncConfig::StateQuery{args: _, state_arg_idx} => {
+                        let encoded_args = entry.args.iter().enumerate()
+                            .filter(|(i, _) | i != state_arg_idx)
+                            .map(|(_, v)| encode_json_to_i64(v))
+                            .collect::<Option<Vec<_>>>()?;
+                        let mut query_call_hist = current_history.clone();
+                        query_call_hist.extend(encoded_args.into_iter());
+                        if !non_pure_logs.contains_key(&entry.func) {
+                            non_pure_logs.insert(entry.func.clone(), HashSet::new());
+                        }
+                        non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
+                            args: query_call_hist.iter().map(|v| Value::from(*v)).collect(),
+                            func: entry.func,
+                            rtn: entry.rtn
+                        });
+                    }
                     FuncConfig::Init{args: _} => {
                         let encoded_args = entry.args.iter().enumerate()
                             .map(|(_, v)| encode_json_to_i64(v))
@@ -257,6 +280,7 @@ impl CEGISState {
                 self.max_hist_length = current_history.len();
             }
         }
+        println!("{:?}", non_pure_logs);
 
         log_map.extend(non_pure_logs.into_iter().map(|(k, v)| (k, v.into_iter().collect())));
         Some(log_map)

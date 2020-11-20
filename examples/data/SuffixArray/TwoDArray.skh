@@ -1,0 +1,41 @@
+struct TwoDArray {
+    int N;
+    int M;
+    Array_int arr;
+}
+
+
+TwoDArray TwoDArray_init(int n, int m) {
+    TwoDArray self = new TwoDArray();
+    self.N = n;
+    self.M = m;
+    self.arr = new Array_int(length=n * m);
+    return self;
+}
+
+void TwoDArray_set(TwoDArray self, int i, int j, int val) {
+    self.arr.A[(i * self.M) + j] = val;
+}
+
+int TwoDArray_get(TwoDArray self, int i, int j) {
+    return self.arr.A[(i * self.M) + j];
+}
+
+void TwoDArray_setRow(TwoDArray self, int i, Array_int row) {
+    int count = 0;
+    for (int j = i * self.M; j < (i * self.M) + self.M; j++) {
+        self.arr.A[j] = row.A[count];
+        count++;
+    }
+}
+
+Array_int TwoDArray_getRow(TwoDArray self, int i) {
+    int count = 0;
+    Array_int row = new Array_int(length=self.M);
+    for (int j = i * self.M; j < (i * self.M) + self.M; j++) {
+        row.A[count] = self.arr.A[j];
+        count++;
+    }
+    return row;
+}
+

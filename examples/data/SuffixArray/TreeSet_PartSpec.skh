@@ -1,0 +1,142 @@
+int HIST_CAP = {{ hist_cap }};
+struct TreeSet {
+    Array_String set;
+    int capacity;
+    int size;
+    int[HIST_CAP] _hist;
+    int _hist_len;
+}
+
+int TreeSet_INITIAL_CAPACITY = 16;
+int TreeSet_RESIZE_FACTOR = 2;
+
+TreeSet TreeSet_init() {
+    TreeSet self = new TreeSet();
+    self.set = new Array_String(length=TreeSet_INITIAL_CAPACITY);
+    self.size = 0;
+    self.capacity = TreeSet_INITIAL_CAPACITY;
+
+    self._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::TreeSet_init" }};
+    self._hist_len = 1;
+
+    return self;
+}
+
+int cap_add = {{get-cap-logs (subtree logs "ANONYMOUS::TreeSet_add_real") n_unknowns}};
+int TreeSet_add_index(int[HIST_CAP] hist);
+int idx_add = 0;
+int[HIST_CAP][cap_add] hist_add = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::TreeSet_add_real") n_unknowns hist_cap "??" }} };
+int[cap_add] hist_add_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::TreeSet_add_real") n_unknowns }}  };
+int[cap_add] rarr_add = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::TreeSet_add_real") "??" n_unknowns}} };
+
+generator int TreeSet_add(TreeSet self, String s) {
+    int i = String_hashCode(s);
+    if (self._hist_len > 0) {
+        self._hist[1::self._hist_len] = self._hist[0::self._hist_len];
+    }
+    self._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::TreeSet_add_real" }};
+    self._hist[self._hist_len + 1] = i;
+    self._hist_len = self._hist_len + 2;
+
+    idx_add = TreeSet_add_index(self._hist);
+    assume 0 <= idx_add;
+    assume idx_add < cap_add;
+    assume hist_add_len[idx_add] == self._hist_len;
+    assume hist_add[idx_add][0::self._hist_len] == self._hist[0::self._hist_len];
+    return TreeSet_add_real(self, s);
+}
+
+int TreeSet_add_real(TreeSet self, String s) {
+    return rarr_add[idx_add];
+}
+
+int cap_contains = {{get-cap-logs (subtree logs "ANONYMOUS::TreeSet_contains_real") n_unknowns}};
+int TreeSet_contains_index(int[HIST_CAP] hist);
+int idx_contains = 0;
+int[HIST_CAP][cap_contains] hist_contains = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::TreeSet_contains_real") n_unknowns hist_cap "??" }} };
+int[cap_contains] hist_contains_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::TreeSet_contains_real") n_unknowns }}  };
+int[cap_contains] rarr_contains = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::TreeSet_contains_real") "??" n_unknowns}} };
+
+generator int TreeSet_contains(TreeSet self, String s) {
+    int i = String_hashCode(s);
+    int[HIST_CAP] query_hist;
+    query_hist[0::self._hist_len] = self._hist[0::self._hist_len];
+    query_hist[self._hist_len] = i;
+    int query_hist_len = self._hist_len + 1;
+
+    idx_contains = TreeSet_contains_index(query_hist);
+    assume 0 <= idx_contains;
+    assume idx_contains < cap_contains;
+    assume hist_contains_len[idx_contains] == query_hist_len;
+    assume hist_contains[idx_contains][0::query_hist_len] == query_hist[0::query_hist_len];
+    return TreeSet_contains_real(self, s);
+}
+
+int TreeSet_contains_real(TreeSet self, String s) {
+    return rarr_contains[idx_contains];
+}
+
+void TreeSet_clear(TreeSet self) {
+    if (self._hist_len > 0) {
+        self._hist[1::self._hist_len] = self._hist[0::self._hist_len];
+    }
+    self._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::TreeSet_clear_real" }};
+    self._hist_len = self._hist_len + 1;
+
+    TreeSet_clear_real(self);
+}
+
+int TreeSet_clear_real(TreeSet self) {
+    return 0;
+}
+
+int cap_size = {{get-cap-logs (subtree logs "ANONYMOUS::TreeSet_size_real") n_unknowns}};
+int TreeSet_size_index(int[HIST_CAP] hist);
+int idx_size = 0;
+int[HIST_CAP][cap_size] hist_size = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::TreeSet_size_real") n_unknowns hist_cap "??"}} };
+int[cap_size] hist_size_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::TreeSet_size_real") n_unknowns }}  };
+int[cap_size] rarr_size = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::TreeSet_size_real") "??" n_unknowns}} };
+
+generator int TreeSet_size(TreeSet self) {
+    idx_size = TreeSet_size_index(self._hist);
+    assume 0 <= idx_size;
+    assume idx_size < cap_size;
+    assume hist_size_len[idx_size] == self._hist_len;
+    assume hist_size[idx_size][0::self._hist_len] == self._hist[0::self._hist_len];
+    return TreeSet_size_real(self);
+}
+
+int TreeSet_size_real(TreeSet self) {
+    return rarr_size[idx_size];
+}
+
+harness void sanity_check(
+    int idx1_add, int idx2_add,
+    int idx1_contains, int idx2_contains,
+    int idx1_size, int idx2_size
+    ) {
+    assume 0 <= idx1_add && idx1_add < cap_add;
+    assume 0 <= idx2_add && idx2_add < cap_add;
+    assume idx1_add != idx2_add;
+    assert hist_add_len[idx1_add] != hist_add_len[idx2_add]
+        || ( hist_add_len[idx1_add] < HIST_CAP
+            && hist_add_len[idx1_add] >= 0
+            && hist_add[idx1_add][0::hist_add_len[idx1_add]] != hist_add[idx2_add][0::hist_add_len[idx1_add]]);
+
+    assume 0 <= idx1_contains && idx1_contains < cap_contains;
+    assume 0 <= idx2_contains && idx2_contains < cap_contains;
+    assume idx1_contains != idx2_contains;
+    assert hist_contains_len[idx1_contains] != hist_contains_len[idx2_contains]
+        || ( hist_contains_len[idx1_contains] < HIST_CAP
+            && hist_contains_len[idx1_contains] >= 0
+            && hist_contains[idx1_contains][0::hist_contains_len[idx1_contains]] != hist_contains[idx2_contains][0::hist_contains_len[idx1_contains]]);
+
+    assume 0 <= idx1_size && idx1_size < cap_size;
+    assume 0 <= idx2_size && idx2_size < cap_size;
+    assume idx1_size != idx2_size;
+    assert hist_size_len[idx1_size] != hist_size_len[idx2_size]
+        || ( hist_size_len[idx1_size] < HIST_CAP
+            && hist_size_len[idx1_size] >= 0
+            && hist_size[idx1_size][0::hist_size_len[idx1_size]] != hist_size[idx2_size][0::hist_size_len[idx1_size]]);
+
+}

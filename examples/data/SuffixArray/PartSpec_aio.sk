@@ -1,0 +1,9 @@
+pragma options "--bnd-inbits 3 --bnd-cbits 5 --bnd-unroll-amnt 32 --slv-nativeints";
+include "arrays.skh";
+include "string.skh";
+include "hashCode.skh";
+include "TwoDArray.skh";
+include "SuffixRankTuple.skh";
+include "TreeSet_PartSpec.skh";
+include "SuffixArray.skh";
+include "Tests_syn.skh";

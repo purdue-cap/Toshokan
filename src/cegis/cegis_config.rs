@@ -19,6 +19,10 @@ pub enum FuncConfig {
         args: usize,
         state_arg_idx: usize
     },
+    StateQuery {
+        args: usize,
+        state_arg_idx: usize
+    },
     Init {args: usize}
 }
 
@@ -54,7 +58,9 @@ impl CEGISConfigParams {
                 FuncConfig::Init{args: _} => {
                     format!("trace_only@{}", name)
                 },
-                FuncConfig::NonPure{args:_, state_arg_idx: _} | FuncConfig::Pure{args: _}  => {
+                FuncConfig::NonPure{args:_, state_arg_idx: _} |
+                FuncConfig::Pure{args: _} |
+                FuncConfig::StateQuery{args:_, state_arg_idx: _}  => {
                     name.clone()
                 }
             }

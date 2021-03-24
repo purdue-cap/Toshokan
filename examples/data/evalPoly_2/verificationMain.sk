@@ -12,12 +12,25 @@ int pow(int a, int b){
     return result;
 }
 
+generator int expr() {
+    if (??) {
+        return expr() * expr();
+    }
+    if (??) {
+        return expr() + expr();
+    }
+    if (??) {
+        return expr() - expr();
+    }
+    return {| (N| ??) |};
+}
+
 harness void main(int p_0, int p_1, int p_2, int p_3, int x) {
 
     int[N] p = {p_0, p_1, p_2, p_3};
 
     int num = 0;
-    int i = {| ( N (+|-) ?? | ?? )|};
+    int i = expr();
     while (i < N) {
         num += p[i] * pow(x, i);
         i = i + 1;

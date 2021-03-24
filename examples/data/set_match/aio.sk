@@ -1,0 +1,55 @@
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
+int CAP=20;
+
+struct Set{
+    int[CAP] storage;
+    int size;
+}
+
+Set set_new() {
+    return new Set();
+}
+
+int set_add(Set s, int input) {
+   for (int i = 0; i < s.size; i++ ) {
+       if (s.storage[i] == input) {
+           return 2;
+       }
+   }
+   if (s.size == CAP) {
+       return 0;
+   }
+   s.storage[s.size] = input;
+   s.size = s.size + 1;
+   return 1;
+}
+
+int set_contains(Set s, int input) {
+   for (int i = 0; i < s.size; i++ ) {
+       if (s.storage[i] == input) {
+           return 1;
+       }
+   }
+   return 0;
+}
+
+int set_size(Set s) {
+    return s.size;
+}
+
+harness void main(int p, int s, int offset) {
+    assume p >= 2 && p <= 10;
+    assume s >= 1 && s <= 4;
+    Set st = set_new();
+    for (int i = 0; i < p; i++) {
+        set_add(st, i * (?? * s + ??) + offset);
+    }
+    int check_value = offset;
+    for (int i = 0; i < p; i++) {
+        int contains = set_contains(st, check_value);
+        assert contains == 1;
+        check_value =  check_value + s + 1;
+    }
+}
+
+

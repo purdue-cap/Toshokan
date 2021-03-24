@@ -1,0 +1,82 @@
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 3 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
+int CAP=20;
+struct Stack {
+   int[CAP] storage;
+   int pos;
+}
+
+int s_push(Stack s, int i) {
+    if (s.pos >= CAP) {
+        return 0;
+    }
+    s.storage[s.pos] = i;
+    s.pos = s.pos + 1;
+    return 1;
+}
+
+int s_pop(Stack s) {
+    if (s.pos == 0) {
+        return 0;
+    }
+    s.pos = s.pos - 1;
+    return s.storage[s.pos];
+}
+
+int s_empty(Stack s){
+    if (s.pos == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+Stack s_new() {
+    return new Stack();
+}
+
+// Use an int array to represent a tree
+// 1st bit indicate if left child exists
+// 2nd bit indicate if right child exists
+// other bits represent the node data
+int N = 15;
+int N_D = 6;
+int[N_D] stored_data = {2, 3, 4, 7, 9, 10};
+int[N] tree = {31, 41, 19, 39, 0, 14, 8, 28, 8, 0, 0, 0, 16, 0, 0};
+
+generator bit search(int value) {
+    Stack s = s_new();
+    // Storing indexes to be traversed
+    s_push(s, 0);
+    bit found = 0;
+    int iter = 0;
+    while(s_empty(s) == 0 && iter < N) {
+        int idx = s_pop(s);
+        int node = tree[idx];
+        int factor = 4;
+        int node_v = node / factor; 
+        if (node_v == value)  {
+            found = 1;
+        }
+        int left_idx =  idx *2 + ??;
+        int right_idx = idx *2 + ??;
+        if (node % 2 == 1 && left_idx < N) {
+            s_push(s, left_idx);
+        }
+        if ( (node / 2) % 2 == 1 && right_idx < N) {
+            s_push(s, right_idx);
+        }
+        iter++;
+    }
+    return found;
+}
+
+
+harness void main(int input) {
+    bit is_data = 0;
+    bit in_tree = 0;
+    in_tree = search(input);
+    for (int i = 0; i < N_D; i++ ) {
+        is_data = is_data || stored_data[i] == input;
+    }
+    assert is_data == in_tree;
+}

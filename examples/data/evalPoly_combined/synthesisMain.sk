@@ -42,6 +42,16 @@ generator int expr() {
     return {| (N| ??) |};
 }
 
+generator bit cond(int i) {
+    if (??) {
+        return cond(i) && cond(i);
+    }
+    if (??) {
+        return cond(i) || cond(i);
+    }
+    return {| i (>=|<=|>|<) (??| N) |};
+}
+
 harness void main(int p_0, int p_1, int p_2, int p_3, int x) {
 
     {{expand-x-d-points-to-assume c_e_s "p_0" "p_1" "p_2" "p_3" "x"}}
@@ -50,9 +60,9 @@ harness void main(int p_0, int p_1, int p_2, int p_3, int x) {
 
     int num = 0;
     int i = expr();
-    while (i < N) {
+    while (cond(i)) {
         num += p[i] * pow(x, i);
-        i = i + 1;
+        i = i - 1;
     }
 
     int ref_num = 0;

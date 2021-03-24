@@ -1,0 +1,144 @@
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 2 --bnd-cbits 3 --bnd-unroll-amnt 16 --slv-nativeints";
+int CAP=20;
+
+
+int HIST_CAP = {{ hist_cap }};
+struct Stack {
+   int[CAP] storage;
+   int pos;
+   int[HIST_CAP] _hist;
+   int _hist_len;
+}
+
+int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::s_push_real") n_unknowns}};
+int s_push_index(int[HIST_CAP] hist);
+int idx0 = 0;
+int[HIST_CAP][cap0] hist0 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_push_real") n_unknowns hist_cap}} };
+int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_push_real") n_unknowns }}  };
+int[cap0] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_push_real") "??" n_unknowns}} };
+
+int cap1 = {{get-cap-logs (subtree logs "ANONYMOUS::s_pop_real") n_unknowns}};
+int s_pop_index(int[HIST_CAP] hist);
+int idx1 = 0;
+int[HIST_CAP][cap1] hist1 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_pop_real") n_unknowns hist_cap}} };
+int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_pop_real") n_unknowns }}  };
+int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_pop_real") "??" n_unknowns}} };
+
+int cap2 = {{get-cap-logs (subtree logs "ANONYMOUS::s_empty_real") n_unknowns}};
+int s_empty_index(int[HIST_CAP] hist);
+int idx2 = 0;
+int[HIST_CAP][cap2] hist2 = { {{expand-to-full-hist-arrays (subtree logs "ANONYMOUS::s_empty_real") n_unknowns hist_cap}} };
+int[cap2] hist2_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::s_empty_real") n_unknowns }}  };
+int[cap2] rarr2 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::s_empty_real") "??" n_unknowns}} };
+
+generator int s_push(Stack s, int i) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_push_real" }};
+    s._hist[s._hist_len+1] = i;
+    s._hist_len = s._hist_len + 2;
+
+	idx0 = s_push_index(s._hist);
+	assume 0 <= idx0;
+    assume idx0 < cap0;
+    assume hist0_len[idx0] == s._hist_len;
+    assume hist0[idx0][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_push_real(s, i);
+}
+
+int s_push_real(Stack s, int i) {
+    return rarr0[idx0];
+}
+
+generator int s_pop(Stack s) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_pop_real" }};
+    s._hist_len = s._hist_len + 1;
+    // What if hist_len overflows
+
+	idx1 = s_pop_index(s._hist);
+	assume 0 <= idx1;
+    assume idx1 < cap1;
+    assume hist1_len[idx1] == s._hist_len;
+    assume hist1[idx1][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_pop_real(s);
+}
+
+int s_pop_real(Stack s) {
+    return rarr1[idx1];
+}
+
+generator int s_empty(Stack s) {
+	idx2 = s_pop_index(s._hist);
+	assume 0 <= idx2;
+    assume idx2 < cap2;
+    assume hist2_len[idx2] == s._hist_len;
+    assume hist2[idx2][0::s._hist_len] == s._hist[0::s._hist_len];
+    return s_empty_real(s);
+}
+
+int s_empty_real(Stack s) {
+    return rarr2[idx2];
+}
+
+Stack s_new_real(){
+    Stack s = new Stack();
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::s_new_real" }};
+    s._hist_len = 1;
+    return s;
+}
+
+Stack s_new() {
+    return s_new_real();
+}
+
+// Use an int array to represent a tree
+// 1st bit indicate if left child exists
+// 2nd bit indicate if right child exists
+// other bits represent the node data
+int N = 15;
+int N_D = 6;
+int[N_D] stored_data = {2, 3, 4, 7, 9, 10};
+int[N] tree = {31, 41, 19, 39, 0, 14, 8, 28, 8, 0, 0, 0, 16, 0, 0};
+
+generator bit search(int value) {
+    Stack s = s_new();
+    // Storing indexes to be traversed
+    s_push(s, 0);
+    bit found = 0;
+    int iter = 0;
+    while(s_empty(s) == 0 && iter < N) {
+        int idx = s_pop(s);
+        int node = tree[idx];
+        int factor = 4;
+        int node_v = node / factor; 
+        if (node_v == value)  {
+            found = 1;
+        }
+        int left_idx =  idx *2 + ??;
+        int right_idx = idx *2 + ??;
+        if (node % 2 == 1 && left_idx < N) {
+            s_push(s, left_idx);
+        }
+        if ( (node / 2) % 2 == 1 && right_idx < N) {
+            s_push(s, right_idx);
+        }
+        iter++;
+    }
+    return found;
+}
+
+harness void main(int input) {
+    {{expand-points-to-assume c_e_s.[0] "input"}}
+
+    bit is_data = 0;
+    bit in_tree = 0;
+    in_tree = search(input);
+    for (int i = 0; i < N_D; i++ ) {
+        is_data = is_data || stored_data[i] == input;
+    }
+    assert is_data == in_tree;
+}

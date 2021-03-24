@@ -1,0 +1,104 @@
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
+int CAP=20;
+
+
+int HIST_CAP = {{ hist_cap }};
+struct ArrayList{
+    int[CAP] storage;
+    int size;
+    int[HIST_CAP] _hist;
+    int _hist_len;
+}
+
+ArrayList arraylist_new_real() {
+    ArrayList s = new ArrayList();
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::arraylist_new_real" }};
+    s._hist_len = 1;
+    return s;
+}
+
+ArrayList arraylist_new() {
+    return arraylist_new_real();
+}
+
+int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::arraylist_push_back_real") n_unknowns}};
+int arraylist_push_back_index(int[HIST_CAP] hist);
+int idx0 = 0;
+int[HIST_CAP][cap0] hist0 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::arraylist_push_back_real") n_unknowns hist_cap}} };
+int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::arraylist_push_back_real") n_unknowns }}  };
+int[cap0] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::arraylist_push_back_real") "??" n_unknowns}} };
+
+generator int arraylist_push_back(ArrayList s, int i) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::arraylist_push_back_real" }};
+    s._hist[s._hist_len+1] = i;
+    s._hist_len = s._hist_len + 2;
+
+	idx0 = arraylist_push_back_index(s._hist);
+	assume 0 <= idx0;
+    assume idx0 < cap0;
+    assume hist0_len[idx0] == s._hist_len;
+    assume hist0[idx0][0::s._hist_len] == s._hist[0::s._hist_len];
+    return arraylist_push_back_real(s, i);
+}
+
+int arraylist_push_back_real(ArrayList s, int i) {
+    return rarr0[idx0];
+}
+
+int cap1 = {{get-cap-logs (subtree logs "ANONYMOUS::arraylist_get_real") n_unknowns}};
+int arraylist_get_index(int[HIST_CAP] hist);
+int idx1 = 0;
+int[HIST_CAP][cap1] hist1 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::arraylist_get_real") n_unknowns hist_cap}} };
+int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::arraylist_get_real") n_unknowns }}  };
+int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::arraylist_get_real") "??" n_unknowns}} };
+
+generator int arraylist_get(ArrayList s, int i) {
+    int[HIST_CAP] tmp_hist;
+    int tmp_hist_len = s._hist_len + 1;
+
+    tmp_hist[0::s._hist_len] = s._hist[0::s._hist_len];
+    tmp_hist[s._hist_len] = i;
+
+	idx1 = arraylist_get_index(tmp_hist);
+	assume 0 <= idx1;
+    assume idx1 < cap1;
+    assume hist1_len[idx1] == tmp_hist_len;
+    assume hist1[idx1][0::tmp_hist_len] == tmp_hist[0::tmp_hist_len];
+    return arraylist_get_real(s, i);
+}
+
+int arraylist_get_real(ArrayList s, int i) {
+    return rarr1[idx1];
+}
+
+generator int expr(int s) {
+    if (??) {
+        return s + ??;
+    }
+    if (??) {
+        return ?? * s;
+    }
+    if (??) {
+        return expr(s);
+    }
+    return s;
+}
+
+harness void main(int p, int s, int offset) {
+    {{expand-x-d-points-to-assume c_e_s "p" "s" "offset" }}
+    ArrayList list = arraylist_new();
+    for (int i = 0; i < p; i++) {
+        arraylist_push_back(list, i * expr(s) + offset);
+    }
+    int n1 = arraylist_get(list, 0);
+    for (int i = 1; i < p; i++) {
+        int n2 = arraylist_get(list, i);
+        assert n2 - n1 == s + 1;
+        n1 = n2;
+    }
+}
+
+

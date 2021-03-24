@@ -1,0 +1,44 @@
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
+int CAP=20;
+
+struct ArrayList{
+    int[CAP] storage;
+    int size;
+}
+
+ArrayList arraylist_new() {
+    return new ArrayList();
+}
+
+int arraylist_push_back(ArrayList l, int input) {
+   if (l.size == CAP) {
+       return 0;
+   }
+   l.storage[l.size] = input;
+   l.size = l.size + 1;
+   return 1;
+}
+
+int arraylist_get(ArrayList l, int index) {
+    if (index >= l.size) {
+        return -1;
+    }
+    return l.storage[index];
+}
+
+harness void main(int p, int s, int offset) {
+    assume p >= 2 && p <= 10;
+    assume s >= 1 && s <= 4;
+    ArrayList list = arraylist_new();
+    for (int i = 0; i < p; i++) {
+        arraylist_push_back(list, i * (?? * s + ??) + offset);
+    }
+    int n1 = arraylist_get(list, 0);
+    for (int i = 1; i < p; i++) {
+        int n2 = arraylist_get(list, i);
+        assert n2 - n1 == s + 1;
+        n1 = n2;
+    }
+}
+
+

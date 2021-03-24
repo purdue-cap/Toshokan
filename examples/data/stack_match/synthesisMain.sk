@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 16 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 16 --slv-nativeints";
 int CAP=20;
 
 int HIST_CAP = {{ hist_cap }};
@@ -87,12 +87,25 @@ harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
 
 // Below are original code from benchmark
 
+generator int expr(int s) {
+    if (??) {
+        return s + ??;
+    }
+    if (??) {
+        return ?? * s;
+    }
+    if (??) {
+        return expr(s);
+    }
+    return s;
+}
+
 
 harness void main(int p, int s, int offset) {
     {{expand-x-d-points-to-assume c_e_s "p" "s" "offset" }}
     Stack st = s_new();
     for (int i = 0; i < p; i++) {
-        s_push(st, i * (?? * s + ??) + offset);
+        s_push(st, i * expr(s) + offset);
     }
 
     int last_pop = s_pop(st);

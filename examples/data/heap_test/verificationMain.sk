@@ -83,16 +83,8 @@ int heap_pop_min(Heap h){
 harness void main(int i) {
     assume i > 6;
     Heap h = heap_new();
-    heap_insert(h, 5);
-    heap_insert(h, i);
     heap_insert(h, ??);
-    heap_insert(h, ??);
-    heap_insert(h, 4);
-    heap_insert(h, ??);
-    assert heap_pop_min(h) == 1;
-    assert heap_pop_min(h) == 4;
-    assert heap_pop_min(h) == 4;
+    heap_insert(h, 6);
     assert heap_pop_min(h) == 5;
     assert heap_pop_min(h) == 6;
-    assert heap_pop_min(h) == i;
 }

@@ -92,16 +92,10 @@ harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
 harness void main(int i) {
     {{expand-points-to-assume c_e_s.[0] "i"}}
     Heap h = heap_new();
-    heap_insert(h, 5);
-    heap_insert(h, i);
     heap_insert(h, ??);
-    heap_insert(h, ??);
-    heap_insert(h, 4);
-    heap_insert(h, ??);
-    assert heap_pop_min(h) == 1;
-    assert heap_pop_min(h) == 4;
-    assert heap_pop_min(h) == 4;
+    heap_insert(h, 2);
+    heap_insert(h, 6);
+    assert heap_pop_min(h) == 2;
     assert heap_pop_min(h) == 5;
     assert heap_pop_min(h) == 6;
-    assert heap_pop_min(h) == i;
 }

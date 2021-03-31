@@ -1,0 +1,107 @@
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 32 --slv-nativeints";
+int HEAP_SIZE=20;
+
+int HIST_CAP = {{ hist_cap }};
+struct Heap{
+    int count;
+    int[HEAP_SIZE] arr;
+    int[HIST_CAP] _hist;
+    int _hist_len;
+}
+
+int cap0 = {{get-cap-logs (subtree logs "ANONYMOUS::heap_insert_real") n_unknowns}};
+int s_push_index(int[HIST_CAP] hist);
+int idx0 = 0;
+int[HIST_CAP][cap0] hist0 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::heap_insert_real") n_unknowns hist_cap}} };
+int[cap0] hist0_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::heap_insert_real") n_unknowns }}  };
+int[cap0] rarr0 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::heap_insert_real") "??" n_unknowns}} };
+
+int cap1 = {{get-cap-logs (subtree logs "ANONYMOUS::heap_pop_min_real") n_unknowns}};
+int s_pop_index(int[HIST_CAP] hist);
+int idx1 = 0;
+int[HIST_CAP][cap1] hist1 = { {{expand-to-hist-arrays (subtree logs "ANONYMOUS::heap_pop_min_real") n_unknowns hist_cap}} };
+int[cap1] hist1_len = { {{expand-to-hist-lens (subtree logs "ANONYMOUS::heap_pop_min_real") n_unknowns }}  };
+int[cap1] rarr1 = { {{expand-to-rtn-array (subtree logs "ANONYMOUS::heap_pop_min_real") "??" n_unknowns}} };
+
+generator int heap_insert(Heap s, int i) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::heap_insert_real" }};
+    s._hist[s._hist_len+1] = i;
+    s._hist_len = s._hist_len + 2;
+
+	idx0 = s_push_index(s._hist);
+	assume 0 <= idx0;
+    assume idx0 < cap0;
+    assume hist0_len[idx0] == s._hist_len;
+    assume hist0[idx0][0::s._hist_len] == s._hist[0::s._hist_len];
+    return heap_insert_real(s, i);
+}
+
+int heap_insert_real(Heap s, int i) {
+    return rarr0[idx0];
+}
+
+generator int heap_pop_min(Heap s) {
+    if (s._hist_len > 0) {
+        s._hist[1::s._hist_len] = s._hist[0::s._hist_len];
+    }
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::heap_pop_min_real" }};
+    s._hist_len = s._hist_len + 1;
+    // What if hist_len overflows
+
+	idx1 = s_pop_index(s._hist);
+	assume 0 <= idx1;
+    assume idx1 < cap1;
+    assume hist1_len[idx1] == s._hist_len;
+    assume hist1[idx1][0::s._hist_len] == s._hist[0::s._hist_len];
+    return heap_pop_min_real(s);
+}
+
+int heap_pop_min_real(Heap s) {
+    return rarr1[idx1];
+}
+
+Heap heap_new_real(){
+    Heap s = new Heap();
+    s._hist[0] = {{ subtree func_hist_codes "ANONYMOUS::heap_new_real" }};
+    s._hist_len = 1;
+    s.count = 0;
+    return s;
+}
+
+Heap heap_new() {
+    return heap_new_real();
+}
+
+harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
+    assume 0 <= idx1 && idx1 < cap0;
+    assume 0 <= idx2 && idx2 < cap0;
+    assume idx1 != idx2;
+    assert hist0_len[idx1] != hist0_len[idx2] || ( hist0_len[idx1] < HIST_CAP && hist0_len[idx1] >= 0 && hist0[idx1][0::hist0_len[idx1]] != hist0[idx2][0::hist0_len[idx1]]);
+
+    assume 0 <= idx3 && idx3 < cap1;
+    assume 0 <= idx4 && idx4 < cap1;
+    assume idx3 != idx4;
+    assert hist1_len[idx3] != hist1_len[idx4] || ( hist1_len[idx3] < HIST_CAP && hist1_len[idx3] >= 0 && hist1[idx3][0::hist1_len[idx3]] != hist1[idx4][0::hist1_len[idx3]]);
+}
+
+// Below are original code from benchmark
+
+harness void main(int i) {
+    {{expand-points-to-assume c_e_s.[0] "i"}}
+    Heap h = heap_new();
+    heap_insert(h, 5);
+    heap_insert(h, i);
+    heap_insert(h, ??);
+    heap_insert(h, ??);
+    heap_insert(h, 4);
+    heap_insert(h, ??);
+    assert heap_pop_min(h) == 1;
+    assert heap_pop_min(h) == 4;
+    assert heap_pop_min(h) == 4;
+    assert heap_pop_min(h) == 5;
+    assert heap_pop_min(h) == 6;
+    assert heap_pop_min(h) == i;
+}

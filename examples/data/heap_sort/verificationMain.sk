@@ -1,0 +1,96 @@
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 32 --slv-nativeints";
+int HEAP_SIZE = 20;
+
+int HIST_CAP = HEAP_SIZE;
+
+struct Heap{
+    int count;
+    int[HEAP_SIZE] arr;
+    int[HIST_CAP] _hist;
+    int _hist_len;
+}
+
+Heap heap_new(){
+    Heap h = new Heap();
+    h.count=0;
+    return h;
+}
+
+int heap_insert(Heap h, int key){
+    if (h.count < HEAP_SIZE) {
+        h.arr[h.count] = key;
+        heap_heapify_bottom_top(h, h.count);
+        h.count++;
+        return 1;
+    }
+    return 0;
+}
+
+void heap_heapify_bottom_top(Heap h,int index){
+    int temp;
+    int parent_node = (index-1)/2;
+
+    if(h.arr[parent_node] > h.arr[index]){
+        //swap and recursive call
+        temp = h.arr[parent_node];
+        h.arr[parent_node] = h.arr[index];
+        h.arr[index] = temp;
+        heap_heapify_bottom_top(h,parent_node);
+    }
+}
+
+void heap_heapify_top_bottom(Heap h, int parent_node){
+    int left = parent_node*2+1;
+    int right = parent_node*2+2;
+    int min;
+    int temp;
+
+    if(left >= h.count || left <0)
+        left = -1;
+    if(right >= h.count || right <0)
+        right = -1;
+
+    if(left != -1 && h.arr[left] < h.arr[parent_node])
+        min=left;
+    else
+        min =parent_node;
+    if(right != -1 && h.arr[right] < h.arr[min])
+        min = right;
+
+    if(min != parent_node){
+        temp = h.arr[min];
+        h.arr[min] = h.arr[parent_node];
+        h.arr[parent_node] = temp;
+
+        // recursive  call
+        heap_heapify_top_bottom(h, min);
+    }
+}
+
+int heap_pop_min(Heap h){
+    int pop;
+    if(h.count==0){
+        return -1;
+    }
+    // replace first node by last and delete last
+    pop = h.arr[0];
+    h.arr[0] = h.arr[h.count-1];
+    h.count--;
+    heap_heapify_top_bottom(h, 0);
+    return pop;
+}
+
+harness void main(int i_0, int i_1, int i_2, int i_3, int i_4) {
+    int[5] input = {i_0, i_1, i_2, i_3, i_4};
+    int[5] output;
+    Heap h = heap_new();
+    for (int i = 0; i < 5; i++) {
+        heap_insert(h, input[i]);
+    }
+    for (int i = 0; i < 5; i++) {
+        output[i] = heap_pop_min(h);
+    }
+    for (int i = 0; i < 4; i++) {
+        assert output[i] <= output[i+1];
+    }
+}

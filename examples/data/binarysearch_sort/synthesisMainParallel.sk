@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --slv-nativeints --bnd-unroll-amnt 16 --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 3 --bnd-cbits 3 --bnd-unroll-amnt 16 --slv-parallel --slv-p-cpus 4 --slv-randassign --slv-randdegree 5";
 int N =5;
 
 int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sort_proxy_real") n_unknowns}};

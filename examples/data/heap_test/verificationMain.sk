@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 5 --bnd-inbits 4 --bnd-cbits 4 --bnd-unroll-amnt 32 --slv-nativeints";
+pragma options "--bnd-inline-amnt 5 --bnd-inbits 4 --bnd-cbits 3 --bnd-unroll-amnt 16 --slv-nativeints";
 int HEAP_SIZE = 20;
 
 int HIST_CAP = HEAP_SIZE;
@@ -81,10 +81,11 @@ int heap_pop_min(Heap h){
 }
 
 harness void main(int i) {
-    assume i > 6;
     Heap h = heap_new();
     heap_insert(h, ??);
+    heap_insert(h, 2);
     heap_insert(h, 6);
+    assert heap_pop_min(h) == 2;
     assert heap_pop_min(h) == 5;
     assert heap_pop_min(h) == 6;
 }

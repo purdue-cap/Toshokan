@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 5 --bnd-inbits 4 --bnd-cbits 3 --bnd-unroll-amnt 16 --slv-nativeints";
+
 int HEAP_SIZE = 20;
 
 int HIST_CAP = HEAP_SIZE;
@@ -79,25 +79,20 @@ int heap_pop_min(Heap h){
     heap_heapify_top_bottom(h, 0);
     return pop;
 }
-int N = 5;
-harness void main(int i_0, int i_1, int i_2, int i_3, int i_4) {
-    int[N] input = {i_0, i_1, i_2, i_3, i_4};
-    int[N] output;
+
+harness void main(int i) {
+    assume i > 6;
     Heap h = heap_new();
-    for (int i = 0; i < N; i++) {
-        heap_insert(h, input[i]);
-    }
-	for(int i=??;{|i  (< | <= | > | >=) (??*N (+ | -) ??) |};i={| i (+|-) ??|}){
-        output[{| i (+|-) ??|}] = heap_pop_min(h);
-    }
-    for (int i = 0; i < N; i++) {
-        bit present_in_output = 0;
-        for (int j = 0; j < N; j++) {
-            if (output[j] == input[i]) present_in_output = 1;
-        }
-        assert present_in_output;
-    }
-    for (int i = 0; i < N-1; i++) {
-        assert output[i] <= output[i+1];
-    }
+    heap_insert(h, 5);
+    heap_insert(h, i);
+    heap_insert(h, ??);
+    heap_insert(h, ??);
+    heap_insert(h, 4);
+    heap_insert(h, ??);
+    assert heap_pop_min(h) == 1;
+    assert heap_pop_min(h) == 4;
+    assert heap_pop_min(h) == 4;
+    assert heap_pop_min(h) == 5;
+    assert heap_pop_min(h) == 6;
+    assert heap_pop_min(h) == i;
 }

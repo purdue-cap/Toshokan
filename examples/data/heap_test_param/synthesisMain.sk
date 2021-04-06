@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 3 --bnd-unroll-amnt 16";
+pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 3 --bnd-unroll-amnt 32";
 int HEAP_SIZE=20;
 
 int HIST_CAP = {{ hist_cap }};
@@ -92,10 +92,16 @@ harness void sanity_check(int idx1, int idx2, int idx3, int idx4) {
 harness void main(int i) {
     {{expand-points-to-assume c_e_s.[0] "i"}}
     Heap h = heap_new();
+    heap_insert(h, 1);
+    heap_insert(h, 4);
     heap_insert(h, ??);
-    heap_insert(h, 2);
-    heap_insert(h, 6);
+    heap_insert(h, ??);
+    heap_insert(h, ??);
+    heap_insert(h, i);
+    assert heap_pop_min(h) == 1;
     assert heap_pop_min(h) == 2;
+    assert heap_pop_min(h) == 4;
+    assert heap_pop_min(h) == 4;
     assert heap_pop_min(h) == 5;
-    assert heap_pop_min(h) == 6;
+    assert heap_pop_min(h) == i;
 }

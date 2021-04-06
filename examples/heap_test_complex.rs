@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log_level = LevelFilter::Trace;
     }
     SimpleLogger::init(log_level, Config::default())?;
-    let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/heap_test");
+    let base_data_dir = PathBuf::from(file!()).parent().ok_or("Get parent failed")?.join("data/heap_test_complex");
     let verification = base_data_dir.join("verificationMain.sk");
     let synthesis = base_data_dir.join("synthesisMain.sk");
     let impl_file = base_data_dir.join("impl.cpp");
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());
-    let (mut record_file, record_file_path) = Builder::new().prefix("heap_test.").suffix(".record.json").tempfile_in(".")?.keep()?;
+    let (mut record_file, record_file_path) = Builder::new().prefix("heap_test_complex.").suffix(".record.json").tempfile_in(".")?.keep()?;
     main_loop.get_recorder().ok_or("Recorder uninitialized")?.write_json_pretty(&mut record_file)?;
     println!("Record File: {}", record_file_path.file_name().ok_or("No record file name")?.to_str().ok_or("Record file name decode failed")?);
     Ok(())

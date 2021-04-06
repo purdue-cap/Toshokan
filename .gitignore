@@ -15,3 +15,4 @@ src/backend/cpp/test.cpp
 *.log
 test_*/
 *_results/
+*_sample/

@@ -33,7 +33,7 @@ def unlock_file(fd):
     fcntl.flock(fd, fcntl.LOCK_UN)
 
 
-def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event):
+def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event, ignore_solved):
     stdout_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stdout.".format(target), dir=".", delete=False)
     stderr_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stderr.".format(target), dir=".", delete=False)
     print("Running on {}".format(target))
@@ -79,6 +79,7 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
                 stderr_log.flush()
                 process_hup = True
         if process_hup:
+            rtn_code = process.poll()
             break
 
     stdout_log.close()
@@ -95,16 +96,18 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
     print("Finished with {}".format(target))
     wall_time = time.time() - begin_wall
 
-    data_line = func(target, stdout_log.name, stderr_log.name, wall_time)
+    data_line, solved = func(target, rtn_code, stdout_log.name, stderr_log.name, wall_time)
     data_fo = open(target + data_postfix, "a")
     lock_file(data_fo)
     data_fo.write(data_line + "\n")
+    unlock_file(data_fo)
 
     print("Output for {} finished".format(target))
     
     if finish_event is not None:
-        print("Setting completion flag")
-        finish_event.set()
+        if ignore_solved or solved:
+            print("Setting completion flag")
+            finish_event.set()
 
 # Kills every processes in the current session other than the current one
 def kill_all_other(kill_current_pg = False):
@@ -139,6 +142,7 @@ def main():
     parser.add_option("-f", "--data_process_func", dest="data_process_func", default=DATA_FUNC, type="string",
                     help="Data process function name. Expecting signature to be: func(target_name, stdout_file_path, stderr_file_path, wall_time) -> data(string)")
     parser.add_option("-D", "--data_postfix", dest="data_postfix", default=".data.csv", type="string", help="Data file postfix")
+    parser.add_option("-S", "--ignore_solved", dest="ignore_solved", action="store_true", default=False, help="Ignores `solved` flag, terminating all jobs once a single job returned no matter the outcome.")
     (options, args) = parser.parse_args()
 
     pid = os.fork()
@@ -164,7 +168,7 @@ def main():
                 finish_event.clear()
                 pool = ThreadPool(options.num_jobs)
                 for _ in range(options.num_jobs):
-                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event))
+                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event, options.ignore_solved))
                 print("Waiting for one thread to finish")
                 timeout = None if options.timeout <= 0 else options.timeout
                 if not finish_event.wait(timeout):

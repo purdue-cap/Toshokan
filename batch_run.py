@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from multiprocessing.pool import ThreadPool
-from multiprocessing import Lock, Event
+from multiprocessing import Event, Semaphore
 import os, signal, sys
 from os import kill
 import optparse
@@ -33,7 +33,7 @@ def unlock_file(fd):
     fcntl.flock(fd, fcntl.LOCK_UN)
 
 
-def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event, ignore_solved):
+def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event, running_sem, ignore_solved):
     stdout_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stdout.".format(target), dir=".", delete=False)
     stderr_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stderr.".format(target), dir=".", delete=False)
     print("Running on {}".format(target))
@@ -88,9 +88,11 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
 
     if timeouted:
         print("Timeouted with {} after {} seconds".format(target, elapsed))
+        running_sem.release()
         return
     if finish_event.is_set():
         print("Terminated with {} after {} seconds due to a parallel process succeeding".format(target, elapsed))
+        running_sem.release()
         return
 
     print("Finished with {}".format(target))
@@ -108,6 +110,7 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
         if ignore_solved or solved:
             print("Setting completion flag")
             finish_event.set()
+    running_sem.release()
 
 # Kills every processes in the current session other than the current one
 def kill_all_other(kill_current_pg = False):
@@ -166,15 +169,20 @@ def main():
             for job in args:
                 print("Running job {} for fastest".format(job))
                 finish_event.clear()
+                running_sem = Semaphore(0)
                 pool = ThreadPool(options.num_jobs)
                 for _ in range(options.num_jobs):
-                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event, options.ignore_solved))
+                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event, running_sem, options.ignore_solved))
                 print("Waiting for one thread to finish")
                 timeout = None if options.timeout <= 0 else options.timeout
-                if not finish_event.wait(timeout):
-                    print("Job {} timeout".format(job))
-                    print("Setting completion flag")
-                    finish_event.set()
+                for _ in range(options.num_jobs):
+                    if not running_sem.acquire(timeout=timeout):
+                        print("Job {} timeout".format(job))
+                        print("Setting completion flag")
+                        finish_event.set()
+                        break
+                    if finish_event.is_set():
+                        break
                 pool.close()
                 print("Killing all remaining processes")
                 kill_all_other()

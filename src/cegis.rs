@@ -6,6 +6,7 @@ pub use cegis_state::FuncLog;
 mod cegis_config;
 pub use cegis_config::CEGISConfig;
 pub use cegis_config::CEGISConfigParams;
+pub use cegis_config::CEGISConfigBuilder;
 pub use cegis_config::VerifyPointsConfig;
 pub use cegis_config::ExcludedHole;
 pub use cegis_config::FuncConfig;

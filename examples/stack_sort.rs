@@ -1,5 +1,5 @@
 extern crate libpartlibspec;
-use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole, FuncConfig};
+use libpartlibspec::cegis::{CEGISLoop, ExcludedHole, FuncConfig, CEGISConfigBuilder};
 use std::path::PathBuf;
 use simplelog::{SimpleLogger, LevelFilter, Config};
 use tempfile::Builder;
@@ -26,45 +26,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
         sketch_home = Some(PathBuf::from(env_path));
     }
-    let config = CEGISConfig::new_full_config(
-        sketch_fe_bin.as_path(),
-        sketch_be_bin.as_path(),
-        sketch_home.as_ref().map(|p| p.as_path()),
-        impl_file.as_path(),
-        &[("ANONYMOUS::s_push_real", FuncConfig::NonPure{args:2, state_arg_idx: 0}),
-        ("ANONYMOUS::s_pop_real", FuncConfig::NonPure{args:1, state_arg_idx: 0}),
-        ("ANONYMOUS::s_new_real", FuncConfig::Init{args: 0}),
-        ("ANONYMOUS::s_peek_real", FuncConfig::StateQuery{args:1, state_arg_idx: 0}),
-        ("ANONYMOUS::s_empty_real", FuncConfig::StateQuery{args:1, state_arg_idx: 0}),
-        ],
-        &[],
-        "main",
-        3,
-        VerifyPointsConfig::NoSpec,
-        10,
-        vec![
-            ExcludedHole::Position(16, -1),
-            ExcludedHole::Position(17, -1),
-            ExcludedHole::Position(18, -1),
-            ExcludedHole::Position(23, -1),
-            ExcludedHole::Position(24, -1),
-            ExcludedHole::Position(25, -1),
-            ExcludedHole::Position(30, -1),
-            ExcludedHole::Position(31, -1),
-            ExcludedHole::Position(32, -1),
-            ExcludedHole::Position(37, -1),
-            ExcludedHole::Position(38, -1),
-            ExcludedHole::Position(39, -1)
-        ].into_iter(),
-        true,
-        log_level == LevelFilter::Trace,
-        synthesis.as_path(),
-        verification.as_path(),
-        &[
-            "i0_6_f_0",
-            "i1_7_10_0",
-            "i2_8_11_0"
-        ], Some(1.0));
+    let config = CEGISConfigBuilder::new()
+        .set_sketch_fe_bin(sketch_fe_bin.as_path())
+        .set_sketch_be_bin(sketch_be_bin.as_path())
+        .set_sketch_home(sketch_home.as_ref().map(|p| p.as_path()))
+        .set_impl_file(impl_file.as_path())
+        .set_func_config(
+            vec![("ANONYMOUS::s_push_real", FuncConfig::NonPure{args:2, state_arg_idx: 0}),
+            ("ANONYMOUS::s_pop_real", FuncConfig::NonPure{args:1, state_arg_idx: 0}),
+            ("ANONYMOUS::s_new_real", FuncConfig::Init{args: 0}),
+            ("ANONYMOUS::s_peek_real", FuncConfig::StateQuery{args:1, state_arg_idx: 0}),
+            ("ANONYMOUS::s_empty_real", FuncConfig::StateQuery{args:1, state_arg_idx: 0}),
+            ].into_iter())
+        .set_n_inputs(3)
+        .set_init_n_unknowns(10)
+        .set_init_hist_cap_padding(10)
+        .set_excluded_holes(
+            vec![
+                ExcludedHole::Position(16, -1),
+                ExcludedHole::Position(17, -1),
+                ExcludedHole::Position(18, -1),
+                ExcludedHole::Position(23, -1),
+                ExcludedHole::Position(24, -1),
+                ExcludedHole::Position(25, -1),
+                ExcludedHole::Position(30, -1),
+                ExcludedHole::Position(31, -1),
+                ExcludedHole::Position(32, -1),
+                ExcludedHole::Position(37, -1),
+                ExcludedHole::Position(38, -1),
+                ExcludedHole::Position(39, -1)
+            ].into_iter())
+        .set_enable_record(true)
+        .set_keep_tmp(log_level == LevelFilter::Trace)
+        .set_c_e_encoder_src_file(synthesis.as_path())
+        .set_generation_encoder_src_file(verification.as_path())
+        .set_c_e_names(
+            vec![
+                "i0_6_f_0",
+                "i1_7_10_0",
+                "i2_8_11_0"
+            ].into_iter())
+        .set_trace_timeout(1.0)
+        .build().ok_or("Config building failure")?;
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

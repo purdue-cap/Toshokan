@@ -93,6 +93,8 @@ pub struct CEGISState {
     func_hist_codes: HashMap<String, usize>,
     n_input: usize,
     n_unknowns: usize,
+    // Padding digits added to history array for synthesizer to ultilize
+    hist_cap_padding: usize,
     // States
     c_e_set: HashSet<Vec<isize>>,
     v_p_set: HashSet<Vec<isize>>,
@@ -134,6 +136,7 @@ impl CEGISState {
             func_config: func_config,
             n_input: n_input,
             n_unknowns: n_unknowns,
+            hist_cap_padding: n_unknowns,
             c_e_set: HashSet::new(),
             v_p_set: HashSet::new(),
             logs: vec![],
@@ -152,7 +155,7 @@ impl CEGISState {
             c_e_s: point_set_transpose(&self.c_e_set)?,
             holes: self.holes.clone(),
             verify_points: point_set_transpose(&self.v_p_set)?,
-            hist_cap: self.max_hist_length + self.n_unknowns,
+            hist_cap: self.max_hist_length + self.hist_cap_padding,
             func_hist_codes: self.func_hist_codes.clone()
         });
         Some(())
@@ -295,6 +298,10 @@ impl CEGISState {
     pub fn get_n_input(&self) -> usize {self.n_input}
 
     pub fn get_n_unknowns(&self) -> usize {self.n_unknowns}
+
+    pub fn get_hist_cap_padding(&self) ->usize {self.hist_cap_padding}
+
+    pub fn set_hist_cap_padding(&mut self, value: usize) {self.hist_cap_padding = value;}
 
     pub fn get_max_log_length(&self) -> usize {self.max_log_length}
 

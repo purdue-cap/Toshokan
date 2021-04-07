@@ -37,6 +37,7 @@ pub struct CEGISConfigParams {
     pub n_inputs: usize,
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
+    pub init_hist_cap_padding: usize,
     pub excluded_holes: HashSet<ExcludedHole>,
     pub enable_record: bool,
     pub keep_tmp: bool,
@@ -49,6 +50,32 @@ pub struct CEGISConfigParams {
     pub c_e_names: Vec<String>,
     pub trace_timeout: Option<f32>,
     pub empty_harness_call: bool
+}
+
+pub struct CEGISConfigBuilder {
+    sketch_fe_bin: Option<PathBuf>,
+    sketch_be_bin: Option<PathBuf>,
+    sketch_home: Option<PathBuf>,
+    impl_file: Option<PathBuf>,
+    harness_func_name: Option<String>,
+    func_config: Option<HashMap<String, FuncConfig>>,
+    hashcode_types: Option<HashSet<String>>,
+    n_inputs: Option<usize>,
+    v_p_config: Option<VerifyPointsConfig>,
+    init_n_unknowns: Option<usize>,
+    init_hist_cap_padding: Option<usize>,
+    excluded_holes: Option<HashSet<ExcludedHole>>,
+    enable_record: Option<bool>,
+    keep_tmp: Option<bool>,
+    retry_strategy_config: Option<RetryStrategyConfig>,
+    cand_encoder_src: Option<EncoderSource>,
+    input_tmp_file: Option<PathBuf>,
+    be_verify_flags: Option<Vec<OsString>>,
+    c_e_encoder_src: Option<EncoderSource>,
+    generation_encoder_src: Option<EncoderSource>,
+    c_e_names: Option<Vec<String>>,
+    trace_timeout: Option<f32>,
+    empty_harness_call: Option<bool>
 }
 
 impl CEGISConfigParams {
@@ -125,6 +152,7 @@ impl CEGISConfig {
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
+                init_hist_cap_padding: init_n_unknowns,
                 excluded_holes: excluded_holes.collect(),
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
@@ -146,7 +174,8 @@ impl CEGISConfig {
             sketch_fe_bin: P, sketch_be_bin: P, sketch_home: Option<P>, impl_file: P,
             func_config: &[(&str, FuncConfig)], hashcode_types: &[&str], harness_func_name: S,
             n_inputs: usize, v_p_config: VerifyPointsConfig,
-            init_n_unknowns: usize, excluded_holes: I,
+            init_n_unknowns: usize, init_hist_cap_padding: usize,
+            excluded_holes: I,
             enable_record: bool, keep_tmp: bool,
             synthesis_sk: P, verify_generation_sk: P, c_e_names: &[&str],
             trace_timeout: Option<f32>) -> Self {
@@ -164,6 +193,7 @@ impl CEGISConfig {
                 n_inputs: n_inputs,
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
+                init_hist_cap_padding: init_hist_cap_padding,
                 excluded_holes: excluded_holes.collect(),
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
@@ -240,4 +270,175 @@ impl CEGISConfig {
         Some(())
     }
 
+}
+
+impl CEGISConfigBuilder {
+    pub fn new() -> Self {
+        Self {
+            sketch_fe_bin: None,
+            sketch_be_bin: None,
+            sketch_home: None,
+            impl_file: None,
+            harness_func_name: None,
+            func_config: None,
+            hashcode_types: None,
+            n_inputs: None,
+            v_p_config: None,
+            init_n_unknowns: None,
+            init_hist_cap_padding: None,
+            excluded_holes: None,
+            enable_record: None,
+            keep_tmp: None,
+            retry_strategy_config: None,
+            cand_encoder_src: None,
+            input_tmp_file: None,
+            be_verify_flags: None,
+            c_e_encoder_src: None,
+            generation_encoder_src: None,
+            c_e_names: None,
+            trace_timeout: None,
+            empty_harness_call: None
+        }
+    }
+    pub fn set_sketch_fe_bin<P: AsRef<Path>>(mut self, sketch_fe_bin: P) -> Self {
+        self.sketch_fe_bin = Some(sketch_fe_bin.as_ref().to_path_buf());
+        self
+    }
+    pub fn set_sketch_be_bin<P: AsRef<Path>>(mut self, sketch_be_bin: P) -> Self {
+        self.sketch_be_bin = Some(sketch_be_bin.as_ref().to_path_buf());
+        self
+    }
+    pub fn set_sketch_home<P: AsRef<Path>>(mut self, sketch_home: Option<P>) -> Self {
+        self.sketch_home = sketch_home.map(|p| p.as_ref().to_path_buf());
+        self
+    }
+    pub fn set_impl_file<P: AsRef<Path>>(mut self, impl_file: P) -> Self {
+        self.impl_file = Some(impl_file.as_ref().to_path_buf());
+        self
+    }
+    pub fn set_harness_func_name<S: AsRef<str>>(mut self, harness_func_name: S) -> Self {
+        self.harness_func_name = Some(harness_func_name.as_ref().to_string());
+        self
+    }
+    pub fn set_pure_func_config<I: Iterator<Item=(&'static str, usize)>>(mut self, func_config: I) -> Self{
+        self.func_config = Some(func_config.map(|(name, args)|
+            (name.to_string(), FuncConfig::Pure{args: args})
+        ).collect());
+        self
+    }
+    pub fn set_func_config<I: Iterator<Item=(&'static str, FuncConfig)>>(mut self, func_config: I) -> Self {
+        self.func_config = Some(func_config.map(|(name, config)| 
+                    (name.to_string(), config)).collect());
+        self
+    }
+    pub fn set_hashcode_types<I: Iterator<Item=&'static str>>(mut self, hashcode_types: I) -> Self {
+        self.hashcode_types = Some(hashcode_types.map(|t| t.to_string()).collect());
+        self
+    }
+    pub fn set_n_inputs(mut self, n_inputs: usize) -> Self{
+        self.n_inputs = Some(n_inputs);
+        self
+    }
+    pub fn set_v_p_config(mut self, v_p_config: VerifyPointsConfig) -> Self{
+        self.v_p_config = Some(v_p_config);
+        self
+    }
+    pub fn set_init_n_unknowns(mut self, init_n_unknowns: usize) -> Self{
+        self.init_n_unknowns = Some(init_n_unknowns);
+        self
+    }
+    pub fn set_init_hist_cap_padding(mut self, init_hist_cap_padding: usize) -> Self{
+        self.init_hist_cap_padding = Some(init_hist_cap_padding);
+        self
+    }
+    pub fn set_excluded_holes<I: Iterator<Item=ExcludedHole>>(mut self, excluded_holes: I) ->Self{
+        self.excluded_holes = Some(excluded_holes.collect());
+        self
+    }
+    pub fn set_enable_record(mut self, enable_record: bool) -> Self{
+        self.enable_record = Some(enable_record);
+        self
+    }
+    pub fn set_keep_tmp(mut self, keep_tmp: bool) -> Self {
+        self.keep_tmp = Some(keep_tmp);
+        self
+    }
+    pub fn set_retry_strategy_config(mut self, retry_strategy_config: RetryStrategyConfig) -> Self{
+        self.retry_strategy_config = Some(retry_strategy_config);
+        self
+    }
+    pub fn set_cand_encoder_src(mut self, cand_encoder_src: EncoderSource) -> Self {
+        self.cand_encoder_src = Some(cand_encoder_src);
+        self
+    }
+    pub fn set_cand_encoder_src_file<P: AsRef<Path>>(mut self, cand_encoder_src: P) -> Self {
+        self.cand_encoder_src = Some(EncoderSource::LoadFromFile(cand_encoder_src.as_ref().to_path_buf()));
+        self
+    }
+    pub fn set_input_tmp_file<P: AsRef<Path>>(mut self, input_tmp_file: P) -> Self {
+        self.input_tmp_file = Some(input_tmp_file.as_ref().to_path_buf());
+        self
+    }
+    pub fn set_be_verify_flags<I: Iterator<Item=OsString>>(mut self, be_verify_flags: I) -> Self {
+        self.be_verify_flags = Some(be_verify_flags.collect());
+        self
+    }
+    pub fn set_c_e_encoder_src(mut self, c_e_encoder_src: EncoderSource) -> Self {
+        self.c_e_encoder_src = Some(c_e_encoder_src);
+        self
+    }
+    pub fn set_c_e_encoder_src_file<P: AsRef<Path>>(mut self, c_e_encoder_src: P) -> Self {
+        self.c_e_encoder_src = Some(EncoderSource::LoadFromFile(c_e_encoder_src.as_ref().to_path_buf()));
+        self
+    }
+    pub fn set_generation_encoder_src(mut self, generation_encoder_src: EncoderSource) -> Self {
+        self.generation_encoder_src = Some(generation_encoder_src);
+        self
+    }
+    pub fn set_generation_encoder_src_file<P: AsRef<Path>>(mut self, generation_encoder_src: P) -> Self {
+        self.generation_encoder_src = Some(EncoderSource::LoadFromFile(generation_encoder_src.as_ref().to_path_buf()));
+        self
+    }
+    pub fn set_c_e_names<I: Iterator<Item=&'static str>>(mut self, c_e_names: I) -> Self {
+        self.c_e_names = Some(c_e_names.map(|s| s.to_string()).collect());
+        self
+    }
+    pub fn set_trace_timeout(mut self, trace_timeout: f32) -> Self {
+        self.trace_timeout = Some(trace_timeout);
+        self
+    }
+    pub fn set_empty_harness_call(mut self, empty_harness_call: bool) -> Self {
+        self.empty_harness_call = Some(empty_harness_call);
+        self
+    }
+    pub fn build(self) -> Option<CEGISConfig> {
+        Some(CEGISConfig {
+            params: CEGISConfigParams {
+                sketch_be_bin: self.sketch_be_bin?,
+                sketch_fe_bin: self.sketch_fe_bin?,
+                sketch_home: self.sketch_home,
+                impl_file: self.impl_file?,
+                func_config: self.func_config?,
+                hashcode_types: self.hashcode_types.unwrap_or(HashSet::new()),
+                harness_func_name: self.harness_func_name.unwrap_or("main".to_string()),
+                n_inputs: self.n_inputs?,
+                v_p_config: self.v_p_config.unwrap_or(VerifyPointsConfig::NoSpec),
+                init_n_unknowns: self.init_n_unknowns?,
+                init_hist_cap_padding: self.init_hist_cap_padding.unwrap_or(self.init_n_unknowns?),
+                excluded_holes: self.excluded_holes.unwrap_or(HashSet::new()),
+                enable_record: self.enable_record.unwrap_or(false),
+                keep_tmp: self.keep_tmp.unwrap_or(false),
+                retry_strategy_config: self.retry_strategy_config.unwrap_or(RetryStrategyConfig::Simple(20)),
+                cand_encoder_src: self.cand_encoder_src.unwrap_or(EncoderSource::Rewrite),
+                input_tmp_file: self.input_tmp_file,
+                be_verify_flags: self.be_verify_flags,
+                c_e_encoder_src: self.c_e_encoder_src?,
+                generation_encoder_src: self.generation_encoder_src?,
+                c_e_names: self.c_e_names.unwrap_or(vec![]),
+                trace_timeout: self.trace_timeout,
+                empty_harness_call: self.empty_harness_call.unwrap_or(false)
+            },
+            input_tmp_path: None
+        })
+    }
 }

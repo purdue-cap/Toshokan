@@ -41,6 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         3,
         VerifyPointsConfig::NoSpec,
         10,
+        10,
         vec![
             ExcludedHole::Position(16, -1),
             ExcludedHole::Position(17, -1),

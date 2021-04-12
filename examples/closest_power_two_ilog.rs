@@ -1,5 +1,5 @@
 extern crate libpartlibspec;
-use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole};
+use libpartlibspec::cegis::{CEGISLoop, ExcludedHole, CEGISConfigBuilder, SketchConfig};
 use std::path::PathBuf;
 use simplelog::{SimpleLogger, LevelFilter, Config};
 use tempfile::Builder;
@@ -26,26 +26,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
         sketch_home = Some(PathBuf::from(env_path));
     }
-    let config = CEGISConfig::new(
-        sketch_fe_bin.as_path(),
-        sketch_be_bin.as_path(),
-        sketch_home.as_ref().map(|p| p.as_path()),
-        impl_file.as_path(),
-        &[("ANONYMOUS::log_real", 1)],
-        "closestTwoPower",
-        5,
-        VerifyPointsConfig::NoSpec,
-        10,
-        vec![
-            ExcludedHole::Position(6, -1),
-            ExcludedHole::Position(7, -1),
-            ].into_iter(),
-        true,
-        true,
-        log_level == LevelFilter::Trace,
-        synthesis.as_path(),
-        verification.as_path(),
-        &["a_0_5_5_0","a_1_6_6_0","a_2_7_7_0","a_3_8_8_0","a_4_9_9_0"], Some(5.0));
+    let mut sketch_config = SketchConfig {
+        bnd_inbits: Some(4),
+        bnd_inline_amnt: Some(2),
+        bnd_unroll_amnt: Some(16),
+        bnd_cbits: Some(3),
+        slv_nativeints: true,
+        ..Default::default()
+    };
+    if let Some(n_cpu) = std::env::var("SKETCH_N_CPU").ok().and_then(|s| s.parse::<usize>().ok()) {
+        sketch_config.slv_parallel = true;
+        sketch_config.slv_p_cpus = Some(n_cpu);
+    }
+    if let Some(randdegree) = std::env::var("SKETCH_RANDDEGREE").ok().and_then(|s| s.parse::<usize>().ok()) {
+        sketch_config.slv_randassign = true;
+        sketch_config.slv_randdegree = Some(randdegree);
+    }
+    let config = CEGISConfigBuilder::new()
+        .set_sketch_fe_bin(sketch_fe_bin.as_path())
+        .set_sketch_be_bin(sketch_be_bin.as_path())
+        .set_sketch_home(sketch_home.as_ref().map(|p| p.as_path()))
+        .set_impl_file(impl_file.as_path())
+        .set_pure_func_config(
+            vec![("ANONYMOUS::log_real", 1)].into_iter()
+        )
+        .set_harness_func_name("closestTwoPower")
+        .set_n_inputs(5)
+        .set_init_n_unknowns(10)
+        .set_excluded_holes(
+            vec![
+                ExcludedHole::Position(6, -1),
+                ExcludedHole::Position(7, -1)
+            ].into_iter())
+        .set_enable_record(true)
+        .set_keep_tmp(log_level == LevelFilter::Trace)
+        .set_c_e_encoder_src_file(synthesis.as_path())
+        .set_generation_encoder_src_file(verification.as_path())
+        .set_c_e_names(
+            vec![
+                "a_0_5_5_0","a_1_6_6_0","a_2_7_7_0","a_3_8_8_0","a_4_9_9_0"
+            ].into_iter())
+        .set_trace_timeout(5.0)
+        .set_synthesis_sketch_config(sketch_config)
+        .build().ok_or("Config building failure")?;
     let mut main_loop = CEGISLoop::new(config);
 
     println!("{}", main_loop.run_loop()?.or(Some("Unsolvable benchmark".to_string())).unwrap());

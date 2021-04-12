@@ -1,4 +1,4 @@
-pragma options "--bnd-inbits 3 --bnd-unroll-amnt 8 --bnd-cbits 3 ";
+pragma options "{{#each synthesis_sketch_options}}{{this}} {{/each}}";
 
 int cap = {{get-cap-logs (subtree logs "ANONYMOUS::sqrt_real") n_unknowns}};
 int sqrt_index(int i);

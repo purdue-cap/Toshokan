@@ -6,6 +6,8 @@ use std::iter::repeat;
 use serde_json::Value;
 use std::hash::{Hash, Hasher};
 use super::FuncConfig;
+use super::SketchConfig;
+use super::CEGISConfigParams;
 
 #[derive(Serialize)]
 pub struct CEGISStateParams {
@@ -15,7 +17,8 @@ pub struct CEGISStateParams {
     pub holes: HashMap<String, isize>,
     pub verify_points: Vec<Vec<isize>>,
     pub hist_cap: usize,
-    pub func_hist_codes: HashMap<String, usize>
+    pub func_hist_codes: HashMap<String, usize>,
+    pub synthesis_sketch_options: Vec<String>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -95,6 +98,8 @@ pub struct CEGISState {
     n_unknowns: usize,
     // Padding digits added to history array for synthesizer to ultilize
     hist_cap_padding: usize,
+    // Sketch Configurations
+    synthesis_sketch_config: SketchConfig,
     // States
     c_e_set: HashSet<Vec<isize>>,
     v_p_set: HashSet<Vec<isize>>,
@@ -125,7 +130,28 @@ fn point_set_transpose(point_set: &HashSet<Vec<isize>>) -> Option<Vec<Vec<isize>
 
 
 impl CEGISState {
-    pub fn new(func_config: Vec<(String, FuncConfig)>, n_input: usize, n_unknowns: usize) -> Self {
+    pub fn new(config_params: &CEGISConfigParams) -> Self {
+        CEGISState {
+            params: None,
+            log_map_cache: None,
+            max_hist_length: 0,
+            max_log_length: 0,
+            func_hist_codes: config_params.func_config.iter().enumerate().map(|(i, (name, _))| (name.clone(), i + 1)).collect(),
+            func_config_lookup: config_params.func_config.clone(),
+            func_config: config_params.func_config.iter().map(|(name, config)| (name.clone(), config.clone())).collect(),
+            n_input: config_params.n_inputs,
+            n_unknowns: config_params.init_n_unknowns,
+            hist_cap_padding: config_params.init_hist_cap_padding,
+            synthesis_sketch_config: config_params.synthesis_sketch_config.clone(),
+            c_e_set: HashSet::new(),
+            v_p_set: HashSet::new(),
+            logs: vec![],
+            holes: HashMap::new(),
+            iter_count: 0
+        }
+    }
+
+    pub fn from_simple_config(func_config: Vec<(String, FuncConfig)>, n_input: usize, n_unknowns: usize) -> Self {
         CEGISState {
             params: None,
             log_map_cache: None,
@@ -137,6 +163,7 @@ impl CEGISState {
             n_input: n_input,
             n_unknowns: n_unknowns,
             hist_cap_padding: n_unknowns,
+            synthesis_sketch_config: Default::default(),
             c_e_set: HashSet::new(),
             v_p_set: HashSet::new(),
             logs: vec![],
@@ -156,7 +183,8 @@ impl CEGISState {
             holes: self.holes.clone(),
             verify_points: point_set_transpose(&self.v_p_set)?,
             hist_cap: self.max_hist_length + self.hist_cap_padding,
-            func_hist_codes: self.func_hist_codes.clone()
+            func_hist_codes: self.func_hist_codes.clone(),
+            synthesis_sketch_options: self.synthesis_sketch_config.to_options()
         });
         Some(())
     }

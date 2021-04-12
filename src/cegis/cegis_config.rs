@@ -38,6 +38,7 @@ pub struct CEGISConfigParams {
     pub v_p_config: VerifyPointsConfig,
     pub init_n_unknowns: usize,
     pub init_hist_cap_padding: usize,
+    pub synthesis_sketch_config: SketchConfig,
     pub excluded_holes: HashSet<ExcludedHole>,
     pub enable_record: bool,
     pub keep_tmp: bool,
@@ -64,6 +65,7 @@ pub struct CEGISConfigBuilder {
     v_p_config: Option<VerifyPointsConfig>,
     init_n_unknowns: Option<usize>,
     init_hist_cap_padding: Option<usize>,
+    synthesis_sketch_config: Option<SketchConfig>,
     excluded_holes: Option<HashSet<ExcludedHole>>,
     enable_record: Option<bool>,
     keep_tmp: Option<bool>,
@@ -153,6 +155,7 @@ impl CEGISConfig {
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
                 init_hist_cap_padding: init_n_unknowns,
+                synthesis_sketch_config: Default::default(),
                 excluded_holes: excluded_holes.collect(),
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
@@ -194,6 +197,7 @@ impl CEGISConfig {
                 v_p_config: v_p_config,
                 init_n_unknowns: init_n_unknowns,
                 init_hist_cap_padding: init_hist_cap_padding,
+                synthesis_sketch_config: Default::default(),
                 excluded_holes: excluded_holes.collect(),
                 enable_record: enable_record,
                 keep_tmp: keep_tmp,
@@ -286,6 +290,7 @@ impl CEGISConfigBuilder {
             v_p_config: None,
             init_n_unknowns: None,
             init_hist_cap_padding: None,
+            synthesis_sketch_config: None,
             excluded_holes: None,
             enable_record: None,
             keep_tmp: None,
@@ -349,6 +354,10 @@ impl CEGISConfigBuilder {
     }
     pub fn set_init_hist_cap_padding(mut self, init_hist_cap_padding: usize) -> Self{
         self.init_hist_cap_padding = Some(init_hist_cap_padding);
+        self
+    }
+    pub fn set_synthesis_sketch_config(mut self, config: SketchConfig) -> Self{
+        self.synthesis_sketch_config = Some(config);
         self
     }
     pub fn set_excluded_holes<I: Iterator<Item=ExcludedHole>>(mut self, excluded_holes: I) ->Self{
@@ -425,6 +434,7 @@ impl CEGISConfigBuilder {
                 v_p_config: self.v_p_config.unwrap_or(VerifyPointsConfig::NoSpec),
                 init_n_unknowns: self.init_n_unknowns?,
                 init_hist_cap_padding: self.init_hist_cap_padding.unwrap_or(self.init_n_unknowns?),
+                synthesis_sketch_config: self.synthesis_sketch_config.unwrap_or(Default::default()),
                 excluded_holes: self.excluded_holes.unwrap_or(HashSet::new()),
                 enable_record: self.enable_record.unwrap_or(false),
                 keep_tmp: self.keep_tmp.unwrap_or(false),
@@ -440,5 +450,74 @@ impl CEGISConfigBuilder {
             },
             input_tmp_path: None
         })
+    }
+}
+
+#[derive(Clone)]
+pub struct SketchConfig {
+    pub bnd_inline_amnt: Option<usize>,
+    pub bnd_unroll_amnt: Option<usize>,
+    pub bnd_inbits: Option<usize>,
+    pub bnd_cbits: Option<usize>,
+    pub slv_nativeints: bool,
+    pub slv_parallel: bool,
+    pub slv_p_cpus: Option<usize>,
+    pub slv_randassign: bool,
+    pub slv_randdegree: Option<usize>,
+    pub extra_options: Vec<String>
+}
+
+impl SketchConfig {
+    pub fn to_options(&self) -> Vec<String> {
+        let mut options = Vec::new();
+
+        macro_rules! push_options {
+            ($name:ident, $cmdline:literal) => {
+                if let Some($name) = self.$name {
+                    options.push($cmdline.to_string());
+                    options.push($name.to_string())
+                }
+            };
+            (flag: $name:ident, $cmdline:literal) => {
+                if self.$name {
+                    options.push($cmdline.to_string());
+                }
+            };
+        }
+
+        push_options!(bnd_inline_amnt, "--bnd-inline-amnt");
+        push_options!(bnd_unroll_amnt, "--bnd-unroll-amnt");
+        push_options!(bnd_inbits, "--bnd-inbits"); 
+        push_options!(bnd_cbits, "--bnd-cbits");
+        push_options!(flag: slv_nativeints, "--slv-nativeints");
+        push_options!(flag: slv_parallel, "--slv-parallel");
+        push_options!(slv_p_cpus, "--slv-p-cpus");
+        push_options!(flag: slv_randassign, "--slv-randassign");
+        push_options!(slv_randdegree, "--slv-randdegree");
+        options.append(&mut self.extra_options.clone());
+        options
+    }
+}
+
+impl Default for SketchConfig{
+    fn default() -> Self {
+        SketchConfig {
+            bnd_inline_amnt: None,
+            bnd_unroll_amnt: None,
+            bnd_inbits: None,
+            bnd_cbits: None,
+            slv_nativeints: false,
+            slv_parallel: false,
+            slv_p_cpus: None,
+            slv_randassign: false,
+            slv_randdegree: None,
+            extra_options: vec![]
+        }
+    }
+}
+
+impl ToString for SketchConfig{
+    fn to_string(&self) -> String{
+        self.to_options().join(" ")
     }
 }

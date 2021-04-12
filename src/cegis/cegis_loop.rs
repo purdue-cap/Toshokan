@@ -62,14 +62,10 @@ impl<'r> CEGISLoop<'r> {
     pub fn new(config: CEGISConfig) -> Self{
         let mut hb = Handlebars::new();
         register_helpers(&mut hb);
-        let mut state = CEGISState::new(config.get_params().func_config.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            config.get_params().n_inputs,
-            config.get_params().init_n_unknowns);
-        state.set_hist_cap_padding(config.get_params().init_hist_cap_padding);
         CEGISLoop {
             hb: RefCell::new(hb),
+            state: CEGISState::new(config.get_params()),
             config: config,
-            state: state,
             recorder: None,
             work_dir: None,
             output_dir: None

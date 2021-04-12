@@ -10,6 +10,7 @@ pub use cegis_config::CEGISConfigBuilder;
 pub use cegis_config::VerifyPointsConfig;
 pub use cegis_config::ExcludedHole;
 pub use cegis_config::FuncConfig;
+pub use cegis_config::SketchConfig;
 mod cegis_loop;
 pub use cegis_loop::CEGISLoop;
 mod cegis_record;

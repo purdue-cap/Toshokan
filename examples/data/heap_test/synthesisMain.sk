@@ -1,4 +1,4 @@
-pragma options "--bnd-inline-amnt 4 --bnd-inbits 4 --bnd-cbits 3 --bnd-unroll-amnt 16";
+pragma options "{{#each synthesis_sketch_options}}{{this}} {{/each}}";
 int HEAP_SIZE=20;
 
 int HIST_CAP = {{ hist_cap }};

@@ -1,5 +1,5 @@
 extern crate libpartlibspec;
-use libpartlibspec::cegis::{CEGISLoop, ExcludedHole, FuncConfig, CEGISConfigBuilder};
+use libpartlibspec::cegis::{CEGISLoop, ExcludedHole, CEGISConfigBuilder, FuncConfig, SketchConfig};
 use std::path::PathBuf;
 use simplelog::{SimpleLogger, LevelFilter, Config};
 use tempfile::Builder;
@@ -25,6 +25,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sketch_home = None;
     if let Ok(env_path) = std::env::var("SKETCH_HOME") {
         sketch_home = Some(PathBuf::from(env_path));
+    }
+    let mut sketch_config = SketchConfig {
+        bnd_inline_amnt: Some(4),
+        bnd_inbits: Some(4),
+        bnd_unroll_amnt: Some(16),
+        bnd_cbits: Some(3),
+        ..Default::default()
+    };
+    if let Some(n_cpu) = std::env::var("SKETCH_N_CPU").ok().and_then(|s| s.parse::<usize>().ok()) {
+        sketch_config.slv_parallel = true;
+        sketch_config.slv_p_cpus = Some(n_cpu);
+    }
+    if let Some(randdegree) = std::env::var("SKETCH_RANDDEGREE").ok().and_then(|s| s.parse::<usize>().ok()) {
+        sketch_config.slv_randassign = true;
+        sketch_config.slv_randdegree = Some(randdegree);
     }
     let config = CEGISConfigBuilder::new()
         .set_sketch_fe_bin(sketch_fe_bin.as_path())
@@ -57,6 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "i_1_b_0"
             ].into_iter())
         .set_trace_timeout(5.0)
+        .set_synthesis_sketch_config(sketch_config)
         .build().ok_or("Config building failure")?;
     let mut main_loop = CEGISLoop::new(config);
 

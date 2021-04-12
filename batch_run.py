@@ -12,6 +12,7 @@ import time
 import errno
 import select
 import tempfile
+import yaml
 
 COMMAND="target/debug/examples/{}"
 DATA_MOD="extract_record"
@@ -33,12 +34,14 @@ def unlock_file(fd):
     fcntl.flock(fd, fcntl.LOCK_UN)
 
 
-def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event, running_sem, ignore_solved):
+def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_event, running_sem, ignore_solved, env={}):
     stdout_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stdout.".format(target), dir=".", delete=False)
     stderr_log = tempfile.NamedTemporaryFile(suffix=log_file_postfix, prefix="{}.stderr.".format(target), dir=".", delete=False)
     print("Running on {}".format(target))
 
-    process = subprocess.Popen(command.format(target), preexec_fn=lambda: os.setpgid(0, 0), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    full_env = os.environ.copy()
+    full_env = full_env.update(env)
+    process = subprocess.Popen(command.format(target), preexec_fn=lambda: os.setpgid(0, 0), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=full_env)
     begin_wall = time.time()
     elapsed = 0
     pollobj = select.epoll()
@@ -90,7 +93,7 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
         print("Timeouted with {} after {} seconds".format(target, elapsed))
         running_sem.release()
         return
-    if finish_event.is_set():
+    if finish_event is not None and finish_event.is_set():
         print("Terminated with {} after {} seconds due to a parallel process succeeding".format(target, elapsed))
         running_sem.release()
         return
@@ -98,7 +101,7 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
     print("Finished with {}".format(target))
     wall_time = time.time() - begin_wall
 
-    data_line, solved = func(target, rtn_code, stdout_log.name, stderr_log.name, wall_time)
+    data_line, solved = func(target, rtn_code, stdout_log.name, stderr_log.name, wall_time, env)
     data_fo = open(target + data_postfix, "a")
     lock_file(data_fo)
     data_fo.write(data_line + "\n")
@@ -110,7 +113,8 @@ def work(target, command, func, data_postfix, log_file_postfix, timeout, finish_
         if ignore_solved or solved:
             print("Setting completion flag")
             finish_event.set()
-    running_sem.release()
+    if running_sem is not None:
+        running_sem.release()
 
 # Kills every processes in the current session other than the current one
 def kill_all_other(kill_current_pg = False):
@@ -137,6 +141,7 @@ def main():
     parser = optparse.OptionParser("Usage: %prog [options] <target>")
     parser.add_option("-n", "--num_job", dest="num_jobs", default=1, type="int", help="Numbers of parallel jobs")
     parser.add_option("-r", "--repeat", dest="repeat", default=1, type="int", help="Repeat time of each job")
+    parser.add_option("-R", "--round_repeat", dest="round_repeat", default=False, action="store_true", help="Repeat each job num_job times, ignoring --repeat")
     parser.add_option("-F", "--fastest", dest="fastest", default=False, action="store_true", help="Return when we have results, yielding just the fastest results, ignores --repeat")
     parser.add_option("-t", "--timeout", dest="timeout", default=0, type="int", help="Timeout when waiting for result, in seconds")
     parser.add_option("-c", "--command", dest="command", default=COMMAND, type="string", help="Command to run, subsitute target with '{}'")
@@ -146,6 +151,7 @@ def main():
                     help="Data process function name. Expecting signature to be: func(target_name, stdout_file_path, stderr_file_path, wall_time) -> data(string)")
     parser.add_option("-D", "--data_postfix", dest="data_postfix", default=".data.csv", type="string", help="Data file postfix")
     parser.add_option("-S", "--ignore_solved", dest="ignore_solved", action="store_true", default=False, help="Ignores `solved` flag, terminating all jobs once a single job returned no matter the outcome.")
+    parser.add_option("-C", "--config", dest="config", action="store", default=None, help="YAML config for test running, ignores --num_job --fastest when present")
     (options, args) = parser.parse_args()
 
     pid = os.fork()
@@ -164,6 +170,26 @@ def main():
 
     try:
         process_func = getattr(__import__(options.data_process_module), options.data_process_func)
+
+        if options.config:
+            with open(options.config) as f:
+                conf = yaml.load(f, Loader=yaml.CLoader)
+            workers = conf["workers"]
+            mode = conf.get("mode")
+            if mode == "fastest":
+                options.fastest = True
+            elif mode == "queue":
+                options.fastest = False
+            elif mode == None:
+                pass
+            else:
+                raise Exception("Unknown mode")
+        else:
+            workers = [{"env":{}, "num":options.num_jobs}]
+        total_workers = []
+        for w in workers:
+            total_workers += [w] * w["num"]
+        options.num_jobs = len(total_workers)
         if options.fastest:
             finish_event = Event()
             for job in args:
@@ -171,8 +197,8 @@ def main():
                 finish_event.clear()
                 running_sem = Semaphore(0)
                 pool = ThreadPool(options.num_jobs)
-                for _ in range(options.num_jobs):
-                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event, running_sem, options.ignore_solved))
+                for worker_config in total_workers:
+                    pool.apply_async(work, (job, options.command, process_func, options.data_postfix, options.log_file_postfix, 0, finish_event, running_sem, options.ignore_solved, worker_config["env"]))
                 print("Waiting for one thread to finish")
                 timeout = None if options.timeout <= 0 else options.timeout
                 for _ in range(options.num_jobs):
@@ -188,10 +214,13 @@ def main():
                 kill_all_other()
                 pool.join()
         else:
-            jobs = args * options.repeat
+            if options.round_repeat:
+                options.repeat = options.num_jobs
+            jobs = [each_job for job in args for each_job in [job]*options.repeat ]
             pool = ThreadPool(options.num_jobs)
-            for j in jobs:
-                pool.apply_async(work, (j, options.command, process_func, options.data_postfix, options.log_file_postfix, options.timeout, None))
+            for i, j in enumerate(jobs):
+                worker_config = total_workers[i%len(total_workers)]
+                pool.apply_async(work, (j, options.command, process_func, options.data_postfix, options.log_file_postfix, options.timeout, None, None, options.ignore_solved, worker_config["env"]))
             pool.close()
             pool.join()
     finally:

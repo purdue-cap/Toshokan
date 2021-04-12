@@ -1,0 +1,6 @@
+workers:
+  - num: 14
+    env: {}
+  - num: 4
+    env:
+      SKETCH_N_CPU: 4

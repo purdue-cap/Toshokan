@@ -119,7 +119,7 @@ Node* build_huffman_tree(Heap* h) {
             left->left = NULL;
             left->right = NULL;
         } else {
-            left = nodes[et_l.key%100];
+            left = nodes[et_l.value%100];
         }
         Entry et_r = heap_pop_min(h);
         Node* right;
@@ -130,7 +130,7 @@ Node* build_huffman_tree(Heap* h) {
             right->left = NULL;
             right->right = NULL;
         } else {
-            right = nodes[et_r.key%100];
+            right = nodes[et_r.value%100];
         }
         Node* parent = (Node*)malloc(sizeof(Node));
         parent->key = et_l.key + et_r.key;
@@ -141,12 +141,13 @@ Node* build_huffman_tree(Heap* h) {
         node_count++;
         heap_insert(h, parent->key, parent->value);
     }
-    return nodes[heap_pop_min(h).key%100];
+    return nodes[heap_pop_min(h).value%100];
 }
 
 void get_huffman_code(Node* node, int current, int* result) {
     if (node->value < 100) {
         result[node->value] = current;
+        return;
     }
     get_huffman_code(node->left, current*2, result);
     get_huffman_code(node->right, current*2+1, result);

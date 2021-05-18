@@ -13,14 +13,20 @@ path = "src/lib.rs"
 name = "partlibspec-bin"
 path = "src/main.rs"
 
+[[bin]]
+name = "predgenerator"
+path = "src/predgenerator.rs"
+
 [dependencies]
 clang = ">=0.23.0"
+clap = "3.0.0-beta.2"
 pest = ">=2.1.2"
 pest_derive = ">=2.1.0"
 tempfile = ">=3.1.0"
 handlebars = ">=3.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "=1.0"
+serde_yaml = "0.8"
 quick-error = "=1.2.3"
 quick-xml = "0.18.1"
 regex = "1"

@@ -1,0 +1,11 @@
+start_symbol: Start
+content:
+  Start:
+    - [A, B]
+    - [B, A]
+  A:
+    - ["a\n"]
+    - [a, A]
+  B:
+    - [b]
+    - [b, A]

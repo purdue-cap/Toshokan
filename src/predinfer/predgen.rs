@@ -1,12 +1,19 @@
 use std::collections::{HashMap, HashSet};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct GrammarInput {
+    pub content: HashMap<String, HashSet<Vec<String>>>,
+    pub start_symbol: String,
+}
 
 pub struct Grammar {
     content: HashMap<String, HashSet<Vec<String>>>,
+    start_symbol: String,
     terminals: HashSet<String>,
-    non_terminals: HashSet<String>,
-    start_symbol: String
+    non_terminals: HashSet<String>
 }
 
 #[derive(Debug)]
@@ -30,6 +37,11 @@ impl Grammar {
             start_symbol: start
         }
     }
+
+    pub fn from_input(input: GrammarInput) -> Self{
+        Self::from_content(input.content, input.start_symbol)
+    }
+
 
     pub fn get_terminals(&self) -> &HashSet<String> {
         &self.terminals
@@ -64,8 +76,22 @@ impl Node {
         if self.children.is_empty() {
             self.data.as_ref().unwrap_or(&"".to_string()).clone()
         } else {
-            self.children.iter().map(|child| child.to_string())
-                .collect::<Vec<String>>().join(" ")
+            let mut formatted = self.children.iter().map(|child| {
+                let child_string = child.to_string();
+                if let Some(last_char) = child_string.chars().last() {
+                    if last_char.is_whitespace() {
+                        return child_string;
+                    }
+                }
+                format!("{} ", child_string)
+            })
+                .collect::<Vec<String>>().join("");
+            if let Some(last_char) = formatted.chars().last() {
+                if last_char == ' ' {
+                    formatted.pop();
+                }
+            }
+            formatted
         }
     }
 }
@@ -134,6 +160,28 @@ mod tests {
         let grammar = Grammar::from_content(get_content(), "A".to_string());
         assert_eq!(grammar.get_terminals(), &vec!["a".to_string(), "b".to_string(), "c".to_string()].into_iter().collect::<HashSet<_>>());
         assert_eq!(grammar.get_non_terminals(), &vec!["A".to_string(), "B".to_string()].into_iter().collect::<HashSet<_>>());
+        Ok(())
+    }
+
+    static GRAMMAR_STR: &'static str =
+r#"start_symbol: Start
+content:
+  Start:
+    - [A, B]
+    - [B, A]
+  A:
+    - [a]
+    - [a, A]
+  B:
+    - [b]
+    - [b, A]
+"#;
+
+    #[test]
+    fn grammar_from_yaml() -> Result<(), Box<dyn Error>> {
+        let grammar = Grammar::from_input(serde_yaml::from_str(GRAMMAR_STR)?);
+        assert_eq!(grammar.get_terminals(), &vec!["a".to_string(), "b".to_string()].into_iter().collect::<HashSet<_>>());
+        assert_eq!(grammar.get_non_terminals(), &vec!["Start".to_string(), "A".to_string(), "B".to_string()].into_iter().collect::<HashSet<_>>());
         Ok(())
     }
 

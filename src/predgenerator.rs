@@ -21,6 +21,7 @@ enum PGSubCmd {
 }
 
 #[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
 struct PGRandom {
     #[clap(short, long, about="Max height of AST to be generated")]
     height: usize,

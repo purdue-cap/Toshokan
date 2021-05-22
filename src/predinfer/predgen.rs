@@ -1,7 +1,8 @@
 use std::collections::{HashMap, HashSet};
 use rand::seq::SliceRandom;
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 use serde::Deserialize;
+use itertools::Itertools;
 
 #[derive(Deserialize)]
 pub struct GrammarInput {
@@ -16,14 +17,15 @@ pub struct Grammar {
     non_terminals: HashSet<String>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Node {
     pub data: Option<String>,
     pub children: Vec<Node>
 }
 
 pub struct PredGenerator<'g> {
-    grammar: &'g Grammar
+    grammar: &'g Grammar,
+    cache: HashMap<(String, usize), Vec<Node>>
 }
 
 impl Grammar {
@@ -99,7 +101,8 @@ impl Node {
 impl<'g> PredGenerator<'g> {
     pub fn new(grammar: &'g Grammar) -> Self {
         Self {
-            grammar: grammar
+            grammar: grammar,
+            cache: HashMap::new()
         }
     }
 
@@ -108,15 +111,30 @@ impl<'g> PredGenerator<'g> {
         if height > 0 {
             let prods = self.grammar.get_non_terminating_productions(symbol.as_ref());
             let prod = prods.choose(&mut rng)?;
+            let non_terminal_indexes = prod.iter()
+                .map(|target| self.grammar.get_non_terminals().contains(target))
+                .enumerate()
+                .filter(|(_idx, is_non_terminal)| *is_non_terminal)
+                .map(|(idx, _is_non_terminal)| idx)
+                .collect::<Vec<_>>();
+            let ensured_height_child = *non_terminal_indexes.choose(&mut rng)?;
+            let mut children = Vec::new();
+            for (i, target) in prod.iter().enumerate() {
+                let child = if i == ensured_height_child {
+                    assert!(self.grammar.get_non_terminals().contains(target));
+                    self.generate_random_ast_for_symbol(height - 1, target)?
+                } else {
+                    if self.grammar.get_terminals().contains(target) {
+                        Node {data:Some(target.clone()), children:vec![]}
+                    } else {
+                        self.generate_random_ast_for_symbol(rng.gen_range(0, height), target)?
+                    }
+                };
+                children.push(child);
+            }
             Some(Node {
                 data: None,
-                children: prod.iter().map(|target| {
-                    if self.grammar.get_terminals().contains(target) {
-                        Some(Node {data:Some(target.clone()), children:vec![]})
-                    } else {
-                        self.generate_random_ast_for_symbol(height - 1, target)
-                    }
-                }).collect::<Option<Vec<_>>>()?
+                children: children
             })
         } else {
             let prods = self.grammar.get_terminating_productions(symbol.as_ref());
@@ -130,6 +148,53 @@ impl<'g> PredGenerator<'g> {
 
     pub fn generate_random_full_ast(&self, height: usize) -> Option<Node> {
         self.generate_random_ast_for_symbol(height, self.grammar.get_start_symbol())
+    }
+
+    fn cache_all_ast_for_symbol<S: AsRef<str>>(&mut self, max_height: usize, symbol: S){
+        let query_tuple = (symbol.as_ref().to_string(), max_height);
+        if self.cache.contains_key(&query_tuple) {
+            return;
+        }
+        let mut asts = Vec::new();
+        if max_height > 0 {
+            let prods = self.grammar.get_non_terminating_productions(symbol.as_ref());
+            for prod in prods { 
+                let mut children_span : Vec<HashSet<Node>> = Vec::new();
+                for target in prod {
+                    if self.grammar.get_terminals().contains(target) {
+                        children_span.push(vec![Node{data: Some(target.clone()), children:vec![]}].into_iter().collect());
+                    } else {
+                        let all_span = (0..max_height).map(|height| {
+                            self.cache_all_ast_for_symbol(height, target.as_str());
+                            self.cache.get(&((*target).clone(), height)).expect("Should have ensured cache").clone()
+                        }).flatten().collect();
+                        children_span.push(all_span);
+                    }
+                }
+                let mut ast_for_this_prod = children_span.into_iter()
+                    .map(|set| set.into_iter().collect::<Vec<_>>())
+                    .multi_cartesian_product()
+                    .map(|children|
+                    Node{data:None, children:children}
+                ).collect();
+                asts.append(&mut ast_for_this_prod);
+            }
+        } else {
+            let prods = self.grammar.get_terminating_productions(symbol.as_ref());
+            asts = prods.into_iter().map(|prod|
+                Node {data: None, children: prod.iter().cloned().map(|data| Node{data: Some(data), children:vec![]}).collect()})
+                .collect();
+        }
+        self.cache.insert(query_tuple, asts);
+    }
+
+    pub fn generate_all_ast_for_symbol<S: AsRef<str>>(&mut self, max_height: usize, symbol: S) -> Vec<Node> {
+        self.cache_all_ast_for_symbol(max_height, symbol.as_ref());
+        self.cache.get(&(symbol.as_ref().to_string(), max_height)).expect("Should have ensured cache").clone()
+    }
+
+    pub fn generate_all_ast(&mut self, max_height: usize) -> Vec<Node> {
+        self.generate_all_ast_for_symbol(max_height, self.grammar.get_start_symbol())
     }
 }
 
@@ -204,6 +269,17 @@ content:
         println!("{}", gen.generate_random_full_ast(4).ok_or("Generation Failure")?.to_string());
         println!("{}", gen.generate_random_full_ast(3).ok_or("Generation Failure")?.to_string());
         println!("{}", gen.generate_random_full_ast(2).ok_or("Generation Failure")?.to_string());
+        Ok(())
+    }
+    #[test]
+
+    fn all_gen_asts() -> Result<(), Box<dyn Error>> {
+        let grammar = Grammar::from_input(serde_yaml::from_str(GRAMMAR_STR)?);
+        let mut gen = PredGenerator::new(&grammar);
+        println!("{:?}", gen.generate_all_ast(5).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast(4).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast(3).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast(2).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
         Ok(())
     }
 }

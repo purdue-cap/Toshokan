@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, seq::IteratorRandom};
 use serde::Deserialize;
 use itertools::Itertools;
 
@@ -96,6 +96,30 @@ impl Node {
             formatted
         }
     }
+    pub fn get_height(&self) -> usize {
+        if self.children.is_empty() {
+            0
+        } else {
+            1 + self.children.iter().map(|child| child.get_height()).max().expect("Children should not be empty")
+        }
+    }
+
+}
+
+fn random_try_range<'a, T, F, R>(set: &'a mut HashSet<T>, mut func: F) -> Option<R>
+    where F : FnMut(&T) -> Option<R>,
+        T: std::cmp::Eq + std::hash::Hash + Clone
+    {
+    let mut rng = thread_rng();
+    while !set.is_empty() {
+        let choice = set.iter().choose(&mut rng).expect("Set should not be empty").clone();
+        if let Some(result) = func(&choice) {
+            return Some(result);
+        } else {
+            set.remove(&choice);
+        }
+    }
+    None
 }
 
 impl<'g> PredGenerator<'g> {
@@ -108,41 +132,73 @@ impl<'g> PredGenerator<'g> {
 
     pub fn generate_random_ast_for_symbol<S: AsRef<str>>(&self, height: usize, symbol: S) -> Option<Node> {
         let mut rng = thread_rng();
-        if height > 0 {
-            let prods = self.grammar.get_non_terminating_productions(symbol.as_ref());
-            let prod = prods.choose(&mut rng)?;
-            let non_terminal_indexes = prod.iter()
-                .map(|target| self.grammar.get_non_terminals().contains(target))
-                .enumerate()
-                .filter(|(_idx, is_non_terminal)| *is_non_terminal)
-                .map(|(idx, _is_non_terminal)| idx)
-                .collect::<Vec<_>>();
-            let ensured_height_child = *non_terminal_indexes.choose(&mut rng)?;
-            let mut children = Vec::new();
-            for (i, target) in prod.iter().enumerate() {
-                let child = if i == ensured_height_child {
-                    assert!(self.grammar.get_non_terminals().contains(target));
-                    self.generate_random_ast_for_symbol(height - 1, target)?
-                } else {
-                    if self.grammar.get_terminals().contains(target) {
-                        Node {data:Some(target.clone()), children:vec![]}
+        if height > 1 {
+            let mut prods : HashSet<_> = self.grammar.get_non_terminating_productions(symbol.as_ref()).into_iter().collect();
+            loop {
+                let prod = *prods.iter().choose(&mut rng)?;
+                let mut non_terminal_indexes = prod.iter()
+                    .map(|target| self.grammar.get_non_terminals().contains(target))
+                    .enumerate()
+                    .filter(|(_idx, is_non_terminal)| *is_non_terminal)
+                    .map(|(idx, _is_non_terminal)| idx)
+                    .collect::<HashSet<_>>();
+                let children_result = 'children: loop {
+                    if let Some(ensured_height_child) = non_terminal_indexes.iter().choose(&mut rng).map(|v| *v){
+                        let mut children = Vec::new();
+                        for (i, target) in prod.iter().enumerate() {
+                            let child_result = if i == ensured_height_child {
+                                assert!(self.grammar.get_non_terminals().contains(target));
+                                self.generate_random_ast_for_symbol(height - 1, target)
+                            } else {
+                                let mut possible_height : HashSet<usize> = (0..height).collect();
+                                loop {
+                                    if let Some(chosen_height) = possible_height.iter().choose(&mut rng).map(|v| *v) {
+                                        let result = self.generate_random_ast_for_symbol(chosen_height, target);
+                                        if let Some(generated) = result {
+                                            break Some(generated);
+                                        } else {
+                                            possible_height.remove(&chosen_height);
+                                        }
+                                    } else {
+                                        break None;
+                                    }
+                                }
+                            };
+                            if let Some(child) = child_result {
+                                children.push(child);
+                            } else {
+                                non_terminal_indexes.remove(&ensured_height_child);
+                                continue 'children;
+                            }
+                        }
+                        break Some(children);
                     } else {
-                        self.generate_random_ast_for_symbol(rng.gen_range(0, height), target)?
+                        break None;
                     }
                 };
-                children.push(child);
+                if let Some(children) = children_result {
+                    break Some(Node {
+                        data: None,
+                        children: children
+                    });
+                } else {
+                    prods.remove(prod);
+                }
             }
-            Some(Node {
-                data: None,
-                children: children
-            })
-        } else {
+        } else if height == 1 {
             let prods = self.grammar.get_terminating_productions(symbol.as_ref());
             let prod = prods.choose(&mut rng)?;
             Some(Node {
                 data: None,
                 children: prod.iter().cloned().map(|data| Node{data:Some(data), children:vec![]}).collect()
             })
+        } else if self.grammar.get_terminals().contains(symbol.as_ref()) {
+            Some(Node {
+                data: Some(symbol.as_ref().to_string()),
+                children: vec![]
+            })
+        } else {
+            None
         }
     }
 
@@ -156,20 +212,16 @@ impl<'g> PredGenerator<'g> {
             return;
         }
         let mut asts = Vec::new();
-        if max_height > 0 {
+        if max_height > 1 {
             let prods = self.grammar.get_non_terminating_productions(symbol.as_ref());
             for prod in prods { 
                 let mut children_span : Vec<HashSet<Node>> = Vec::new();
                 for target in prod {
-                    if self.grammar.get_terminals().contains(target) {
-                        children_span.push(vec![Node{data: Some(target.clone()), children:vec![]}].into_iter().collect());
-                    } else {
-                        let all_span = (0..max_height).map(|height| {
-                            self.cache_all_ast_for_symbol(height, target.as_str());
-                            self.cache.get(&((*target).clone(), height)).expect("Should have ensured cache").clone()
-                        }).flatten().collect();
-                        children_span.push(all_span);
-                    }
+                    let all_span = (0..max_height).map(|height| {
+                        self.cache_all_ast_for_symbol(height, target.as_str());
+                        self.cache.get(&((*target).clone(), height)).expect("Should have ensured cache").clone()
+                    }).flatten().collect();
+                    children_span.push(all_span);
                 }
                 let mut ast_for_this_prod = children_span.into_iter()
                     .map(|set| set.into_iter().collect::<Vec<_>>())
@@ -179,11 +231,16 @@ impl<'g> PredGenerator<'g> {
                 ).collect();
                 asts.append(&mut ast_for_this_prod);
             }
-        } else {
+        } else if max_height == 1{
             let prods = self.grammar.get_terminating_productions(symbol.as_ref());
             asts = prods.into_iter().map(|prod|
                 Node {data: None, children: prod.iter().cloned().map(|data| Node{data: Some(data), children:vec![]}).collect()})
                 .collect();
+        } else if self.grammar.get_terminals().contains(symbol.as_ref()) {
+            asts.push(Node{
+                data: Some(symbol.as_ref().to_string()),
+                children: vec![]
+            });
         }
         self.cache.insert(query_tuple, asts);
     }

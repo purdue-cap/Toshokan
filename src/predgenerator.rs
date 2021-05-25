@@ -10,6 +10,8 @@ use rand::Rng;
 struct PGConfig {
     #[clap(about="Grammar file to read grammar from")]
     grammar: String,
+    #[clap(short, long, about="Suppress stderr messages")]
+    quiet: bool,
     #[clap(subcommand)]
     subcmd: PGSubCmd,
 }
@@ -30,7 +32,9 @@ struct PGRandom {
     #[clap(short, long, about="Number of AST to be generated")]
     number: usize,
     #[clap(short, long, about="Generate all ASTs at max height")]
-    fixed: bool
+    fixed: bool,
+    #[clap(short, long, about="Retry after failure, until number of ASTs are successfully generated")]
+    retry: bool
 
 }
 
@@ -51,15 +55,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let gen = predgen::PredGenerator::new(&grammar);
     match config.subcmd {
         PGSubCmd::Random(ref random_config) => {
-            for _ in 0..random_config.number {
+            let mut i = 0;
+            while i < random_config.number {
                 match generate_random_ast(&gen, random_config) {
                     Ok(ast) => {
+                        if !config.quiet {
+                            eprintln!("Height {}:", ast.get_height());
+                        }
                         println!("{}", ast.to_string());
                     },
                     Err(error_height) => {
-                        eprintln!("Generation Failure at height {}", error_height);
+                        if !config.quiet {
+                            eprintln!("Generation Failure at height {}", error_height);
+                        }
+                        if random_config.retry {
+                            continue;
+                        }
                     }
                 }
+                i += 1;
             }
         }
     };

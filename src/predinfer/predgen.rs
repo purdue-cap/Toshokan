@@ -106,6 +106,9 @@ impl Node {
 
 }
 
+// Randomly tries everything in set by calling closure func
+// Returns Some(result) if func returns Some(result)
+// Returns None if everything in set failed
 fn random_try_range<'a, T, F, R>(set: &'a mut HashSet<T>, mut func: F) -> Option<R>
     where F : FnMut(&T) -> Option<R>,
         T: std::cmp::Eq + std::hash::Hash + Clone
@@ -134,57 +137,34 @@ impl<'g> PredGenerator<'g> {
         let mut rng = thread_rng();
         if height > 1 {
             let mut prods : HashSet<_> = self.grammar.get_non_terminating_productions(symbol.as_ref()).into_iter().collect();
-            loop {
-                let prod = *prods.iter().choose(&mut rng)?;
+            random_try_range(&mut prods, |prod| {
                 let mut non_terminal_indexes = prod.iter()
                     .map(|target| self.grammar.get_non_terminals().contains(target))
                     .enumerate()
                     .filter(|(_idx, is_non_terminal)| *is_non_terminal)
                     .map(|(idx, _is_non_terminal)| idx)
                     .collect::<HashSet<_>>();
-                let children_result = 'children: loop {
-                    if let Some(ensured_height_child) = non_terminal_indexes.iter().choose(&mut rng).map(|v| *v){
-                        let mut children = Vec::new();
-                        for (i, target) in prod.iter().enumerate() {
-                            let child_result = if i == ensured_height_child {
-                                assert!(self.grammar.get_non_terminals().contains(target));
-                                self.generate_random_ast_for_symbol(height - 1, target)
-                            } else {
-                                let mut possible_height : HashSet<usize> = (0..height).collect();
-                                loop {
-                                    if let Some(chosen_height) = possible_height.iter().choose(&mut rng).map(|v| *v) {
-                                        let result = self.generate_random_ast_for_symbol(chosen_height, target);
-                                        if let Some(generated) = result {
-                                            break Some(generated);
-                                        } else {
-                                            possible_height.remove(&chosen_height);
-                                        }
-                                    } else {
-                                        break None;
-                                    }
-                                }
-                            };
-                            if let Some(child) = child_result {
-                                children.push(child);
-                            } else {
-                                non_terminal_indexes.remove(&ensured_height_child);
-                                continue 'children;
-                            }
-                        }
-                        break Some(children);
-                    } else {
-                        break None;
+                let children = random_try_range(&mut non_terminal_indexes, |ensured_height_child|{
+                    let mut children = Vec::new();
+                    for (i, target) in prod.iter().enumerate() {
+                        let child = if i == *ensured_height_child {
+                            assert!(self.grammar.get_non_terminals().contains(target));
+                            self.generate_random_ast_for_symbol(height - 1, target)?
+                        } else {
+                            let mut possible_height : HashSet<usize> = (0..height).collect();
+                            random_try_range(&mut possible_height, |chosen_height| {
+                                self.generate_random_ast_for_symbol(*chosen_height, target)
+                            })?
+                        };
+                        children.push(child);
                     }
-                };
-                if let Some(children) = children_result {
-                    break Some(Node {
-                        data: None,
-                        children: children
-                    });
-                } else {
-                    prods.remove(prod);
-                }
-            }
+                    Some(children)
+                })?;
+                Some(Node {
+                    data: None,
+                    children: children
+                })
+            })
         } else if height == 1 {
             let prods = self.grammar.get_terminating_productions(symbol.as_ref());
             let prod = prods.choose(&mut rng)?;

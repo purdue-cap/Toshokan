@@ -19,7 +19,9 @@ struct PGConfig {
 #[derive(Clap)]
 enum PGSubCmd {
     #[clap(about="Randomly generate ASTs")]
-    Random(PGRandom)
+    Random(PGRandom),
+    #[clap(about="Generate all ASTs")]
+    Genall(PGGenall)
 }
 
 #[derive(Clap)]
@@ -38,6 +40,13 @@ struct PGRandom {
 
 }
 
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct PGGenall {
+    #[clap(short, long, about="Max height of AST to be generated")]
+    max_height: usize
+}
+
 fn generate_random_ast(gen: &predgen::PredGenerator, random_config: &PGRandom) -> Result<predgen::Node, usize> {
     let height = if random_config.fixed {
         random_config.height
@@ -48,11 +57,16 @@ fn generate_random_ast(gen: &predgen::PredGenerator, random_config: &PGRandom) -
     gen.generate_random_full_ast(height).ok_or(height)
 }
 
+fn generate_all_ast(gen: &mut predgen::PredGenerator, genall_config: &PGGenall) -> Vec<predgen::Node> { 
+    gen.generate_all_ast(genall_config.max_height)
+}
+
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = PGConfig::parse();
     let grammar_content = fs::read_to_string(&config.grammar)?;
     let grammar = predgen::Grammar::from_input(serde_yaml::from_str(grammar_content.as_str())?);
-    let gen = predgen::PredGenerator::new(&grammar);
+    let mut gen = predgen::PredGenerator::new(&grammar);
     match config.subcmd {
         PGSubCmd::Random(ref random_config) => {
             let mut i = 0;
@@ -75,6 +89,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 i += 1;
             }
+        }
+        PGSubCmd::Genall(ref genall_config) => {
+            let ast = generate_all_ast(&mut gen, genall_config);
+            let ast_p = ast.into_iter().map(|node| node.to_string()).collect::<Vec<_>>();
+            for i in &ast_p{
+                println!("{}",i);  
+            }
+                 
         }
     };
     Ok(())

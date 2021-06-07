@@ -8,11 +8,13 @@ use itertools::Itertools;
 pub struct GrammarInput {
     pub content: HashMap<String, HashSet<Vec<String>>>,
     pub start_symbol: String,
+    pub height_limit: HashMap<String, usize>,
 }
 
 pub struct Grammar {
     content: HashMap<String, HashSet<Vec<String>>>,
     start_symbol: String,
+    height_limit: HashMap<String, usize>,
     terminals: HashSet<String>,
     non_terminals: HashSet<String>
 }
@@ -29,19 +31,22 @@ pub struct PredGenerator<'g> {
 }
 
 impl Grammar {
-    pub fn from_content(content: HashMap<String, HashSet<Vec<String>>>, start: String) -> Self {
+    pub fn from_content(content: HashMap<String, HashSet<Vec<String>>>, start: String,height_limit: HashMap<String, usize>) -> Self {
+        
         let non_terminals : HashSet<&String> = content.keys().collect();
         let all_rh_symbols : HashSet<&String> = content.values().flatten().flatten().collect();
         Self {
             terminals: all_rh_symbols.difference(&non_terminals).cloned().cloned().collect(),
             non_terminals: non_terminals.into_iter().cloned().collect(),
             content: content,
-            start_symbol: start
+            start_symbol: start,
+            height_limit: height_limit
         }
     }
 
     pub fn from_input(input: GrammarInput) -> Self{
-        Self::from_content(input.content, input.start_symbol)
+        Self::from_content(input.content, input.start_symbol,input.height_limit)
+      
     }
 
 
@@ -133,8 +138,13 @@ impl<'g> PredGenerator<'g> {
         }
     }
 
-    pub fn generate_random_ast_for_symbol<S: AsRef<str>>(&self, height: usize, symbol: S) -> Option<Node> {
+    pub fn generate_random_ast_for_symbol<S: AsRef<str>>(&self, mut height: usize, symbol: S) -> Option<Node> {
         let mut rng = thread_rng();
+        if self.grammar.height_limit.contains_key(symbol.as_ref()){
+            if self.grammar.height_limit.get(symbol.as_ref()).unwrap().clone() < height {
+                height = self.grammar.height_limit.get(symbol.as_ref()).unwrap().clone();
+            }
+        }
         if height > 1 {
             let mut prods : HashSet<_> = self.grammar.get_non_terminating_productions(symbol.as_ref()).into_iter().collect();
             random_try_range(&mut prods, |prod| {
@@ -234,7 +244,7 @@ impl<'g> PredGenerator<'g> {
         self.generate_all_ast_for_symbol(max_height, self.grammar.get_start_symbol())
     }
 }
-
+/*
 #[cfg(test)]
 mod tests {
     use super::Grammar;
@@ -320,3 +330,4 @@ content:
         Ok(())
     }
 }
+*/

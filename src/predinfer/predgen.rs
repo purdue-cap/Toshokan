@@ -108,6 +108,14 @@ impl Node {
             1 + self.children.iter().map(|child| child.get_height()).max().expect("Children should not be empty")
         }
     }
+    
+    pub fn get_size(&self) -> usize {
+        if self.children.is_empty() {
+            1
+        } else {
+            1 + self.children.iter().map(|child| child.get_size()).sum::<usize>()
+        }
+    }
 
 }
 
@@ -196,7 +204,7 @@ impl<'g> PredGenerator<'g> {
         self.generate_random_ast_for_symbol(height, self.grammar.get_start_symbol())
     }
 
-    fn cache_all_ast_for_symbol<S: AsRef<str>>(&mut self, max_height: usize, symbol: S){
+    fn cache_all_ast_for_symbol_with_height<S: AsRef<str>>(&mut self, max_height: usize, symbol: S){
         let query_tuple = (symbol.as_ref().to_string(), max_height);
         if self.cache.contains_key(&query_tuple) {
             return;
@@ -208,7 +216,7 @@ impl<'g> PredGenerator<'g> {
                 let mut children_span : Vec<HashSet<Node>> = Vec::new();
                 for target in prod {
                     let all_span = (0..max_height).map(|height| {
-                        self.cache_all_ast_for_symbol(height, target.as_str());
+                        self.cache_all_ast_for_symbol_with_height(height, target.as_str());
                         self.cache.get(&((*target).clone(), height)).expect("Should have ensured cache").clone()
                     }).flatten().collect();
                     children_span.push(all_span);
@@ -235,13 +243,13 @@ impl<'g> PredGenerator<'g> {
         self.cache.insert(query_tuple, asts);
     }
 
-    pub fn generate_all_ast_for_symbol<S: AsRef<str>>(&mut self, max_height: usize, symbol: S) -> Vec<Node> {
-        self.cache_all_ast_for_symbol(max_height, symbol.as_ref());
+    pub fn generate_all_ast_for_symbol_with_height<S: AsRef<str>>(&mut self, max_height: usize, symbol: S) -> Vec<Node> {
+        self.cache_all_ast_for_symbol_with_height(max_height, symbol.as_ref());
         self.cache.get(&(symbol.as_ref().to_string(), max_height)).expect("Should have ensured cache").clone()
     }
 
-    pub fn generate_all_ast(&mut self, max_height: usize) -> Vec<Node> {
-        self.generate_all_ast_for_symbol(max_height, self.grammar.get_start_symbol())
+    pub fn generate_all_ast_with_height(&mut self, max_height: usize) -> Vec<Node> {
+        self.generate_all_ast_for_symbol_with_height(max_height, self.grammar.get_start_symbol())
     }
 }
 
@@ -323,10 +331,10 @@ content:
     fn all_gen_asts() -> Result<(), Box<dyn Error>> {
         let grammar = Grammar::from_input(serde_yaml::from_str(GRAMMAR_STR)?);
         let mut gen = PredGenerator::new(&grammar);
-        println!("{:?}", gen.generate_all_ast(5).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
-        println!("{:?}", gen.generate_all_ast(4).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
-        println!("{:?}", gen.generate_all_ast(3).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
-        println!("{:?}", gen.generate_all_ast(2).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast_with_height(5).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast_with_height(4).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast_with_height(3).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        println!("{:?}", gen.generate_all_ast_with_height(2).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
         Ok(())
     }
 }

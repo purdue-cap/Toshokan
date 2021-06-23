@@ -244,7 +244,7 @@ impl<'g> PredGenerator<'g> {
         self.generate_all_ast_for_symbol(max_height, self.grammar.get_start_symbol())
     }
 }
-/*
+
 #[cfg(test)]
 mod tests {
     use super::Grammar;
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn grammar_initialization() -> Result<(), Box<dyn Error>> {
-        let grammar = Grammar::from_content(get_content(), "A".to_string());
+        let grammar = Grammar::from_content(get_content(), "A".to_string(), HashMap::new());
         assert_eq!(grammar.get_terminals(), &vec!["a".to_string(), "b".to_string(), "c".to_string()].into_iter().collect::<HashSet<_>>());
         assert_eq!(grammar.get_non_terminals(), &vec!["A".to_string(), "B".to_string()].into_iter().collect::<HashSet<_>>());
         Ok(())
@@ -299,7 +299,7 @@ content:
 
     #[test]
     fn get_productions() -> Result<(), Box<dyn Error>> {
-        let grammar = Grammar::from_content(get_content(), "A".to_string());
+        let grammar = Grammar::from_content(get_content(), "A".to_string(), HashMap::new());
         assert_eq!(grammar.get_terminating_productions("A"), vec![&vec!["a".to_string()]]);
         assert_eq!(grammar.get_terminating_productions("B"),
             vec![&vec!["b".to_string()], &vec!["b".to_string(), "c".to_string()]]);
@@ -310,7 +310,7 @@ content:
 
     #[test]
     fn rand_gen_asts() -> Result<(), Box<dyn Error>> {
-        let grammar = Grammar::from_content(get_complex_content(), "A".to_string());
+        let grammar = Grammar::from_content(get_complex_content(), "A".to_string(), HashMap::new());
         let gen = PredGenerator::new(&grammar);
         println!("{}", gen.generate_random_full_ast(5).ok_or("Generation Failure")?.to_string());
         println!("{}", gen.generate_random_full_ast(4).ok_or("Generation Failure")?.to_string());
@@ -330,4 +330,3 @@ content:
         Ok(())
     }
 }
-*/

@@ -8,6 +8,7 @@ use itertools::Itertools;
 pub struct GrammarInput {
     pub content: HashMap<String, HashSet<Vec<String>>>,
     pub start_symbol: String,
+    #[serde(default)]
     pub height_limit: HashMap<String, usize>,
 }
 
@@ -27,7 +28,9 @@ pub struct Node {
 
 pub struct PredGenerator<'g> {
     grammar: &'g Grammar,
-    cache: HashMap<(String, usize), Vec<Node>>
+    cache: HashMap<(String, usize), Vec<Node>>,
+    cache_symbol_size: HashMap<(String, usize), HashSet<Node>>,
+    cache_prod_size: HashMap<(&'g Vec<String>, usize), HashSet<Node>>
 }
 
 impl Grammar {
@@ -138,11 +141,26 @@ fn random_try_range<'a, T, F, R>(set: &'a mut HashSet<T>, mut func: F) -> Option
     None
 }
 
+// Returns all possible partitions of {part} numbers so that their collective sum is {sum}
+// Each partition is enured to be at least 1, {part} would be considered as 1 if 0 is supplied
+// Eg. all_partitions(3, 2) -> [1,2], [2,1]
+fn all_partitions(sum: usize, part: usize) -> impl Iterator<Item=Vec<usize>> {
+    let comb = (1..sum).combinations( if part == 0 {0} else {part - 1});
+    comb.map(move |pos|
+        std::iter::once(0).chain(pos.into_iter()).chain(std::iter::once(sum))
+        .tuple_windows()
+        .map(|(start, end)| end-start)
+        .collect_vec()
+    )
+}
+
 impl<'g> PredGenerator<'g> {
     pub fn new(grammar: &'g Grammar) -> Self {
         Self {
             grammar: grammar,
-            cache: HashMap::new()
+            cache: HashMap::new(),
+            cache_symbol_size: HashMap::new(),
+            cache_prod_size: HashMap::new()
         }
     }
 
@@ -251,6 +269,71 @@ impl<'g> PredGenerator<'g> {
     pub fn generate_all_ast_with_height(&mut self, max_height: usize) -> Vec<Node> {
         self.generate_all_ast_for_symbol_with_height(max_height, self.grammar.get_start_symbol())
     }
+
+    fn cache_all_ast_for_prod_with_size<S: AsRef<str>>(&mut self, size: usize, symbol: S, prod: &'g Vec<String>) {
+        let query_tuple = (prod, size);
+        if self.cache_prod_size.contains_key(&query_tuple) {
+            return;
+        }
+        let mut result = HashSet::new();
+        if size == 1 && prod.len() == 0 {
+            result.insert(Node {
+                data: Some(symbol.as_ref().to_string()),
+                children: vec![]
+            });
+        } else if size > 1 && prod.len() > 0 {
+            for parts in all_partitions(size - 1, prod.len()) {
+                let nodes = prod.iter().zip(parts.into_iter())
+                    .map(|(target, sub_size)| {
+                        self.cache_all_ast_for_symbol_with_size(sub_size, &target);
+                        self.cache_symbol_size.get(&(target.clone(), sub_size))
+                            .expect("Should have ensured cache")
+                            .iter().cloned().collect_vec()
+                    }).multi_cartesian_product()
+                    .map(|children| Node {
+                        data: None,
+                        children: children
+                    });
+                result.extend(nodes);
+            }
+        }
+        self.cache_prod_size.insert(query_tuple, result);
+    }
+
+    fn cache_all_ast_for_symbol_with_size<S: AsRef<str>>(&mut self, size: usize, symbol: S) {
+        let query_tuple = (symbol.as_ref().to_string(), size);
+        if self.cache_symbol_size.contains_key(&query_tuple) {
+            return;
+        }
+        if self.grammar.get_non_terminals().contains(symbol.as_ref()) {
+            let prods = self.grammar.content.get(symbol.as_ref()).expect("Should have ensured to be non-terminal");
+            for prod in prods.iter() {
+                self.cache_all_ast_for_prod_with_size(size, symbol.as_ref(), prod);
+            }
+            let results : HashSet<Node> = prods.iter()
+                .map(|prod| self.cache_prod_size.get(&(prod, size)).expect("Should have ensured cache").clone().into_iter()).flatten().collect();
+            self.cache_symbol_size.insert(query_tuple, results);
+        } else { // Terminal
+            if size != 1 { // Terminals could only have size of 1
+                self.cache_symbol_size.insert(query_tuple, HashSet::new());
+            } else {
+                self.cache_symbol_size.insert(query_tuple, vec![
+                    Node {
+                        data: Some(symbol.as_ref().to_string()),
+                        children: vec![]
+                    }
+                ].into_iter().collect());
+            }
+        }
+    }
+    pub fn generate_all_ast_for_symbol_with_size<S: AsRef<str>>(&mut self, size: usize, symbol: S) -> Vec<Node> {
+        self.cache_all_ast_for_symbol_with_size(size, symbol.as_ref());
+        self.cache_symbol_size.get(&(symbol.as_ref().to_string(), size)).expect("Should have ensured cache").iter().cloned().collect()
+    }
+
+    pub fn generate_all_ast_with_size(&mut self, size: usize) -> Vec<Node> {
+        self.generate_all_ast_for_symbol_with_size(size, self.grammar.get_start_symbol())
+    }
 }
 
 #[cfg(test)]
@@ -305,6 +388,13 @@ content:
         Ok(())
     }
 
+
+    macro_rules! vec_string{
+        [$($x:tt),*] => {
+            vec![$($x),*].into_iter().map(|s| s.to_string()).collect::<Vec<_>>()
+        };
+    }
+
     #[test]
     fn get_productions() -> Result<(), Box<dyn Error>> {
         let grammar = Grammar::from_content(get_content(), "A".to_string(), HashMap::new());
@@ -327,7 +417,6 @@ content:
         Ok(())
     }
     #[test]
-
     fn all_gen_asts() -> Result<(), Box<dyn Error>> {
         let grammar = Grammar::from_input(serde_yaml::from_str(GRAMMAR_STR)?);
         let mut gen = PredGenerator::new(&grammar);
@@ -335,6 +424,22 @@ content:
         println!("{:?}", gen.generate_all_ast_with_height(4).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
         println!("{:?}", gen.generate_all_ast_with_height(3).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
         println!("{:?}", gen.generate_all_ast_with_height(2).into_iter().map(|node| node.to_string()).collect::<Vec<_>>());
+        Ok(())
+    }
+
+    #[test]
+    fn all_gen_asts_size() -> Result<(), Box<dyn Error>> {
+        let grammar = Grammar::from_input(serde_yaml::from_str(GRAMMAR_STR)?);
+        let mut gen = PredGenerator::new(&grammar);
+        let mut get_repr = |size: usize| {
+            let mut result = gen.generate_all_ast_with_size(size).into_iter().map(|node| node.to_string()).collect::<Vec<_>>();
+            result.sort();
+            result
+        };
+        assert_eq!(get_repr(5), vec_string!["a b", "b a"]);
+        assert_eq!(get_repr(7), vec_string!["a a b", "a b a", "b a a", "b a a"]);
+        assert_eq!(get_repr(9), vec_string!["a a a b", "a a b a", "a b a a", "b a a a", "b a a a", "b a a a"]);
+        assert_eq!(get_repr(11), vec_string!["a a a a b", "a a a b a", "a a b a a", "a b a a a", "b a a a a", "b a a a a", "b a a a a", "b a a a a"]);
         Ok(())
     }
 }

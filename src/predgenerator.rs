@@ -21,7 +21,9 @@ enum PGSubCmd {
     #[clap(about="Randomly generate ASTs")]
     Random(PGRandom),
     #[clap(about="Generate all ASTs based on height")]
-    Genallh(PGGenallh)
+    Genallh(PGGenallh),
+    #[clap(about="Generate all ASTs based on size")]
+    Genall(PGGenall)
 }
 
 #[derive(Clap)]
@@ -47,6 +49,13 @@ struct PGGenallh {
     max_height: usize
 }
 
+#[derive(Clap)]
+#[clap(setting = AppSettings::ColoredHelp)]
+struct PGGenall {
+    #[clap(short, long, about="Size of AST to be generated")]
+    size: usize
+}
+
 fn generate_random_ast(gen: &predgen::PredGenerator, random_config: &PGRandom) -> Result<predgen::Node, usize> {
     let height = if random_config.fixed {
         random_config.height
@@ -59,6 +68,10 @@ fn generate_random_ast(gen: &predgen::PredGenerator, random_config: &PGRandom) -
 
 fn generate_all_ast_with_height(gen: &mut predgen::PredGenerator, genall_config: &PGGenallh) -> Vec<predgen::Node> { 
     gen.generate_all_ast_with_height(genall_config.max_height)
+}
+
+fn generate_all_ast_with_size(gen: &mut predgen::PredGenerator, genall_config: &PGGenall) -> Vec<predgen::Node> {
+    gen.generate_all_ast_with_size(genall_config.size)
 }
 
 
@@ -92,6 +105,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         PGSubCmd::Genallh(ref genall_config) => {
             let ast = generate_all_ast_with_height(&mut gen, genall_config);
+            let ast_p = ast.into_iter().map(|node| node.to_string()).collect::<Vec<_>>();
+            for i in &ast_p{
+                println!("{}",i);  
+            }
+                 
+        }
+        PGSubCmd::Genall(ref genall_config) => {
+            let ast = generate_all_ast_with_size(&mut gen, genall_config);
             let ast_p = ast.into_iter().map(|node| node.to_string()).collect::<Vec<_>>();
             for i in &ast_p{
                 println!("{}",i);  

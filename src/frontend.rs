@@ -22,3 +22,5 @@ mod rewrite_controller;
 pub use rewrite_controller::RewriteController;
 
 pub mod template_helpers;
+
+pub mod java;

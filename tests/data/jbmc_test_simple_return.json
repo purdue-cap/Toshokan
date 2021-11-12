@@ -1,0 +1,2815 @@
+[
+  {
+    "program": "JBMC 5.42.0 (cbmc-5.42.0-20-g268a0d04e)"
+  },
+  {
+    "messageText": "JBMC version 5.42.0 (cbmc-5.42.0-20-g268a0d04e) 64-bit x86_64 linux",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Parsing ...",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: SimpleReturn.main",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: SimpleReturn",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Found Java main class: SimpleReturn",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Converting",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "stub class symbol java::java.lang.Object already exists",
+    "messageType": "WARNING"
+  },
+  {
+    "messageText": "Java: added 1 String or Class constant symbols",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generating GOTO Program",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running GOTO functions transformation passes",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running with 16 object bits, 48 offset bits (default)",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Starting Bounded Model Checking",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Unwinding recursion java::SimpleReturn.<clinit_wrapper> iteration 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "aborting path on assume(false) at file SimpleReturn.java line 7 function java::SimpleReturn.main:(II)V bytecode-index 22 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Symex: 0.00175071s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "size of program expression: 104 steps",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "simple slicing removed 4 assignments",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generated 4 VCC(s), 1 remaining after simplification",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Postprocess Equation: 1.4663e-05s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Passing problem to string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "converting SSA",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Convert SSA: 0.000236649s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: post-processing",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: iteration 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "1164 variables, 2091 clauses",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "SAT checker: instance is SATISFIABLE",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: got SAT, and it simulates => SAT",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Total iterations: 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Solver: 0.00041068s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime decision procedure: 0.000679218s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Building error trace",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "result": [
+      {
+        "description": "Null pointer check",
+        "property": "java::SimpleReturn.main:(II)V.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "assertion at file SimpleReturn.java line 7 function java::SimpleReturn.main:(II)V bytecode-index 22",
+        "property": "java::SimpleReturn.main:(II)V.assertion.1",
+        "status": "FAILURE",
+        "trace": [
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": true,
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "__CPROVER_rounding_mode",
+            "mode": "C",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "identifier": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "signed int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "@inflight_exception",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "@inflight_exception"
+                },
+                "identifier": {
+                  "id": "java::@inflight_exception"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "java$$SimpleReturn$$clinit_already_run",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "java::SimpleReturn::clinit_already_run"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn::clinit_already_run"
+                },
+                "type": {
+                  "id": "bool"
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "0",
+              "data": false,
+              "name": "boolean"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "$assertionsDisabled",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$assertionsDisabled"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.$assertionsDisabled"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "SimpleReturn@class_model.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "SimpleReturn@class_model"
+                    },
+                    "identifier": {
+                      "id": "java::SimpleReturn@class_model"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#no_nondet_initialization": {
+                          "id": "1"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.Class"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "uncaught_exception'",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "uncaught_exception'"
+                },
+                "identifier": {
+                  "id": "uncaught_exception'"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg0i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000000",
+                "data": "0",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg1i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000000",
+                "data": "0",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "function": {
+              "displayName": "SimpleReturn.main(int, int)",
+              "identifier": "java::SimpleReturn.main:(II)V",
+              "sourceLocation": {
+                "file": "SimpleReturn.java",
+                "function": "java::SimpleReturn.main:(II)V",
+                "line": "4"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp0"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::$stack_tmp0"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp0"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::$stack_tmp0"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "3",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::3i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::3i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "13"
+                    },
+                    "line": {
+                      "id": "6"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::anonlocal::3i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::2i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::2i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "9"
+                    },
+                    "line": {
+                      "id": "5"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::anonlocal::2i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp2",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp2"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "12"
+                    },
+                    "line": {
+                      "id": "6"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::return_tmp2"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp1"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "8"
+                    },
+                    "line": {
+                      "id": "5"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::return_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "Library.add(int, int)",
+              "identifier": "java::Library.add:(II)I",
+              "sourceLocation": {
+                "file": "Library.java",
+                "function": "java::Library.add:(II)I",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "Library.add:(II)I#return_value",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "add#return_value"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I#return_value"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "3",
+              "file": "Library.java",
+              "function": "java::Library.add:(II)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "function": {
+              "displayName": "Library.add(int, int)",
+              "identifier": "java::Library.add:(II)I",
+              "sourceLocation": {
+                "file": "Library.java",
+                "function": "java::Library.add:(II)I",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp1"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "8"
+                    },
+                    "line": {
+                      "id": "5"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::return_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::2i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::2i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "9"
+                    },
+                    "line": {
+                      "id": "5"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::anonlocal::2i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "9",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "5"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "12",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "Library.add(int, int)",
+              "identifier": "java::Library.add:(II)I",
+              "sourceLocation": {
+                "file": "Library.java",
+                "function": "java::Library.add:(II)I",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "12",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "12",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "12",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "Library.add:(II)I#return_value",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "add#return_value"
+                },
+                "identifier": {
+                  "id": "java::Library.add:(II)I#return_value"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "3",
+              "file": "Library.java",
+              "function": "java::Library.add:(II)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "function": {
+              "displayName": "Library.add(int, int)",
+              "identifier": "java::Library.add:(II)I",
+              "sourceLocation": {
+                "file": "Library.java",
+                "function": "java::Library.add:(II)I",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp2",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp2"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "12"
+                    },
+                    "line": {
+                      "id": "6"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::return_tmp2"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "12",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::3i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::3i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "13"
+                    },
+                    "line": {
+                      "id": "6"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::anonlocal::3i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "13",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "6"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "14",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleReturn.<clinit_wrapper>",
+              "identifier": "java::SimpleReturn.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "14",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "java$$SimpleReturn$$clinit_already_run",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "java::SimpleReturn::clinit_already_run"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn::clinit_already_run"
+                },
+                "type": {
+                  "id": "bool"
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "1",
+              "data": true,
+              "name": "boolean"
+            }
+          },
+          {
+            "function": {
+              "displayName": "SimpleReturn.<clinit>()",
+              "identifier": "java::SimpleReturn.<clinit>:()V",
+              "sourceLocation": {
+                "file": "SimpleReturn.java",
+                "function": "java::SimpleReturn.<clinit>:()V",
+                "line": "2"
+              }
+            },
+            "hidden": false,
+            "internal": true,
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp1"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.<clinit>:()V::$stack_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.<clinit>:()V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "2"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.<clinit>:()V::return_tmp0"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java.lang.Class.desiredAssertionStatus()",
+              "identifier": "java::java.lang.Class.desiredAssertionStatus:()Z",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "this",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "this"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z::this"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#no_nondet_initialization": {
+                          "id": "1"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.Class"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "SimpleReturn@class_model",
+              "name": "pointer",
+              "type": "struct java.lang.Class *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "to_return",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "to_return"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z::to_return"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "java.lang.Class.desiredAssertionStatus:()Z#return_value",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "desiredAssertionStatus#return_value"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z#return_value"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "java.lang.Class.desiredAssertionStatus()",
+              "identifier": "java::java.lang.Class.desiredAssertionStatus:()Z",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.<clinit>:()V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "2"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.<clinit>:()V::return_tmp0"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "2",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp1"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.<clinit>:()V::$stack_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleReturn.<clinit_wrapper>",
+              "identifier": "java::SimpleReturn.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleReturn.<clinit_wrapper>",
+              "identifier": "java::SimpleReturn.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "$assertionsDisabled",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$assertionsDisabled"
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.$assertionsDisabled"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleReturn"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.<clinit>:()V",
+              "line": "2"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "SimpleReturn.<clinit>()",
+              "identifier": "java::SimpleReturn.<clinit>:()V",
+              "sourceLocation": {
+                "file": "SimpleReturn.java",
+                "function": "java::SimpleReturn.<clinit>:()V",
+                "line": "2"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleReturn.<clinit_wrapper>",
+              "identifier": "java::SimpleReturn.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "15",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "18",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "new_tmp3",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "new_tmp3"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "19"
+                    },
+                    "line": {
+                      "id": "7"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::new_tmp3"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "dynamic_object1"
+                },
+                "identifier": {
+                  "id": "symex_dynamic::dynamic_object1"
+                },
+                "type": {
+                  "id": "struct_tag",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "java.lang.AssertionError"
+                    },
+                    "identifier": {
+                      "id": "java::java.lang.AssertionError"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "19",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "members": [
+                {
+                  "name": "@class_identifier",
+                  "value": {
+                    "data": "java::java.lang.Class",
+                    "name": "string"
+                  }
+                }
+              ],
+              "name": "struct"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "19",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "new_tmp3",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "new_tmp3"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleReturn.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleReturn.main:(II)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "19"
+                    },
+                    "line": {
+                      "id": "7"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleReturn.main:(II)V::new_tmp3"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "19",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "19",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.AssertionError",
+              "name": "string"
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "21",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java.lang.AssertionError.<init>()",
+              "identifier": "java::java.lang.AssertionError.<init>:()V",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "21",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": true,
+            "lhs": "this",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "this"
+                },
+                "identifier": {
+                  "id": "java::java.lang.AssertionError.<init>:()V::this"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "21",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "to_construct",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "to_construct"
+                },
+                "identifier": {
+                  "id": "java::java.lang.AssertionError.<init>:()V::to_construct"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "function": {
+              "displayName": "java.lang.AssertionError.<init>()",
+              "identifier": "java::java.lang.AssertionError.<init>:()V",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "internal": false,
+            "property": "java::SimpleReturn.main:(II)V.assertion.1",
+            "reason": "assertion at file SimpleReturn.java line 7 function java::SimpleReturn.main:(II)V bytecode-index 22",
+            "sourceLocation": {
+              "bytecodeIndex": "22",
+              "file": "SimpleReturn.java",
+              "function": "java::SimpleReturn.main:(II)V",
+              "line": "7"
+            },
+            "stepType": "failure",
+            "thread": 0
+          }
+        ]
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::SimpleReturn.<clinit>:()V.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "no uncaught exception",
+        "property": "java::SimpleReturn.main:(II)V.1",
+        "status": "SUCCESS"
+      }
+    ]
+  },
+  {
+    "messageText": "VERIFICATION FAILED",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "cProverStatus": "failure"
+  }
+]

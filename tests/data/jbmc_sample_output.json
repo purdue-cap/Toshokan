@@ -1,0 +1,1733 @@
+[
+  {
+    "program": "JBMC 5.42.0 (cbmc-5.42.0-20-g268a0d04e)"
+  },
+  {
+    "messageText": "JBMC version 5.42.0 (cbmc-5.42.0-20-g268a0d04e) 64-bit x86_64 linux",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Parsing ...",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: SimpleTest.main",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: SimpleTest",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Found Java main class: SimpleTest",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Converting",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "stub class symbol java::java.lang.Object already exists",
+    "messageType": "WARNING"
+  },
+  {
+    "messageText": "Java: added 1 String or Class constant symbols",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generating GOTO Program",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running GOTO functions transformation passes",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running with 16 object bits, 48 offset bits (default)",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Starting Bounded Model Checking",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Unwinding recursion java::SimpleTest.<clinit_wrapper> iteration 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "aborting path on assume(false) at file SimpleTest.java line 3 function java::SimpleTest.main:(I)I bytecode-index 8 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Symex: 0.00751988s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "size of program expression: 73 steps",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "simple slicing removed 7 assignments",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generated 4 VCC(s), 1 remaining after simplification",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Postprocess Equation: 7.6854e-05s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Passing problem to string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "converting SSA",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Convert SSA: 0.00308663s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: post-processing",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: iteration 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "487 variables, 494 clauses",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "SAT checker: instance is SATISFIABLE",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: got SAT, and it simulates => SAT",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Total iterations: 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Solver: 0.00208474s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime decision procedure: 0.00544079s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Building error trace",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "result": [
+      {
+        "description": "Null pointer check",
+        "property": "java::SimpleTest.main:(I)I.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "assertion at file SimpleTest.java line 3 function java::SimpleTest.main:(I)I bytecode-index 8",
+        "property": "java::SimpleTest.main:(I)I.assertion.1",
+        "status": "FAILURE",
+        "trace": [
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": true,
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "__CPROVER_rounding_mode",
+            "mode": "C",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "identifier": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "signed int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "@inflight_exception",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "@inflight_exception"
+                },
+                "identifier": {
+                  "id": "java::@inflight_exception"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "java$$SimpleTest$$clinit_already_run",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "java::SimpleTest::clinit_already_run"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest::clinit_already_run"
+                },
+                "type": {
+                  "id": "bool"
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "0",
+              "data": false,
+              "name": "boolean"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "SimpleTest@class_model.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "SimpleTest@class_model"
+                    },
+                    "identifier": {
+                      "id": "java::SimpleTest@class_model"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#no_nondet_initialization": {
+                          "id": "1"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.Class"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "$assertionsDisabled",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$assertionsDisabled"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.$assertionsDisabled"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "uncaught_exception'",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "uncaught_exception'"
+                },
+                "identifier": {
+                  "id": "uncaught_exception'"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg0i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000000",
+                "data": "0",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "function": {
+              "displayName": "SimpleTest.main(int)",
+              "identifier": "java::SimpleTest.main:(I)I",
+              "sourceLocation": {
+                "file": "SimpleTest.java",
+                "function": "java::SimpleTest.main:(I)I",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.main:(I)I::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "0",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleTest.<clinit_wrapper>",
+              "identifier": "java::SimpleTest.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "0",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "java$$SimpleTest$$clinit_already_run",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "java::SimpleTest::clinit_already_run"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest::clinit_already_run"
+                },
+                "type": {
+                  "id": "bool"
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "1",
+              "data": true,
+              "name": "boolean"
+            }
+          },
+          {
+            "function": {
+              "displayName": "SimpleTest.<clinit>()",
+              "identifier": "java::SimpleTest.<clinit>:()V",
+              "sourceLocation": {
+                "file": "SimpleTest.java",
+                "function": "java::SimpleTest.<clinit>:()V",
+                "line": "1"
+              }
+            },
+            "hidden": false,
+            "internal": true,
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp1"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.<clinit>:()V::$stack_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleTest.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleTest.<clinit>:()V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "1"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.<clinit>:()V::return_tmp0"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java.lang.Class.desiredAssertionStatus()",
+              "identifier": "java::java.lang.Class.desiredAssertionStatus:()Z",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "this",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "this"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z::this"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#no_nondet_initialization": {
+                          "id": "1"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.Class"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "SimpleTest@class_model",
+              "name": "pointer",
+              "type": "struct java.lang.Class *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "to_return",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "to_return"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z::to_return"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "java.lang.Class.desiredAssertionStatus:()Z#return_value",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "desiredAssertionStatus#return_value"
+                },
+                "identifier": {
+                  "id": "java::java.lang.Class.desiredAssertionStatus:()Z#return_value"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "java.lang.Class.desiredAssertionStatus()",
+              "identifier": "java::java.lang.Class.desiredAssertionStatus:()Z",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "return_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "return_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleTest.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleTest.<clinit>:()V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "1"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.<clinit>:()V::return_tmp0"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000001",
+              "data": "true",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "2",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "$stack_tmp1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$stack_tmp1"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.<clinit>:()V::$stack_tmp1"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleTest.<clinit_wrapper>",
+              "identifier": "java::SimpleTest.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleTest.<clinit_wrapper>",
+              "identifier": "java::SimpleTest.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "$assertionsDisabled",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$assertionsDisabled"
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.$assertionsDisabled"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::SimpleTest"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "6",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.<clinit>:()V",
+              "line": "1"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "SimpleTest.<clinit>()",
+              "identifier": "java::SimpleTest.<clinit>:()V",
+              "sourceLocation": {
+                "file": "SimpleTest.java",
+                "function": "java::SimpleTest.<clinit>:()V",
+                "line": "1"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java::SimpleTest.<clinit_wrapper>",
+              "identifier": "java::SimpleTest.<clinit_wrapper>",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "4",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "new_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "new_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleTest.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleTest.main:(I)I"
+                    },
+                    "java_bytecode_index": {
+                      "id": "5"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.main:(I)I::new_tmp0"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "dynamic_object1"
+                },
+                "identifier": {
+                  "id": "symex_dynamic::dynamic_object1"
+                },
+                "type": {
+                  "id": "struct_tag",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "java.lang.AssertionError"
+                    },
+                    "identifier": {
+                      "id": "java::java.lang.AssertionError"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "members": [
+                {
+                  "name": "@class_identifier",
+                  "value": {
+                    "data": "java::java.lang.Class",
+                    "name": "string"
+                  }
+                }
+              ],
+              "name": "struct"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "new_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "new_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "SimpleTest.java"
+                    },
+                    "function": {
+                      "id": "java::SimpleTest.main:(I)I"
+                    },
+                    "java_bytecode_index": {
+                      "id": "5"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::SimpleTest.main:(I)I::new_tmp0"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.AssertionError",
+              "name": "string"
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "7",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "function": {
+              "displayName": "java.lang.AssertionError.<init>()",
+              "identifier": "java::java.lang.AssertionError.<init>:()V",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "bytecodeIndex": "7",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": true,
+            "lhs": "this",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "this"
+                },
+                "identifier": {
+                  "id": "java::java.lang.AssertionError.<init>:()V::this"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "7",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "to_construct",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "to_construct"
+                },
+                "identifier": {
+                  "id": "java::java.lang.AssertionError.<init>:()V::to_construct"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "java.lang.AssertionError"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.AssertionError"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java.lang.AssertionError *"
+            }
+          },
+          {
+            "function": {
+              "displayName": "java.lang.AssertionError.<init>()",
+              "identifier": "java::java.lang.AssertionError.<init>:()V",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "internal": false,
+            "property": "java::SimpleTest.main:(I)I.assertion.1",
+            "reason": "assertion at file SimpleTest.java line 3 function java::SimpleTest.main:(I)I bytecode-index 8",
+            "sourceLocation": {
+              "bytecodeIndex": "8",
+              "file": "SimpleTest.java",
+              "function": "java::SimpleTest.main:(I)I",
+              "line": "3"
+            },
+            "stepType": "failure",
+            "thread": 0
+          }
+        ]
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::SimpleTest.<clinit>:()V.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "no uncaught exception",
+        "property": "java::SimpleTest.main:(I)I.1",
+        "status": "SUCCESS"
+      }
+    ]
+  },
+  {
+    "messageText": "VERIFICATION FAILED",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "cProverStatus": "failure"
+  }
+]

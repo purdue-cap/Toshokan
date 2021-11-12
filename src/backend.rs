@@ -11,3 +11,5 @@ mod library_tracer;
 pub use library_tracer::LibraryTracer;
 mod trace_error;
 pub use trace_error::TraceError;
+
+pub mod java;

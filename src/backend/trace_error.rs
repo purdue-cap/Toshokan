@@ -14,6 +14,9 @@ quick_error! {
             cause(err)
             display("{}", err)
         }
+        JBMCLogError(err: &'static str) {
+            display("{}", err)
+        }
         OtherError(desc: &'static str) {
             display("{}", desc)
         }

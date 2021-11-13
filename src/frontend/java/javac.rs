@@ -1,20 +1,20 @@
 use std::ffi::{OsString, OsStr};
 use std::path::Path;
-use std::process::Command;
-use crate::backend::{TraceError ,java::JBMCLogs};
+use std::io;
+use std::process::{Command, Output};
 
-pub struct JBMCRunner {
-    jbmc_path: OsString,
+pub struct JavacRunner {
+    javac_path: OsString,
     class_dir: OsString,
     extra_class_path: Vec<OsString>,
     extra_flags: Vec<OsString>
 }
 
-impl JBMCRunner {
-    pub fn new<P1, P2>(jbmc_path: P1, class_dir: P2) -> Self
+impl JavacRunner {
+    pub fn new<P1, P2>(javac_path: P1, class_dir: P2) -> Self
         where P1: AsRef<Path>, P2: AsRef<Path>{
         Self {
-            jbmc_path: jbmc_path.as_ref().as_os_str().to_os_string(),
+            javac_path: javac_path.as_ref().as_os_str().to_os_string(),
             class_dir: class_dir.as_ref().as_os_str().to_os_string(),
             extra_class_path: vec![],
             extra_flags: vec![]
@@ -23,10 +23,11 @@ impl JBMCRunner {
 
     fn build_flags(&self) -> Vec<OsString> {
         // Default flags
-        let mut flags = vec![OsString::from("--json-ui"),
-            OsString::from("--trace-json-extended")];
+        let mut flags = vec![
+            OsString::from("-d"),
+            self.class_dir.clone()];
 
-        flags.push(OsString::from("--classpath"));
+        flags.push(OsString::from("-classpath"));
         // Build classpath
         let mut cp_joined = self.class_dir.clone();
         for cp in self.extra_class_path.iter() {
@@ -46,16 +47,15 @@ impl JBMCRunner {
         self.extra_flags.push(new_flag.as_ref().to_os_string());
     }
     
-    pub fn run<S: AsRef<str>>(&self, entrance: S) -> Result<JBMCLogs, TraceError>{
+    pub fn run<S, I>(&self, files: I) -> io::Result<Output>
+        where I: Iterator<Item=S>, S: AsRef<OsStr> {
         let mut args = self.build_flags();
-        args.push(OsString::from(entrance.as_ref()));
+        args.extend(files.map(|s| s.as_ref().to_os_string()));
 
-        let mut cmd = Command::new(self.jbmc_path.as_os_str());
+        let mut cmd = Command::new(self.javac_path.as_os_str());
         cmd.args(args);
 
-        let result = cmd.output()?;
-        Ok(serde_json::from_slice(&result.stdout)?)
+        let result = cmd.output();
+        result
     }
 }
-
-// TODO: Unit tests

@@ -293,6 +293,7 @@ mod tests {
     use super::*;
     use std::error::Error;
     use crate::cegis::FuncLog;
+    use serde_json::json;
     #[test]
     fn parses_json_log_line() -> Result<(), Box<dyn Error>> {
         let json_str = r#"{"meta":"FuncCall","args":[5],"rtn":2,"func":"sqrt"}"#;

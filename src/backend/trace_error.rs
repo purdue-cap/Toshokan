@@ -1,5 +1,6 @@
 use std::io::Error as IOError;
 use serde_json::Error as JSONError;
+use quick_error::quick_error;
 
 quick_error! {
     #[derive(Debug)]

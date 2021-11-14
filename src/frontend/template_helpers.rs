@@ -1,8 +1,9 @@
 use handlebars::{Helper, Handlebars, Context,
                 RenderContext, Output,
                 BlockContext, BlockParams,
-                HelperResult, RenderError, Renderable};
-use serde_json::value::Value;
+                HelperResult, RenderError, Renderable,
+                handlebars_helper};
+use serde_json::Value;
 
 handlebars_helper!(range: |x: u64| (0..x).collect::<Vec<u64>>());
 handlebars_helper!(add: |x: u64, y: u64| x + y);
@@ -542,6 +543,7 @@ mod tests {
     use super::*;
     use crate::cegis::{TraceLog, FuncLog};
     use std::collections::HashMap;
+    use serde_json::json;
     
     #[derive(Serialize)]
     struct Param {

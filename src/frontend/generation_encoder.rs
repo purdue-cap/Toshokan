@@ -36,4 +36,3 @@ impl<'h, 'r> HandlebarsEncoder<'r> for GenerationEncoder<'h, 'r> {
         unimplemented!("Rewrite for GenerationEncoder not implemented yet.");
     }
 }
-

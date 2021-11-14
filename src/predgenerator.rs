@@ -1,4 +1,3 @@
-extern crate libpartlibspec;
 use clap::{AppSettings, Clap};
 use libpartlibspec::predinfer::predgen;
 use std::fs;

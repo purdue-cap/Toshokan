@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use super::TraceLog;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
+use quick_error::quick_error;
 
 pub struct CEGISTimer {
     elapsed_duration: Duration,

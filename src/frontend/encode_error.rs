@@ -4,6 +4,7 @@ use handlebars::RenderError;
 use std::cell::BorrowError;
 use std::cell::BorrowMutError;
 use std::io::Error as IOError;
+use quick_error::quick_error;
 
 quick_error! {
     #[derive(Debug)]

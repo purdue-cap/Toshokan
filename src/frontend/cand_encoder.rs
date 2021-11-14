@@ -3,7 +3,7 @@ use std::fs;
 use std::io::Write;
 use std::collections::HashSet;
 use regex::Regex;
-use super::{Encoder, EncodeError, RewriteController};
+use super::{Encoder, Renderer, EncodeError, RewriteController};
 use crate::cegis::CEGISStateParams;
 
 pub static HOLE_REGEX: &'static str = r#"(?x)
@@ -79,8 +79,11 @@ impl Encoder for CandEncoder {
         self.template = Some(template.as_ref().to_string());
         Ok(())
     }
+}
 
-    fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError> {
+impl Renderer<CEGISStateParams> for CandEncoder {
+
+    fn render(&self, params: &CEGISStateParams) -> Result<String, EncodeError> {
         let mut work_buffer = self.template.as_ref().ok_or(EncodeError::SimpleRenderError("Template not loaded"))?.clone();
         let mut idx : usize = 0;
         while idx < work_buffer.len() {
@@ -117,7 +120,7 @@ mod tests {
         let mut encoder = CandEncoder::new();
         encoder.load_str(r#"holes_2 = {{holes.H__2}}"#)?;
         state.update_hole("H__2", 3);
-        assert_eq!(encoder.render(&state)?, "holes_2 = 3");
+        assert_eq!(encoder.render(state.get_params().ok_or("No param present")?)?, "holes_2 = 3");
         Ok(())
     }
 
@@ -134,7 +137,7 @@ mod tests {
         state.update_hole("H__3", 4);
         state.update_hole("H__4", 5);
         state.update_hole("H__5", 6);
-        assert_eq!(encoder.render(&state)?, "1 + 2 + 3 + 4 + 5 + 6");
+        assert_eq!(encoder.render(state.get_params().ok_or("No param present")?)?, "1 + 2 + 3 + 4 + 5 + 6");
         Ok(())
     }
 

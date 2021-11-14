@@ -41,7 +41,7 @@ impl<'h, 'r> HandlebarsEncoder<'r> for CEEncoder<'h, 'r> {
 mod tests {
     use super::*;
     use crate::cegis::{CEGISState, FuncConfig};
-    use crate::frontend::Encoder;
+    use crate::frontend::{Encoder, Renderer};
     use std::error::Error;
     
     #[test]
@@ -53,7 +53,7 @@ mod tests {
         for i in 1..5 {
             state.add_c_e(vec![i]).ok_or("C.E. addition failed")?;
         }
-        assert_eq!(encoder.render(&state)?, "c_e_2 = 3");
+        assert_eq!(encoder.render(state.get_params().ok_or("No params present")?)?, "c_e_2 = 3");
         Ok(())
     }
 

@@ -5,12 +5,20 @@ use std::fs::File;
 use std::cell::RefCell;
 
 use super::{EncodeError, RewriteController};
-use crate::cegis::{CEGISState, CEGISStateParams};
+use serde::Serialize;
 
 pub enum EncoderSource {
     LoadFromFile(PathBuf),
     LoadFromStr(String),
     Rewrite
+}
+
+impl From<PathBuf> for EncoderSource {
+    fn from(p: PathBuf) -> Self {EncoderSource::LoadFromFile(p)}
+}
+
+impl From<String> for EncoderSource {
+    fn from(s: String) -> Self {EncoderSource::LoadFromStr(s)}
 }
 
 pub trait Encoder {
@@ -35,23 +43,17 @@ pub trait Encoder {
     fn load_from_rewrite(&mut self) -> Result<(), EncodeError> {
         self.load_str(self.rewrite_template_to_str()?.as_str())
     }
+}
 
-    fn render(&self, state: &CEGISState) -> Result<String, EncodeError> {
-        self.render_params(state.get_params().ok_or(EncodeError::ParamError)?)
-    }
-    fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError>;
-    fn render_to_write<W: Write>(&self, state:&CEGISState, writer: W) -> Result<(), EncodeError> {
-        self.render_params_to_write(state.get_params().ok_or(EncodeError::ParamError)?, writer)
-    }
-    fn render_params_to_write<W: Write>(&self, params: &CEGISStateParams, mut writer: W) -> Result<(), EncodeError> {
-        write!(writer, "{}", self.render_params(params)?)?;
+pub trait Renderer<Data>
+    where Data: Serialize {
+    fn render(&self, params: &Data) -> Result<String, EncodeError>;
+    fn render_to_write<W: Write>(&self, params: &Data, mut writer: W) -> Result<(), EncodeError> {
+        write!(writer, "{}", self.render(params)?)?;
         Ok(())
     }
-    fn render_to_file<P: AsRef<Path>>(&self, state:&CEGISState, file_path: P) -> Result<(), EncodeError> {
-        self.render_params_to_file(state.get_params().ok_or(EncodeError::ParamError)?, file_path)
-    }
-    fn render_params_to_file<P: AsRef<Path>>(&self, params: &CEGISStateParams, file_path: P) -> Result<(), EncodeError> {
-        self.render_params_to_write(params, File::create(file_path)?)
+    fn render_to_file<P: AsRef<Path>>(&self, params: &Data, file_path: P) -> Result<(), EncodeError> {
+        self.render_to_write(params, File::create(file_path)?)
     }
 }
 
@@ -67,7 +69,8 @@ pub trait HandlebarsEncoder<'r> {
     }
 }
 
-impl<'r, T> Encoder for T  where T: HandlebarsEncoder<'r> {
+impl<'r, T> Encoder for T
+    where T: HandlebarsEncoder<'r> {
 
     fn setup_rewrite(&mut self, controller: &RewriteController) -> Result<(), EncodeError> {
         HandlebarsEncoder::setup_rewrite(self, controller)
@@ -88,19 +91,18 @@ impl<'r, T> Encoder for T  where T: HandlebarsEncoder<'r> {
         Ok(self.handlebars().try_borrow_mut()?
             .register_template_file(self.name(), template_file)?)
     }
+}
 
-    fn render_params(&self, params: &CEGISStateParams) -> Result<String, EncodeError> {
+impl<'r, T, Data> Renderer<Data> for T  
+    where T: HandlebarsEncoder<'r>, Data: Serialize{
+    fn render(&self, params: &Data) -> Result<String, EncodeError> {
         Ok(self.handlebars().try_borrow()?
             .render(self.name(), params)?)
     }
 
-    fn render_params_to_write<W: Write>(&self, params: &CEGISStateParams, writer: W) -> Result<(), EncodeError> {
+    fn render_to_write<W: Write>(&self, params: &Data, writer: W) -> Result<(), EncodeError> {
         Ok(self.handlebars().try_borrow()?
             .render_to_write(self.name(), params, writer)?)
     }
 
-    fn render_params_to_file<P: AsRef<Path>>(&self, params: &CEGISStateParams, file_path: P) -> Result<(), EncodeError> {
-        let file = File::create(file_path)?;
-        self.render_params_to_write(params, file)
-    }
 }

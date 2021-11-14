@@ -1,4 +1,4 @@
-use crate::frontend::{Encoder, CandEncoder, CEEncoder, GenerationEncoder};
+use crate::frontend::{Encoder, Renderer, CandEncoder, CEEncoder, GenerationEncoder};
 use crate::frontend::{SketchRunner, VerificationResult, SynthesisResult};
 use crate::frontend::RewriteController;
 use crate::frontend::template_helpers::register_helpers;
@@ -78,7 +78,9 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Verification", "Filling sketch template");
         let verification_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("verification_{}", self.state.get_iter_count())));
-        cand.render_to_file(&self.state, &verification_sk)?;
+        cand.render_to_file(
+            self.state.get_params().ok_or("State param not present")?,
+            &verification_sk)?;
         trace!(target: "Verification", "Sketch template {}:\n{}",
             verification_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&verification_sk).ok()
@@ -106,7 +108,9 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Synthesis", "Filling sketch template");
         let synthesis_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from(format!("synthesis_{}", self.state.get_iter_count())));
-        c_e.render_to_file(&self.state, &synthesis_sk)?;
+        c_e.render_to_file(
+            self.state.get_params().ok_or("State param not present")?,
+            &synthesis_sk)?;
         trace!(target: "Synthesis", "Sketch template {}:\n{}",
             synthesis_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&synthesis_sk).ok()
@@ -152,7 +156,9 @@ impl<'r> CEGISLoop<'r> {
         info!(target: "Generation", "Filling sketch template");
         let generation_sk = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             PathBuf::from("generation"));
-        generation.render_to_file(&self.state, &generation_sk)?;
+        generation.render_to_file(
+            self.state.get_params().ok_or("State param not present")?,
+            &generation_sk)?;
         trace!(target: "Generation", "Sketch template {}:\n{}",
             generation_sk.to_str().unwrap_or("<Failure>"),
             fs::read(&generation_sk).ok()

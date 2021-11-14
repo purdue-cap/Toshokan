@@ -1,4 +1,3 @@
-extern crate libpartlibspec;
 use libpartlibspec::cegis::{CEGISConfig, CEGISLoop, VerifyPointsConfig, ExcludedHole, FuncConfig};
 use std::path::PathBuf;
 use simplelog::{SimpleLogger, LevelFilter, Config};

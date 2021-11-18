@@ -276,6 +276,7 @@ impl CEGISConfig {
 
 }
 
+// TODO: Refactor with derive_builder crate
 impl CEGISConfigBuilder {
     pub fn new() -> Self {
         Self {

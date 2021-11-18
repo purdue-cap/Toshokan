@@ -7,7 +7,7 @@ use serde_json::Value;
 
 handlebars_helper!(range: |x: u64| (0..x).collect::<Vec<u64>>());
 handlebars_helper!(add: |x: u64, y: u64| x + y);
-handlebars_helper!(subtree: |obj: object, key: str| obj.get(key).cloned().unwrap_or(Value::Null));
+handlebars_helper!(subtree: |obj: object, key: str| obj.get(key).cloned().unwrap_or(Value::Array(vec![])));
 
 pub fn get_n_logs(h: &Helper,
                     _: &Handlebars,

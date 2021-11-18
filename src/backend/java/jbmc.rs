@@ -1,11 +1,11 @@
 use serde_json::Value;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use std::collections::{HashMap, HashSet};
 use crate::cegis::FuncLog;
 use regex::Regex;
 use super::super::TraceError::{self, JBMCLogError};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
 pub enum LogItem {
     Program {
@@ -24,11 +24,12 @@ pub enum LogItem {
         #[serde(rename = "cProverStatus")]
         status: StatusInfo
     },
+    Other(HashMap<String, Value>)
 }
 
 pub type VerifyLogs = Vec<LogItem>;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct VerifyResult {
     description: String,
     property: String,
@@ -37,7 +38,7 @@ pub struct VerifyResult {
     trace: Vec<VerifyTrace>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum StatusInfo {
     #[serde(rename = "SUCCESS")]
     #[serde(alias = "success")]
@@ -48,7 +49,7 @@ pub enum StatusInfo {
 }
 
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(tag = "stepType")]
 pub enum VerifyTrace {
     #[serde(rename = "assignment")]
@@ -158,7 +159,7 @@ impl VerifyTrace {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub enum AssignmentTypeInfo {
     #[serde(rename = "variable")]
     Variable,
@@ -166,7 +167,7 @@ pub enum AssignmentTypeInfo {
     ActualParameter
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct TraceInfo {
     hidden: bool,
     internal: bool,
@@ -176,7 +177,7 @@ pub struct TraceInfo {
     source_location: SourceLocationInfo
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct FunctionInfo {
     #[serde(rename = "displayName")]
     display_name: String,
@@ -185,7 +186,7 @@ pub struct FunctionInfo {
     source_location: SourceLocationInfo
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(tag = "name")]
 pub enum ValueInfo {
     #[serde(rename = "integer")]
@@ -233,7 +234,7 @@ impl ValueInfo {
 
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
 pub enum SourceLocationInfo {
     Empty {},
@@ -282,14 +283,17 @@ impl<'s> FuncCallRecord<'s>  {
 }
 
 impl LogAnalyzer {
-    pub fn new<I>(func_names: I) -> Self 
-        where I: IntoIterator<Item=String> {
+    pub fn new<I, S>(func_names: I) -> Self 
+        where I: IntoIterator<Item=S>, S: AsRef<str>{
         LogAnalyzer {
             c_e_s: vec![],
-            traced_functions: func_names.into_iter().collect(),
+            traced_functions: func_names.into_iter().map(|s| s.as_ref().to_string()).collect(),
             traces: vec![]
         }
     }
+
+    pub fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&self.c_e_s}
+    pub fn get_traces(&self) -> &Vec<FuncLog> {&self.traces}
 
     fn analyze_traces<'l>(&mut self, traces: &'l Vec<VerifyTrace>) -> Result<(), TraceError> {
         let mut it = traces.iter();
@@ -387,6 +391,9 @@ impl LogAnalyzer {
     }
 
     pub fn analyze_logs<'l>(&mut self, logs: &'l VerifyLogs) -> Result<bool, TraceError> {
+        // Clear internal storage
+        self.c_e_s.clear();
+        self.traces.clear();
         for msg in logs.iter().rev() {
             match msg {
                 LogItem::CProverStatus {status} => {

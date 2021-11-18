@@ -1,8 +1,8 @@
 mod jbmc;
-pub use jbmc::JBMCRunner;
+pub use jbmc::{JBMCRunner, JBMCConfig, JBMCConfigBuilder};
 
 mod jsketch;
-pub use jsketch::JSketchRunner;
+pub use jsketch::{JSketchRunner, JSketchConfig, JSketchConfigBuilder};
 
 mod javac;
 pub use javac::JavacRunner;

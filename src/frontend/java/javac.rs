@@ -5,31 +5,32 @@ use std::process::{Command, Output};
 
 pub struct JavacRunner {
     javac_path: OsString,
-    class_dir: OsString,
-    extra_class_path: Vec<OsString>,
-    extra_flags: Vec<OsString>
+    pub extra_class_path: Vec<OsString>,
+    pub extra_flags: Vec<OsString>
 }
 
 impl JavacRunner {
-    pub fn new<P1, P2>(javac_path: P1, class_dir: P2) -> Self
-        where P1: AsRef<Path>, P2: AsRef<Path>{
+    pub fn new<P>(javac_path: P) -> Self
+        where P: AsRef<Path> {
         Self {
             javac_path: javac_path.as_ref().as_os_str().to_os_string(),
-            class_dir: class_dir.as_ref().as_os_str().to_os_string(),
             extra_class_path: vec![],
             extra_flags: vec![]
         }
     }
 
-    fn build_flags(&self) -> Vec<OsString> {
+    fn build_flags<S>(&self, class_dir: S) -> Vec<OsString>
+        where S: AsRef<OsStr> {
         // Default flags
         let mut flags = vec![
             OsString::from("-d"),
-            self.class_dir.clone()];
+            class_dir.as_ref().to_os_string()];
 
         flags.push(OsString::from("-classpath"));
         // Build classpath
-        let mut cp_joined = self.class_dir.clone();
+        // input classpath must be put before the extra ones
+        // So that in case of class override input takes priority
+        let mut cp_joined = class_dir.as_ref().to_os_string();
         for cp in self.extra_class_path.iter() {
             cp_joined.push(":");
             cp_joined.push(cp);
@@ -39,23 +40,21 @@ impl JavacRunner {
         flags
     }
 
-    pub fn add_class_path<P: AsRef<Path>>(&mut self, new_path: P) {
-        self.extra_class_path.push(new_path.as_ref().as_os_str().to_os_string());
-    }
-
-    pub fn add_flag<S: AsRef<OsStr>>(&mut self, new_flag: S) {
-        self.extra_flags.push(new_flag.as_ref().to_os_string());
-    }
-    
-    pub fn run<S, I>(&self, files: I) -> io::Result<Output>
-        where I: Iterator<Item=S>, S: AsRef<OsStr> {
-        let mut args = self.build_flags();
+    pub fn run<S, I, Sp>(&self, files: I, class_dir: Sp) -> io::Result<Output>
+        where I: Iterator<Item=S>,
+            S: AsRef<OsStr>, Sp: AsRef<OsStr> {
+        let mut args = self.build_flags(class_dir);
         args.extend(files.map(|s| s.as_ref().to_os_string()));
 
         let mut cmd = Command::new(self.javac_path.as_os_str());
         cmd.args(args);
 
-        let result = cmd.output();
-        result
+        let result = cmd.output()?;
+        if !result.status.success() {
+            Err(io::Error::new(io::ErrorKind::Other, 
+                format!("Compilation failure: {}", std::str::from_utf8(&result.stderr).unwrap_or("<decode failure>"))))
+        } else {
+            Ok(result)
+        }
     }
 }

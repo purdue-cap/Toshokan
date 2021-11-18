@@ -33,6 +33,7 @@ quick-xml = "0.18.1"
 regex = "1"
 log = ">=0.4"
 rand = "0.7.3"
+derive_builder = "0.10.2"
 
 [dependencies.mio]
 version = "0.7.0"

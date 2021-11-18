@@ -108,7 +108,8 @@ pub struct CEGISState {
     iter_count: usize
 }
 
-fn point_set_transpose(point_set: &HashSet<Vec<isize>>) -> Option<Vec<Vec<isize>>> {
+pub(super) fn point_set_transpose<T>(point_set: &HashSet<Vec<T>>) -> Option<Vec<Vec<T>>>
+    where T: Copy {
     if point_set.is_empty() {
         Some(vec![])
     } else {

@@ -1,0 +1,4426 @@
+[
+  {
+    "program": "JBMC 5.42.0 (cbmc-5.42.0-20-g268a0d04e)"
+  },
+  {
+    "messageText": "JBMC version 5.42.0 (cbmc-5.42.0-20-g268a0d04e) 64-bit x86_64 linux",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Parsing ...",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: Main.main",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Trying to load Java main class: Main",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Found Java main class: Main",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Converting",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "stub class symbol java::java.lang.Object already exists",
+    "messageType": "WARNING"
+  },
+  {
+    "messageText": "Java: added 1 String or Class constant symbols",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generating GOTO Program",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running GOTO functions transformation passes",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running with 16 object bits, 48 offset bits (default)",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Starting Bounded Model Checking",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Unwinding loop java::Main.main:(IIIII)V.0 iteration 1 file Main.java line 4 function java::Main.main:(IIIII)V bytecode-index 35 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Unwinding loop java::Main.main:(IIIII)V.0 iteration 2 file Main.java line 4 function java::Main.main:(IIIII)V bytecode-index 35 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Unwinding loop java::Main.main:(IIIII)V.0 iteration 3 file Main.java line 4 function java::Main.main:(IIIII)V bytecode-index 35 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Not unwinding loop java::Main.main:(IIIII)V.0 iteration 4 file Main.java line 4 function java::Main.main:(IIIII)V bytecode-index 35 thread 0",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Symex: 0.0093394s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "size of program expression: 124 steps",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "simple slicing removed 13 assignments",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Generated 34 VCC(s), 1 remaining after simplification",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Postprocess Equation: 2.2465e-05s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Passing problem to string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "converting SSA",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Convert SSA: 0.00071785s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Running string refinement loop with MiniSAT 2.2.1 without simplifier",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: post-processing",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: iteration 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "1675 variables, 2733 clauses",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "SAT checker: instance is SATISFIABLE",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "BV-Refinement: got SAT, and it simulates => SAT",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Total iterations: 1",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime Solver: 0.000666225s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Runtime decision procedure: 0.00143438s",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "messageText": "Building error trace",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "result": [
+      {
+        "description": "Null pointer check",
+        "property": "java::GCD.gcd_n:([I)I.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-low.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-high.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::GCD.gcd_n:([I)I.null-pointer-exception.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-low.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-high.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::GCD.gcd_n:([I)I.null-pointer-exception.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::GCD.gcd_n:([I)I.null-pointer-exception.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-low.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::GCD.gcd_n:([I)I.array-index-out-of-bounds-high.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-create-negative-size.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.10",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Denominator should be nonzero",
+        "property": "java::Main.main:(IIIII)V.integer-divide-by-zero.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.11",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "assertion at file Main.java line 10 function java::Main.main:(IIIII)V bytecode-index 61",
+        "property": "java::Main.main:(IIIII)V.assertion.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.12",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.13",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.14",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be >= 0",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-low.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array index should be < length",
+        "property": "java::Main.main:(IIIII)V.array-index-out-of-bounds-high.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Denominator should be nonzero",
+        "property": "java::Main.main:(IIIII)V.integer-divide-by-zero.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.main:(IIIII)V.null-pointer-exception.15",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "assertion at file Main.java line 16 function java::Main.main:(IIIII)V bytecode-index 102",
+        "property": "java::Main.main:(IIIII)V.assertion.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Null pointer check",
+        "property": "java::Main.<clinit>:()V.null-pointer-exception.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Denominator should be nonzero",
+        "property": "java::Library.gcd:(II)I.integer-divide-by-zero.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.2",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.3",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.4",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.5",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.6",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.7",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.8",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "Array size should be >= 0",
+        "property": "array-create-negative-size.9",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "no uncaught exception",
+        "property": "java::Main.main:(IIIII)V.1",
+        "status": "SUCCESS"
+      },
+      {
+        "description": "unwinding assertion loop 0",
+        "property": "java::Main.main:(IIIII)V.unwind.0",
+        "status": "FAILURE",
+        "trace": [
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": true,
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "__CPROVER_rounding_mode",
+            "mode": "C",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "identifier": {
+                  "id": "__CPROVER_rounding_mode"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "signed int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "@inflight_exception",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "@inflight_exception"
+                },
+                "identifier": {
+                  "id": "java::@inflight_exception"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "java$$Main$$clinit_already_run",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "java::Main::clinit_already_run"
+                },
+                "identifier": {
+                  "id": "java::Main::clinit_already_run"
+                },
+                "type": {
+                  "id": "bool"
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "0",
+              "data": false,
+              "name": "boolean"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "Main@class_model.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "Main@class_model"
+                    },
+                    "identifier": {
+                      "id": "java::Main@class_model"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#no_nondet_initialization": {
+                          "id": "1"
+                        },
+                        "identifier": {
+                          "id": "java::java.lang.Class"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "$assertionsDisabled",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "$assertionsDisabled"
+                },
+                "identifier": {
+                  "id": "java::Main.$assertionsDisabled"
+                },
+                "type": {
+                  "id": "c_bool",
+                  "namedSub": {
+                    "#access": {
+                      "id": "default"
+                    },
+                    "#class": {
+                      "id": "java::Main"
+                    },
+                    "#constant": {
+                      "id": "1"
+                    },
+                    "#field": {
+                      "id": "$assertionsDisabled"
+                    },
+                    "width": {
+                      "id": "8"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000",
+              "data": "false",
+              "name": "integer",
+              "type": "const boolean",
+              "width": 8
+            }
+          },
+          {
+            "function": {
+              "displayName": "__CPROVER_initialize",
+              "identifier": "__CPROVER_initialize",
+              "sourceLocation": {}
+            },
+            "hidden": false,
+            "internal": false,
+            "stepType": "function-return",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "uncaught_exception'",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "uncaught_exception'"
+                },
+                "identifier": {
+                  "id": "uncaught_exception'"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg0i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000001",
+                "data": "1",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg1i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000001",
+                "data": "1",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg2i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg2i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg2i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg2i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg2i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg2i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg2i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000001",
+                "data": "1",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg3i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg3i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg3i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg3i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg3i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg3i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg3i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000001",
+                "data": "1",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg4i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg4i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg4i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "arg4i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg4i"
+                },
+                "identifier": {
+                  "id": "__CPROVER__start::arg4i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "inputID": "arg4i",
+            "internal": true,
+            "mode": "java",
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "input",
+            "thread": 0,
+            "values": [
+              {
+                "binary": "00000000000000000000000000000000",
+                "data": "0",
+                "name": "integer",
+                "type": "int",
+                "width": 32
+              }
+            ]
+          },
+          {
+            "function": {
+              "displayName": "Main.main(int, int, int, int, int)",
+              "identifier": "java::Main.main:(IIIII)V",
+              "sourceLocation": {
+                "file": "Main.java",
+                "function": "java::Main.main:(IIIII)V",
+                "line": "3"
+              }
+            },
+            "hidden": false,
+            "internal": false,
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "function-call",
+            "thread": 0
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg0i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg0i"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::arg0i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg1i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg1i"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::arg1i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg2i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg2i"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::arg2i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg3i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg3i"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::arg3i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "actual-parameter",
+            "hidden": false,
+            "internal": false,
+            "lhs": "arg4i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "arg4i"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::arg4i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::7i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::7i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "45"
+                    },
+                    "line": {
+                      "id": "9"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::7i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::5a",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::5a"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "22"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::5a"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "newarray_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "newarray_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::newarray_tmp0"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "struct java::array[int] *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "dynamic_object1"
+                },
+                "identifier": {
+                  "id": "symex_dynamic::dynamic_object1"
+                },
+                "type": {
+                  "id": "struct_tag",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "array[int]"
+                    },
+                    "element_type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    },
+                    "identifier": {
+                      "id": "java::array[int]"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "members": [
+                {
+                  "name": "@java.lang.Object",
+                  "value": {
+                    "members": [
+                      {
+                        "name": "@class_identifier",
+                        "value": {
+                          "data": "java::java.lang.Class",
+                          "name": "string"
+                        }
+                      }
+                    ],
+                    "name": "struct"
+                  }
+                },
+                {
+                  "name": "length",
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                },
+                {
+                  "name": "data",
+                  "value": {
+                    "data": "null",
+                    "name": "pointer",
+                    "type": "int *"
+                  }
+                }
+              ],
+              "name": "struct"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.@java.lang.Object.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "member",
+                  "namedSub": {
+                    "component_name": {
+                      "id": "@java.lang.Object"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "identifier": {
+                          "id": "java::java.lang.Object"
+                        }
+                      }
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "symbol",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "dynamic_object1"
+                        },
+                        "identifier": {
+                          "id": "symex_dynamic::dynamic_object1"
+                        },
+                        "type": {
+                          "id": "struct_tag",
+                          "namedSub": {
+                            "#base_name": {
+                              "id": "array[int]"
+                            },
+                            "element_type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "identifier": {
+                              "id": "java::array[int]"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::java.lang.Class",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.length",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "length"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.data",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "data"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "int *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "newarray_tmp0",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "newarray_tmp0"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "1"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::newarray_tmp0"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "struct java::array[int] *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.@java.lang.Object.@class_identifier",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "@class_identifier"
+                },
+                "type": {
+                  "id": "string"
+                }
+              },
+              "sub": [
+                {
+                  "id": "member",
+                  "namedSub": {
+                    "component_name": {
+                      "id": "@java.lang.Object"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "identifier": {
+                          "id": "java::java.lang.Object"
+                        }
+                      }
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "symbol",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "dynamic_object1"
+                        },
+                        "identifier": {
+                          "id": "symex_dynamic::dynamic_object1"
+                        },
+                        "type": {
+                          "id": "struct_tag",
+                          "namedSub": {
+                            "#base_name": {
+                              "id": "array[int]"
+                            },
+                            "element_type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "identifier": {
+                              "id": "java::array[int]"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "java::array[int]",
+              "name": "string"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.length",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "length"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.data",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "data"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "int *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_object1.length",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "length"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000101",
+              "data": "5",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": false,
+            "lhs": "tmp_new_data_array",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "tmp_new_data_array"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::tmp_new_data_array"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "null",
+              "name": "pointer",
+              "type": "int *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": true,
+            "internal": true,
+            "lhs": "tmp_new_data_array",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "tmp_new_data_array"
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::tmp_new_data_array"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_2_array",
+              "name": "pointer",
+              "type": "int *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_object1.data",
+            "mode": "java",
+            "rawLhs": {
+              "id": "member",
+              "namedSub": {
+                "component_name": {
+                  "id": "data"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#reference": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_object1"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_object1"
+                    },
+                    "type": {
+                      "id": "struct_tag",
+                      "namedSub": {
+                        "#base_name": {
+                          "id": "array[int]"
+                        },
+                        "element_type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "identifier": {
+                          "id": "java::array[int]"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_2_array",
+              "name": "pointer",
+              "type": "int *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "dynamic_2_array",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "dynamic_2_array"
+                },
+                "identifier": {
+                  "id": "symex_dynamic::dynamic_2_array"
+                },
+                "type": {
+                  "id": "array",
+                  "namedSub": {
+                    "#dynamic": {
+                      "id": "1"
+                    },
+                    "size": {
+                      "id": "constant",
+                      "namedSub": {
+                        "type": {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        },
+                        "value": {
+                          "id": "5"
+                        }
+                      }
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_int"
+                        },
+                        "width": {
+                          "id": "32"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "elements": [
+                {
+                  "index": 0,
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                },
+                {
+                  "index": 1,
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                },
+                {
+                  "index": 2,
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                },
+                {
+                  "index": 3,
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                },
+                {
+                  "index": 4,
+                  "value": {
+                    "binary": "00000000000000000000000000000000",
+                    "data": "0",
+                    "name": "integer",
+                    "type": "int",
+                    "width": 32
+                  }
+                }
+              ],
+              "name": "array"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[0L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "0"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[1L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "1"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[2L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "2"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[3L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "3"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[4L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "4"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "1",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[0L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "0"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "5",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[1L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "1"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "9",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[2L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "2"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "13",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[3L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "3"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "17",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "dynamic_2_array[4L]",
+            "mode": "java",
+            "rawLhs": {
+              "id": "index",
+              "namedSub": {
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              },
+              "sub": [
+                {
+                  "id": "symbol",
+                  "namedSub": {
+                    "#base_name": {
+                      "id": "dynamic_2_array"
+                    },
+                    "identifier": {
+                      "id": "symex_dynamic::dynamic_2_array"
+                    },
+                    "type": {
+                      "id": "array",
+                      "namedSub": {
+                        "#dynamic": {
+                          "id": "1"
+                        },
+                        "size": {
+                          "id": "constant",
+                          "namedSub": {
+                            "type": {
+                              "id": "signedbv",
+                              "namedSub": {
+                                "#c_type": {
+                                  "id": "signed_int"
+                                },
+                                "width": {
+                                  "id": "32"
+                                }
+                              }
+                            },
+                            "value": {
+                              "id": "5"
+                            }
+                          }
+                        }
+                      },
+                      "sub": [
+                        {
+                          "id": "signedbv",
+                          "namedSub": {
+                            "#c_type": {
+                              "id": "signed_int"
+                            },
+                            "width": {
+                              "id": "32"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "constant",
+                  "namedSub": {
+                    "type": {
+                      "id": "signedbv",
+                      "namedSub": {
+                        "#c_type": {
+                          "id": "signed_long_int"
+                        },
+                        "width": {
+                          "id": "64"
+                        }
+                      }
+                    },
+                    "value": {
+                      "id": "4"
+                    }
+                  }
+                }
+              ]
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "21",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": true,
+            "lhs": "anonlocal::5a",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::5a"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "22"
+                    },
+                    "line": {
+                      "id": "3"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::5a"
+                },
+                "type": {
+                  "id": "pointer",
+                  "namedSub": {
+                    "#failed_symbol": {
+                      "id": "java::@inflight_exception$object"
+                    },
+                    "#no_nondet_initialization": {
+                      "id": "1"
+                    },
+                    "width": {
+                      "id": "64"
+                    }
+                  },
+                  "sub": [
+                    {
+                      "id": "empty"
+                    }
+                  ]
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "22",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "3"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "data": "dynamic_object1",
+              "name": "pointer",
+              "type": "void *"
+            }
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "24",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000000",
+              "data": "0",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "28",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "32",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "5"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "34",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000001",
+              "data": "1",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "35",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "28",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "32",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "5"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "34",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000010",
+              "data": "2",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "35",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "28",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "32",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "5"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "34",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000011",
+              "data": "3",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "35",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "28",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "32",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "5"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "assignmentType": "variable",
+            "hidden": false,
+            "internal": false,
+            "lhs": "anonlocal::6i",
+            "mode": "java",
+            "rawLhs": {
+              "id": "symbol",
+              "namedSub": {
+                "#base_name": {
+                  "id": "anonlocal::6i"
+                },
+                "#source_location": {
+                  "id": "",
+                  "namedSub": {
+                    "file": {
+                      "id": "Main.java"
+                    },
+                    "function": {
+                      "id": "java::Main.main:(IIIII)V"
+                    },
+                    "java_bytecode_index": {
+                      "id": "24"
+                    },
+                    "line": {
+                      "id": "4"
+                    }
+                  }
+                },
+                "identifier": {
+                  "id": "java::Main.main:(IIIII)V::anonlocal::6i"
+                },
+                "type": {
+                  "id": "signedbv",
+                  "namedSub": {
+                    "#c_type": {
+                      "id": "signed_int"
+                    },
+                    "width": {
+                      "id": "32"
+                    }
+                  }
+                }
+              }
+            },
+            "sourceLocation": {
+              "bytecodeIndex": "34",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "assignment",
+            "thread": 0,
+            "value": {
+              "binary": "00000000000000000000000000000100",
+              "data": "4",
+              "name": "integer",
+              "type": "int",
+              "width": 32
+            }
+          },
+          {
+            "hidden": false,
+            "sourceLocation": {
+              "bytecodeIndex": "35",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "location-only",
+            "thread": 0
+          },
+          {
+            "hidden": false,
+            "internal": false,
+            "property": "java::Main.main:(IIIII)V.unwind.0",
+            "reason": "unwinding assertion loop 0",
+            "sourceLocation": {
+              "bytecodeIndex": "35",
+              "file": "Main.java",
+              "function": "java::Main.main:(IIIII)V",
+              "line": "4"
+            },
+            "stepType": "failure",
+            "thread": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "messageText": "VERIFICATION FAILED",
+    "messageType": "STATUS-MESSAGE"
+  },
+  {
+    "cProverStatus": "failure"
+  }
+]

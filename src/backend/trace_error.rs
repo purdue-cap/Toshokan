@@ -18,6 +18,9 @@ quick_error! {
         JBMCLogError(err: &'static str) {
             display("{}", err)
         }
+        JBMCUnwindError(assertion: String) {
+            display("UnwindAssertion:{}", assertion)
+        }
         OtherError(desc: &'static str) {
             display("{}", desc)
         }

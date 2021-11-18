@@ -24,7 +24,6 @@ pub enum LogItem {
         #[serde(rename = "cProverStatus")]
         status: StatusInfo
     },
-    Other(HashMap<String, Value>)
 }
 
 pub type VerifyLogs = Vec<LogItem>;
@@ -214,8 +213,14 @@ pub enum ValueInfo {
     },
     #[serde(rename = "struct")]
     Struct {
+        // TODO: Struct parsing
         members: Vec<Value>
-    }
+    },
+    #[serde(rename = "array")]
+    Array {
+        // TODO: Array parsing
+        elements: Vec<Value>
+    },
 }
 
 impl ValueInfo {
@@ -385,6 +390,10 @@ impl LogAnalyzer {
             if let StatusInfo::Success = result.status {
                 continue;
             }
+            let unwind_prop_regex = Regex::new(r"^.*(\.unwind\.\d+$|\.recursion)$").expect("Hardcoded regex");
+            if unwind_prop_regex.is_match(&result.property) {
+                return Err(TraceError::JBMCUnwindError(result.property.clone()));
+            }
             self.analyze_traces(&result.trace)?;
         }
         Ok(())
@@ -419,6 +428,8 @@ mod tests {
     static JBMC_SAMPLE_OUTPUT : &'static str = include_str!("../../../tests/data/jbmc_sample_output.json");
     static JBMC_SAMPLE_TRACES : &'static str = include_str!("../../../tests/data/jbmc_sample_traces.json");
     static JBMC_TEST_SIMPLE_RETURN : &'static str = include_str!("../../../tests/data/jbmc_test_simple_return.json");
+    static JBMC_UNWINDING_ERROR: &'static str = include_str!("../../../tests/data/jbmc_unwinding_error.json");
+    static JBMC_UNWINDING_TRACES: &'static str = include_str!("../../../tests/data/jbmc_unwinding_traces.json");
 
     #[test]
     fn parses_json_output() -> Result<(), Box<dyn Error>> {
@@ -460,7 +471,30 @@ mod tests {
         let func_sigs = vec!["Library.add(int, int)".to_string()];
         let mut analyzer = LogAnalyzer::new(func_sigs);
         analyzer.analyze_logs(&logs)?;
+        // TODO: assertions for traces
         println!("{:?}", analyzer.traces);
+        Ok(())
+    }
+
+    #[test]
+    fn errors_on_unwinding_failure() -> Result<(), Box<dyn Error>> {
+        let logs: VerifyLogs = serde_json::from_str(JBMC_UNWINDING_ERROR)?;
+        let mut analyzer = LogAnalyzer::new(Vec::<String>::new());
+        let result = analyzer.analyze_logs(&logs);
+        println!("{:?}", result);
+        assert!(matches!(result, Err(TraceError::JBMCUnwindError{..})));
+        Ok(())
+    }
+
+    #[test]
+    fn parses_unwinding_traces() -> Result<(), Box<dyn Error>> {
+        let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_UNWINDING_TRACES);
+        if let Ok(content) = result {
+            println!("{:?}", content);
+        } else if let Err(error) = result {
+            println!("{:?}", error);
+            return Err(Box::new(error));
+        }
         Ok(())
     }
 }

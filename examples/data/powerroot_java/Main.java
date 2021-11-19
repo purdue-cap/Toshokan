@@ -16,6 +16,7 @@ public class Main {
 
     public static void main(int x) {
         int k=2;
+        if(k==0 || x==0) return;
         int val = PowerRoot.powerroot(k, x);
         assert(val !=0);
         assert(val == twokroot(x,k));

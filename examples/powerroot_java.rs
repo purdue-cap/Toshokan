@@ -23,6 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .bin_path(jbmc_bin)
         .unwind(9)
         .unwind_growth_step(1)
+        .unwind_maximum(16)
         .primitive_input_bound(Some((0, 7)))
         .build()?;
     let jsketch_config = JSketchConfigBuilder::default()

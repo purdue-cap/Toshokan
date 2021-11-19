@@ -20,8 +20,8 @@ pub struct JBMCConfig {
     pub unwind: Option<usize>,
     #[builder(default)]
     pub unwind_growth_step: Option<usize>,
-    #[builder(default = "false")]
-    pub unwind_as_c_e: bool,
+    #[builder(default)]
+    pub unwind_maximum: Option<usize>,
     #[builder(default)]
     pub depth: Option<usize>,
     #[builder(setter(each = "unwind_set"), default)]
@@ -54,14 +54,23 @@ impl<'c> JBMCRunner<'c> {
 
     pub fn get_current_unwind(&self) -> Option<usize> {self.current_unwind.clone()}
 
-    pub fn get_unknown_as_c_e(&self) -> bool {self.jbmc_config.unwind_as_c_e}
-
-    pub fn grow_unwind(&mut self, unwind_err: TraceError) -> Result<(), TraceError> {
+    pub fn grow_unwind(&mut self, err_loops: &Vec<String>) -> Result<(), TraceError> {
+        // Upon enter this function, an unwind error should already be detected
         if let (Some(current), Some(step)) = (self.current_unwind, self.jbmc_config.unwind_growth_step) {
-            self.current_unwind = Some(current + step);
+            let new_unwind = current + step;
+            if let Some(bound) = self.jbmc_config.unwind_maximum {
+                if new_unwind > bound {
+                    // Exceeded bound, throw error
+                    return Err(TraceError::JBMCUnwindError(err_loops.join(",")));
+                }
+            }
+            // Within bound/no bound, set new unwind
+            self.current_unwind = Some(new_unwind);
             Ok(())
         } else {
-            Err(unwind_err)
+            // Either no step set, or no unwind set
+            // Either case, an unwind error should be a hard error, throw it
+            Err(TraceError::JBMCUnwindError(err_loops.join(",")))
         }
     }
 

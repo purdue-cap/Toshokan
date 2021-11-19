@@ -85,6 +85,7 @@ impl<'r> CEGISLoop<'r> {
     }
 
     // Returning Ok(None) means verification passed
+    // Otherwise returns (C.E.s, Traces)
     fn verify<'a>(&self, compiler: &mut JavacRunner,
         runner: &mut JBMCRunner, analyzer: &'a mut JBMCLogAnalyzer)
         -> Result<Option<(&'a Vec<Vec<i32>>, &'a Vec<FuncLog>)>, Box<dyn std::error::Error>> {
@@ -93,34 +94,28 @@ impl<'r> CEGISLoop<'r> {
         fs::create_dir(&verification_dir)?;
         let _compiler_output = compiler.run(
             self.state.current_cand.iter(), &verification_dir)?;
-        let verif_passed = loop {
-            let logs_result = runner.run(
-                &self.config.get_params().verif_entrance, &verification_dir);
-            
-            let logs = match logs_result {
-                Ok(logs) => logs,
-                Err(TraceError::JSONError(Some(json_buf), json_err)) => {
-                    let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
-                    failed_file.write(&json_buf)?;
-                    return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
-                },
-                Err(other_error) => return Err(Box::new(other_error))
-            };
-            let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
-            serde_json::to_writer_pretty(log_file, &logs)?;
-            analyzer.unwind_as_c_e = runner.get_unknown_as_c_e();
-            match analyzer.analyze_logs(&logs) {
-                Ok(analyze_result) => break analyze_result,
-                Err(err @ TraceError::JBMCUnwindError(..)) => {
-                    runner.grow_unwind(err)?;
-                    println!("Unwind grown:{:?}", runner.get_current_unwind());
-                },
-                Err(other_error) => return Err(Box::new(other_error))
-            };
+        let logs_result = runner.run(
+            &self.config.get_params().verif_entrance, &verification_dir);
+        
+        let logs = match logs_result {
+            Ok(logs) => logs,
+            Err(TraceError::JSONError(Some(json_buf), json_err)) => {
+                let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
+                failed_file.write(&json_buf)?;
+                return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
+            },
+            Err(other_error) => return Err(Box::new(other_error))
         };
+        let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
+        serde_json::to_writer_pretty(log_file, &logs)?;
+        let verif_passed = analyzer.analyze_logs(&logs)?;
         if verif_passed {
             Ok(None)
         } else {
+            if !analyzer.get_unwind_err_loops().is_empty() {
+                runner.grow_unwind(analyzer.get_unwind_err_loops())?;
+                println!("Unwind growth:{:?}", runner.get_current_unwind());
+            }
             Ok(Some((analyzer.get_c_e_s(), analyzer.get_traces())))
         }
     }

@@ -16,3 +16,4 @@ src/backend/cpp/test.cpp
 test_*/
 *_results/
 *_sample/
+results/*

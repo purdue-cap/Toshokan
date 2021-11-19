@@ -20,6 +20,8 @@ pub struct JBMCConfig {
     pub unwind: Option<usize>,
     #[builder(default)]
     pub unwind_growth_step: Option<usize>,
+    #[builder(default = "false")]
+    pub unwind_as_c_e: bool,
     #[builder(default)]
     pub depth: Option<usize>,
     #[builder(setter(each = "unwind_set"), default)]
@@ -51,6 +53,8 @@ impl<'c> JBMCRunner<'c> {
     }
 
     pub fn get_current_unwind(&self) -> Option<usize> {self.current_unwind.clone()}
+
+    pub fn get_unknown_as_c_e(&self) -> bool {self.jbmc_config.unwind_as_c_e}
 
     pub fn grow_unwind(&mut self, unwind_err: TraceError) -> Result<(), TraceError> {
         if let (Some(current), Some(step)) = (self.current_unwind, self.jbmc_config.unwind_growth_step) {

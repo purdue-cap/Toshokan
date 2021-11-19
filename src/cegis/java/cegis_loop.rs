@@ -93,16 +93,12 @@ impl<'r> CEGISLoop<'r> {
         fs::create_dir(&verification_dir)?;
         let _compiler_output = compiler.run(
             self.state.current_cand.iter(), &verification_dir)?;
-        let logs = loop {
+        let verif_passed = loop {
             let logs_result = runner.run(
                 &self.config.get_params().verif_entrance, &verification_dir);
             
-            match logs_result {
-                Ok(logs) => break logs,
-                Err(err @ TraceError::JBMCUnwindError(..)) => {
-                    runner.grow_unwind(err)?;
-                    println!("JBMC unwind grown:{:?}", runner.get_current_unwind());
-                }
+            let logs = match logs_result {
+                Ok(logs) => logs,
                 Err(TraceError::JSONError(Some(json_buf), json_err)) => {
                     let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
                     failed_file.write(&json_buf)?;
@@ -110,10 +106,18 @@ impl<'r> CEGISLoop<'r> {
                 },
                 Err(other_error) => return Err(Box::new(other_error))
             };
+            let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
+            serde_json::to_writer_pretty(log_file, &logs)?;
+            analyzer.unwind_as_c_e = runner.get_unknown_as_c_e();
+            match analyzer.analyze_logs(&logs) {
+                Ok(analyze_result) => break analyze_result,
+                Err(err @ TraceError::JBMCUnwindError(..)) => {
+                    runner.grow_unwind(err)?;
+                    println!("Unwind grown:{:?}", runner.get_current_unwind());
+                },
+                Err(other_error) => return Err(Box::new(other_error))
+            };
         };
-        let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
-        serde_json::to_writer_pretty(log_file, &logs)?;
-        let verif_passed = analyzer.analyze_logs(&logs)?;
         if verif_passed {
             Ok(None)
         } else {

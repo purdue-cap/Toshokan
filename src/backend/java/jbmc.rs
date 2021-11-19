@@ -287,7 +287,8 @@ impl Default for SourceLocationInfo {
 pub struct LogAnalyzer {
     c_e_s: Vec<Vec<i32>>,
     traced_functions: HashSet<String>,
-    traces: Vec<FuncLog>
+    traces: Vec<FuncLog>,
+    pub unwind_as_c_e: bool
 }
 
 // For storing a function call record that has not returned yet
@@ -319,7 +320,8 @@ impl LogAnalyzer {
         LogAnalyzer {
             c_e_s: vec![],
             traced_functions: func_names.into_iter().map(|s| s.as_ref().to_string()).collect(),
-            traces: vec![]
+            traces: vec![],
+            unwind_as_c_e: false
         }
     }
 
@@ -417,7 +419,7 @@ impl LogAnalyzer {
                 continue;
             }
             let unwind_prop_regex = Regex::new(r"^.*(\.unwind\.\d+$|\.recursion)$").expect("Hardcoded regex");
-            if unwind_prop_regex.is_match(&result.property) {
+            if !self.unwind_as_c_e && unwind_prop_regex.is_match(&result.property) {
                 return Err(TraceError::JBMCUnwindError(result.property.clone()));
             }
             self.analyze_traces(&result.trace)?;

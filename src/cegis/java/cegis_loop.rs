@@ -5,8 +5,9 @@ use super::{CEGISState, CEGISConfig, super::FuncLog};
 use crate::frontend::template_helpers::register_helpers;
 use crate::frontend::{Encoder, Renderer, CEEncoder};
 use crate::frontend::java::{JSketchRunner, JBMCRunner, JavacRunner};
-use crate::backend::java::JBMCLogAnalyzer;
+use crate::backend::{java::JBMCLogAnalyzer, TraceError};
 use tempfile::{tempdir, TempDir};
+use std::io::Write;
 use std::fs;
 
 struct TempDirSaver{
@@ -87,8 +88,17 @@ impl<'r> CEGISLoop<'r> {
         fs::create_dir(&verification_dir)?;
         let _compiler_output = compiler.run(
             self.state.current_cand.iter(), &verification_dir)?;
-        let logs = runner.run(
-            &self.config.get_params().verif_entrance, &verification_dir)?;
+        let logs_result = runner.run(
+            &self.config.get_params().verif_entrance, &verification_dir);
+        let logs = match logs_result {
+            Ok(logs) => logs,
+            Err(TraceError::JSONError(Some(json_buf), json_err)) => {
+                let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
+                failed_file.write(&json_buf)?;
+                return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
+            },
+            Err(other_error) => return Err(Box::new(other_error))
+        };
         let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
         serde_json::to_writer_pretty(log_file, &logs)?;
         let verif_passed = analyzer.analyze_logs(&logs)?;

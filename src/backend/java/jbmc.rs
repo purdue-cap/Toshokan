@@ -96,6 +96,26 @@ pub enum VerifyTrace {
         #[serde(flatten)]
         others: HashMap<String, Value>
     },
+    #[serde(rename = "location-only")]
+    LocationOnly {
+        hidden: bool,
+        #[serde(rename = "sourceLocation")]
+        source_location: SourceLocationInfo,
+        thread: usize,
+
+        #[serde(flatten)]
+        others: HashMap<String, Value>
+    },
+    #[serde(rename = "failure")]
+    Failure {
+        property: String,
+        reason: String,
+
+        #[serde(flatten)]
+        info: TraceInfo,
+        #[serde(flatten)]
+        others: HashMap<String, Value>
+    },
     #[serde(other)]
     Other
 }
@@ -221,6 +241,12 @@ pub enum ValueInfo {
         // TODO: Array parsing
         elements: Vec<Value>
     },
+    #[serde(rename = "float")]
+    Float {
+        binary: String,
+        data: String,
+        width: usize
+    }
 }
 
 impl ValueInfo {
@@ -425,12 +451,8 @@ impl LogAnalyzer {
 mod tests {
     use super::*;
     use std::error::Error;
-    static JBMC_SAMPLE_OUTPUT : &'static str = include_str!("../../../tests/data/jbmc_sample_output.json");
-    static JBMC_SAMPLE_TRACES : &'static str = include_str!("../../../tests/data/jbmc_sample_traces.json");
-    static JBMC_TEST_SIMPLE_RETURN : &'static str = include_str!("../../../tests/data/jbmc_test_simple_return.json");
-    static JBMC_UNWINDING_ERROR: &'static str = include_str!("../../../tests/data/jbmc_unwinding_error.json");
-    static JBMC_UNWINDING_TRACES: &'static str = include_str!("../../../tests/data/jbmc_unwinding_traces.json");
 
+    static JBMC_SAMPLE_OUTPUT : &'static str = include_str!("../../../tests/data/jbmc_sample_output.json");
     #[test]
     fn parses_json_output() -> Result<(), Box<dyn Error>> {
         let result : Result<VerifyLogs, serde_json::Error> = serde_json::from_str(JBMC_SAMPLE_OUTPUT);
@@ -443,6 +465,7 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_SAMPLE_TRACES : &'static str = include_str!("../../../tests/data/jbmc_sample_traces.json");
     #[test]
     fn parses_json_traces() -> Result<(), Box<dyn Error>> {
         let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_SAMPLE_TRACES);
@@ -465,6 +488,7 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_TEST_SIMPLE_RETURN : &'static str = include_str!("../../../tests/data/jbmc_test_simple_return.json");
     #[test]
     fn extracts_trace() -> Result<(), Box<dyn Error>> {
         let logs: VerifyLogs = serde_json::from_str(JBMC_TEST_SIMPLE_RETURN)?;
@@ -476,6 +500,7 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_UNWINDING_ERROR: &'static str = include_str!("../../../tests/data/jbmc_unwinding_error.json");
     #[test]
     fn errors_on_unwinding_failure() -> Result<(), Box<dyn Error>> {
         let logs: VerifyLogs = serde_json::from_str(JBMC_UNWINDING_ERROR)?;
@@ -486,6 +511,7 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_UNWINDING_TRACES: &'static str = include_str!("../../../tests/data/jbmc_unwinding_traces.json");
     #[test]
     fn parses_unwinding_traces() -> Result<(), Box<dyn Error>> {
         let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_UNWINDING_TRACES);
@@ -497,4 +523,44 @@ mod tests {
         }
         Ok(())
     }
+
+    // FIXME: Wrong sqrt implementation used for this regression test log, though still
+    // good for regression test, might be bette to use a correct one
+    static JBMC_REGRESS_001: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_001/full.json");
+    #[test]
+    fn parses_regress_001_full() -> Result<(), Box<dyn Error>> {
+        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_001)?;
+        let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
+        analyzer.analyze_logs(&logs)?;
+        println!("{:#?}", analyzer.get_c_e_s());
+        println!("{:#?}", analyzer.get_traces());
+        Ok(())
+    }
+
+    static JBMC_REGRESS_001_TRACE1: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_001/trace1.json");
+    #[test]
+    fn parses_regress_001_trace1() -> Result<(), Box<dyn Error>> {
+        let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_001_TRACE1);
+        if let Ok(content) = result {
+            println!("{:#?}", content);
+        } else if let Err(error) = result {
+            println!("{:#?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
+
+    static JBMC_REGRESS_001_TRACE2: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_001/trace2.json");
+    #[test]
+    fn parses_regress_001_trace2() -> Result<(), Box<dyn Error>> {
+        let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_001_TRACE2);
+        if let Ok(content) = result {
+            println!("{:#?}", content);
+        } else if let Err(error) = result {
+            println!("{:#?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
+
 }

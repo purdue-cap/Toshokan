@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use crate::backend::{TraceError ,java::JBMCLogs};
 use derive_builder::Builder;
+use quick_error::ResultExt;
 
 pub struct JBMCRunner<'c> {
     jbmc_config: &'c JBMCConfig,
@@ -122,7 +123,7 @@ impl<'c> JBMCRunner<'c> {
         cmd.args(args);
 
         let result = cmd.output()?;
-        Ok(serde_json::from_slice(&result.stdout)?)
+        Ok(serde_json::from_slice(&result.stdout).context(result.stdout)?)
     }
 }
 

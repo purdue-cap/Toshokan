@@ -276,7 +276,7 @@ int main(int argc, char** argv) {{
             if let Ok(log) = log_parse_result {
                 logs.push(log);
             } else if let Err(error) = log_parse_result {
-                if let TraceError::JSONError(_) = error {
+                if let TraceError::JSONError(_, _) = error {
                     continue;
                 } else {
                     return Err(error);

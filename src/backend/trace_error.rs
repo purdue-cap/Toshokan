@@ -7,12 +7,13 @@ quick_error! {
     pub enum TraceError {
         IOError(err: IOError) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
-        JSONError(err: JSONError) {
-            from()
-            cause(err)
+        JSONError(json_buf: Option<Vec<u8>>, err: JSONError) {
+            from(err: JSONError) -> (None, err)
+            context(buf: Vec<u8>, err: JSONError) -> (Some(buf), err)
+            source(err)
             display("{}", err)
         }
         JBMCLogError(err: &'static str) {

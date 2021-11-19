@@ -11,32 +11,32 @@ quick_error! {
     pub enum EncodeError {
         TemplateError(err: TemplateError) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         TemplateFileError(err: TemplateFileError) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         RenderError(err: RenderError){
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         BorrowError(err: BorrowError){
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         BorrowMutError(err: BorrowMutError){
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         IOError(err: IOError) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         RewriteError(desc: &'static str) {

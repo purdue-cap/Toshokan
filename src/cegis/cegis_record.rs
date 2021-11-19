@@ -120,12 +120,12 @@ quick_error! {
     pub enum Error {
         IOError(err: std::io::Error) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
         SerdeJSONError(err: serde_json::Error) {
             from()
-            cause(err)
+            source(err)
             display("{}", err)
         }
     }

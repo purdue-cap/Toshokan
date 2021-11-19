@@ -7,6 +7,7 @@ use quick_error::ResultExt;
 
 pub struct JBMCRunner<'c> {
     jbmc_config: &'c JBMCConfig,
+    current_unwind: Option<usize>,
     pub extra_class_path: Vec<OsString>,
     pub extra_flags: Vec<OsString>,
 }
@@ -17,6 +18,8 @@ pub struct JBMCConfig {
     pub bin_path: PathBuf,
     #[builder(default = "Some(32)")]
     pub unwind: Option<usize>,
+    #[builder(default)]
+    pub unwind_growth_step: Option<usize>,
     #[builder(default)]
     pub depth: Option<usize>,
     #[builder(setter(each = "unwind_set"), default)]
@@ -41,8 +44,20 @@ impl<'c> JBMCRunner<'c> {
     pub fn new(jbmc_config: &'c JBMCConfig) -> Self {
         Self {
             jbmc_config: jbmc_config,
+            current_unwind: jbmc_config.unwind.clone(),
             extra_class_path: vec![],
             extra_flags: vec![]
+        }
+    }
+
+    pub fn get_current_unwind(&self) -> Option<usize> {self.current_unwind.clone()}
+
+    pub fn grow_unwind(&mut self, unwind_err: TraceError) -> Result<(), TraceError> {
+        if let (Some(current), Some(step)) = (self.current_unwind, self.jbmc_config.unwind_growth_step) {
+            self.current_unwind = Some(current + step);
+            Ok(())
+        } else {
+            Err(unwind_err)
         }
     }
 
@@ -53,7 +68,7 @@ impl<'c> JBMCRunner<'c> {
             "--trace-json-extended".into(),
             "--unwinding-assertions".into()];
 
-        if let Some(unwind) = self.jbmc_config.unwind.as_ref() {
+        if let Some(unwind) = self.current_unwind {
             flags.push("--unwind".into());
             flags.push(unwind.to_string().into());
         }

@@ -1,15 +1,17 @@
 use handlebars::Handlebars;
 use std::cell::RefCell;
 use std::path::PathBuf;
-use super::{CEGISState, CEGISConfig, super::FuncLog};
+use super::{CEGISState, CEGISConfig, CEGISRecorder, super::FuncLog};
 use crate::frontend::template_helpers::register_helpers;
 use crate::frontend::{Encoder, Renderer, CEEncoder};
 use crate::frontend::java::{JSketchRunner, JBMCRunner, JavacRunner};
 use crate::backend::{java::JBMCLogAnalyzer, TraceError};
 use tempfile::{tempdir, TempDir};
+use tempfile::Builder as TempFileBuilder;
 use std::io::Write;
 use std::fs;
 
+// TODO: Use logging utilities to replace println in java procedures
 struct TempDirSaver{
     temp_dir_obj: Option<TempDir>,
 }
@@ -38,7 +40,8 @@ pub struct CEGISLoop<'r> {
     hb: RefCell<Handlebars<'r>>,
     state: CEGISState,
     config: CEGISConfig,
-    work_dir: Option<PathBuf>
+    work_dir: Option<PathBuf>,
+    recorder: Option<CEGISRecorder>,
 }
 
 impl<'r> CEGISLoop<'r> {
@@ -49,11 +52,13 @@ impl<'r> CEGISLoop<'r> {
             hb: RefCell::new(hb),
             state: CEGISState::new(config.get_params()),
             config: config,
-            work_dir: None
+            work_dir: None,
+            recorder: None,
         }
     }
 
     pub fn get_work_dir(&self) -> Option<&PathBuf> {self.work_dir.as_ref()}
+    pub fn get_recorder(&self) -> Option<&CEGISRecorder> {self.recorder.as_ref()}
 
     fn synthesize(&self, c_e: &CEEncoder, runner: &mut JSketchRunner)
         -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
@@ -88,16 +93,23 @@ impl<'r> CEGISLoop<'r> {
         fs::create_dir(&verification_dir)?;
         let _compiler_output = compiler.run(
             self.state.current_cand.iter(), &verification_dir)?;
-        let logs_result = runner.run(
-            &self.config.get_params().verif_entrance, &verification_dir);
-        let logs = match logs_result {
-            Ok(logs) => logs,
-            Err(TraceError::JSONError(Some(json_buf), json_err)) => {
-                let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
-                failed_file.write(&json_buf)?;
-                return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
-            },
-            Err(other_error) => return Err(Box::new(other_error))
+        let logs = loop {
+            let logs_result = runner.run(
+                &self.config.get_params().verif_entrance, &verification_dir);
+            
+            match logs_result {
+                Ok(logs) => break logs,
+                Err(err @ TraceError::JBMCUnwindError(..)) => {
+                    runner.grow_unwind(err)?;
+                    println!("JBMC unwind grown:{:?}", runner.get_current_unwind());
+                }
+                Err(TraceError::JSONError(Some(json_buf), json_err)) => {
+                    let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
+                    failed_file.write(&json_buf)?;
+                    return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
+                },
+                Err(other_error) => return Err(Box::new(other_error))
+            };
         };
         let log_file = fs::File::create(&verification_dir.join("jbmc_log.json"))?;
         serde_json::to_writer_pretty(log_file, &logs)?;
@@ -152,24 +164,57 @@ impl<'r> CEGISLoop<'r> {
             self.config.get_params().lib_funcs.iter()
         );
 
+        self.recorder = if self.config.get_params().enable_record {
+            Some(CEGISRecorder::new(Some(
+                TempFileBuilder::new().prefix("emphermal_record.").suffix(".json").tempfile()?
+            )))
+        } else {
+            None
+        };
+
+        if let Some(ref recorder) = self.recorder {
+            println!("Emphermal Record:{:?}", recorder.get_ephemeral_record_path());
+        }
+
         // Initial counter examples
-        self.state.c_e_set.insert(vec![0; self.config.get_params().n_inputs]);
+        let mut init_c_e : Vec<Vec<i32>> = vec![vec![0; self.config.get_params().n_inputs]];
+        if let Some(ref mut recorder) = self.recorder {
+            recorder.set_new_c_e_s(&init_c_e);
+            recorder.start_total_clock();
+        }
+        self.state.c_e_set.insert(init_c_e.pop().expect("Index checked"));
         self.state.update_params()
             .ok_or("Param update failure")?;
 
         loop {
             // Synthesis
+            if let Some(ref mut recorder) = self.recorder {
+                recorder.set_iter_nth(self.state.get_iter_count());
+                recorder.start_synthesis();
+            }
             let synth_result = self.synthesize(
                 &c_e_encoder, 
                 &mut jsketch_runner)?;
             self.state.current_cand = synth_result;
+
+            if let Some(ref mut recorder) = self.recorder {
+                recorder.stop_synthesis();
+                recorder.start_verification();
+            }
 
             let verif_result = self.verify(
                 &mut javac_runner,
                 &mut jbmc_runner,
                 &mut log_analyzer
             )?;
+            if let Some(ref mut recorder) = self.recorder {
+                recorder.stop_verification();
+            }
             if let Some((c_e_s, traces)) = verif_result {
+                if let Some(ref mut recorder) = self.recorder {
+                    recorder.set_new_c_e_s(c_e_s);
+                    recorder.set_new_traces(traces);
+                }
                 self.state.c_e_set.extend(c_e_s.iter().cloned());
                 self.state.logs.extend(traces.iter().cloned());
                 self.state.update_params()
@@ -177,12 +222,22 @@ impl<'r> CEGISLoop<'r> {
             } else {
                 break;
             }
-            self.state.incr_iteration()
+            if let Some(ref mut recorder) = self.recorder {
+                recorder.step_iteration();
+                recorder.commit();
+                recorder.write_ephemeral_record()?;
+            }
+            self.state.incr_iteration();
         }
         for path in self.state.current_cand.iter() {
             let target = self.config.get_params().output_dir
                 .join(path.file_name().ok_or("No file name in cand path")?);
             fs::copy(path, &target)?;
+        }
+        if let Some(ref mut recorder) = self.recorder {
+            recorder.set_total_iter(self.state.get_iter_count());
+            recorder.set_solved(true);
+            recorder.commit_time();
         }
         Ok(())
     }

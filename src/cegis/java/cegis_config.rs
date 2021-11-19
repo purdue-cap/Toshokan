@@ -41,4 +41,6 @@ pub struct CEGISConfigParams {
     pub output_dir: PathBuf,
     #[builder(default = "false")]
     pub keep_tmp: bool,
+    #[builder(default = "false")]
+    pub enable_record: bool,
 }

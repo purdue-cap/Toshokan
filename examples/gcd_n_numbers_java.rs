@@ -24,14 +24,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwind(17)
         .unwind_growth_step(1)
         .unwind_maximum(32)
-        .primitive_input_bound(Some((0, 15)))
+        .primitive_input_bound(Some((0, 7)))
         .build()?;
     let jsketch_config = JSketchConfigBuilder::default()
         .dir_path(jsketch_dir)
         .inline(None)
         .unroll(16)
-        .inbits(4)
-        .cbits(4)
+        .inbits(3)
+        .cbits(3)
         .build()?;
     let config_params = CEGISConfigParamsBuilder::default()
         .jbmc_config(jbmc_config)

@@ -1,7 +1,7 @@
 use libpartlibspec::cegis::java::{CEGISConfig, CEGISLoop, CEGISConfigParamsBuilder};
 use libpartlibspec::frontend::java::{JBMCConfigBuilder, JSketchConfigBuilder};
 use std::path::PathBuf;
-
+use tempfile::Builder as TempFileBuilder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let base_data_dir = std::env::current_dir()?.join(file!()).parent().ok_or("Get parent failed")?.join("data/gcd_java");
@@ -18,14 +18,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut javac_bin = PathBuf::from("javac");
     if let Ok(env_path) = std::env::var("JAVAC_BIN") {
         javac_bin = PathBuf::from(env_path);
-    }
+    } 
     let jbmc_config = JBMCConfigBuilder::default()
         .bin_path(jbmc_bin)
-        .unwind(8)
-        .primitive_input_bound(Some((0, 7)))
+        .unwind(17)
+        .unwind_growth_step(1)
+        .unwind_maximum(32)
+        .primitive_input_bound(Some((0, 15)))
         .build()?;
     let jsketch_config = JSketchConfigBuilder::default()
         .dir_path(jsketch_dir)
+        .inline(None)
+        .unroll(16)
+        .inbits(4)
+        .cbits(4)
         .build()?;
     let config_params = CEGISConfigParamsBuilder::default()
         .jbmc_config(jbmc_config)
@@ -40,8 +46,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .synth_file(synthesis_common_file)
         .output_class("GCD".into())
         .n_inputs(5 as usize)
-        .output_dir("/usr/tmp")
+        .output_dir("results/")
         .keep_tmp(true)
+        .enable_record(true)
         .build()?;
     let config = CEGISConfig::new(config_params);
     let mut cegis_loop = CEGISLoop::new(config);
@@ -49,5 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("WorkDir: {:?}", cegis_loop.get_work_dir());
         return Err(err);
     }
+
+    let (mut record_file, record_file_path) = TempFileBuilder::new().prefix("gcd_java.").suffix(".record.json").tempfile_in(".")?.keep()?;
+    cegis_loop.get_recorder().ok_or("Recorder uninitialized")?.write_json_pretty(&mut record_file)?;
+    println!("Record File: {}", record_file_path.file_name().ok_or("No record file name")?.to_str().ok_or("Record file name decode failed")?);
     Ok(())
 }

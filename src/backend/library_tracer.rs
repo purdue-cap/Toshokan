@@ -299,7 +299,8 @@ mod tests {
         let json_str = r#"{"meta":"FuncCall","args":[5],"rtn":2,"func":"sqrt"}"#;
         let fixture = TraceLog::FuncCall(FuncLog {
             args: vec![json!(5)],
-            rtn: json!(2),
+            rtn: Some(json!(2)),
+            this: None,
             func: "sqrt".to_string()
         });
         let result = parse_log_from_json(json_str)?;

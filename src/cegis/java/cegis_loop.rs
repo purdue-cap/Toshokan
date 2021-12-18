@@ -88,7 +88,7 @@ impl<'r> CEGISLoop<'r> {
     // Otherwise returns (C.E.s, Traces)
     fn verify<'a>(&self, compiler: &mut JavacRunner,
         runner: &mut JBMCRunner, analyzer: &'a mut JBMCLogAnalyzer)
-        -> Result<Option<(&'a Vec<Vec<i32>>, &'a Vec<FuncLog>)>, Box<dyn std::error::Error>> {
+        -> Result<Option<(&'a Vec<Vec<i32>>, &'a Vec<Vec<FuncLog>>)>, Box<dyn std::error::Error>> {
         let verification_dir = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             format!("verification_{}", self.state.get_iter_count()));
         fs::create_dir(&verification_dir)?;

@@ -263,6 +263,14 @@ impl ValueInfo {
         }
     }
 
+    fn parse_as_pointer(&self) -> Result<String, TraceError> {
+        if let ValueInfo::Pointer{data, ..} = self {
+            Ok(data.clone())
+        } else {
+            Err(JBMCLogError("Unsupported value type"))
+        }
+    }
+
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -287,13 +295,14 @@ impl Default for SourceLocationInfo {
 pub struct LogAnalyzer {
     c_e_s: Vec<Vec<i32>>,
     traced_functions: HashSet<String>,
-    traces: Vec<FuncLog>,
+    traces: Vec<Vec<FuncLog>>,
     unwind_err_loops: Vec<String>
 }
 
 // For storing a function call record that has not returned yet
 struct FuncCallRecord<'s> {
     args: Vec<Value>,
+    this: Option<String>,
     func: &'s str,
 }
 
@@ -301,15 +310,17 @@ impl<'s> FuncCallRecord<'s>  {
     fn new(name: &'s str) -> Self {
         Self {
             args: vec![],
+            this: None,
             func: name.as_ref()
         }
     }
     
-    fn into_func_log(self, ret_val: i32) -> FuncLog {
+    fn into_func_log(self, ret_val: Option<i32>) -> FuncLog {
         FuncLog {
             func: self.func.to_string(),
             args: self.args.into_iter().map(|v| Value::from(v)).collect(),
-            rtn: Value::from(ret_val)
+            this: self.this,
+            rtn: ret_val.map(|v| Value::from(v))
         }
     }
 }
@@ -326,7 +337,7 @@ impl LogAnalyzer {
     }
 
     pub fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&self.c_e_s}
-    pub fn get_traces(&self) -> &Vec<FuncLog> {&self.traces}
+    pub fn get_traces(&self) -> &Vec<Vec<FuncLog>> {&self.traces}
     pub fn get_unwind_err_loops(&self) -> &Vec<String> {&self.unwind_err_loops}
 
     fn analyze_traces<'l>(&mut self, traces: &'l Vec<VerifyTrace>) -> Result<(), TraceError> {
@@ -340,6 +351,8 @@ impl LogAnalyzer {
         let mut func_call_stack: Vec<FuncCallRecord> = vec![];
         // Last retrieved return value
         let mut last_return: Option<i32> = None;
+        // Current sequence of traces
+        let mut current_traces: Vec<FuncLog> = vec![];
         while let Some(trace) = it.next() {
             match trace {
                 input @ VerifyTrace::Input{..} => {
@@ -362,22 +375,29 @@ impl LogAnalyzer {
                     if record.func != &function.display_name {
                         return Err(JBMCLogError("func_call_stack mismatch"));
                     }
-                    // Currently we assume that traced functions are not void
-                    // If we do not see a ret_val which means returning from a void function
-                    // We just assume it is from an non-traced function and ignore the trace
-                    if let Some(ret_val) = last_return.take() {
-                        if self.traced_functions.contains(&function.display_name) {
-                            self.traces.push(record.into_func_log(ret_val));
-                        }
+                    let current_return = last_return.take();
+                    if self.traced_functions.contains(&function.display_name) {
+                        current_traces.push(record.into_func_log(current_return));
                     }
                 }
                 trace @ VerifyTrace::Assignment{
                     assignment_type: AssignmentTypeInfo::ActualParameter,
+                    ref lhs, ref value,
                     ..
                 } => {
+                    // Check for "this" parameters
+                    if lhs == "this" {
+                        let record = func_call_stack.last_mut()
+                            .ok_or(JBMCLogError("func_call_stack empty"))?;
+                        if let Ok(this_address) = value.parse_as_pointer() {
+                            record.this = Some(this_address);
+                        } else {
+                            // Parse failure of this parameter
+                        }
+                    }
                     // Skip failed param assignment parses instead of returning error
                     // since unsupported types in un-traced functions will error out
-                    if let Ok((index, value)) = trace.parse_as_param_assign() {
+                    else if let Ok((index, value)) = trace.parse_as_param_assign() {
                         let record = func_call_stack.last_mut()
                             .ok_or(JBMCLogError("func_call_stack empty"))?;
                         if record.args.len() < index + 1 {
@@ -411,6 +431,7 @@ impl LogAnalyzer {
             }
         }
         self.c_e_s.push(current_input);
+        self.traces.push(current_traces);
         Ok(())
     }
 
@@ -564,6 +585,30 @@ mod tests {
             println!("{:#?}", error);
             return Err(Box::new(error));
         }
+        Ok(())
+    }
+
+    static JBMC_OBJECT_SAMPLE : &'static str = include_str!("../../../tests/data/jbmc_object_sample.json");
+    #[test]
+    fn parses_object_sample() -> Result<(), Box<dyn Error>> {
+        let result : Result<VerifyLogs, serde_json::Error> = serde_json::from_str(JBMC_OBJECT_SAMPLE);
+        if let Ok(content) = result {
+            println!("{:?}", content);
+        } else if let Err(error) = result {
+            println!("{:?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn extracts_trace_from_object_example() -> Result<(), Box<dyn Error>> {
+        let logs: VerifyLogs = serde_json::from_str(JBMC_OBJECT_SAMPLE)?;
+        let func_sigs = vec!["Adder(int)".to_string(), "Adder.add(int)".to_string()];
+        let mut analyzer = LogAnalyzer::new(func_sigs);
+        analyzer.analyze_logs(&logs)?;
+        // TODO: assertions for traces
+        println!("{:?}", analyzer.traces);
         Ok(())
     }
 

@@ -27,6 +27,8 @@ pub struct JSketchConfig {
     pub sk_opts: Vec<String>,
 }
 
+test_fixture!(JSketchConfig, dummy, builder{dir_path("")});
+
 impl<'c> JSketchRunner<'c> {
     pub fn new(jsketch_config: &'c JSketchConfig) -> Self {
         Self {

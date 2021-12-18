@@ -13,7 +13,7 @@ struct CEGISRecordEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     new_c_e_s: Option<Vec<Vec<i32>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    new_traces: Option<Vec<FuncLog>>,
+    new_traces: Option<Vec<Vec<FuncLog>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     synthesis_wall_time: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -36,7 +36,7 @@ pub struct CEGISRecorder {
     record: CEGISRecord,
     iter_nth: Option<usize>,
     new_c_e_s: Option<Vec<Vec<i32>>>,
-    new_traces: Option<Vec<FuncLog>>,
+    new_traces: Option<Vec<Vec<FuncLog>>>,
     total_clock: CEGISTimer,
     synthesis_clock: CEGISTimer,
     verification_clock: CEGISTimer,
@@ -78,7 +78,7 @@ impl CEGISRecorder {
         self.new_c_e_s = Some(new_c_e_s.clone());
     }
 
-    pub fn set_new_traces(&mut self, new_traces: &Vec<FuncLog>) {
+    pub fn set_new_traces(&mut self, new_traces: &Vec<Vec<FuncLog>>) {
         self.new_traces = Some(new_traces.clone());
     }
 

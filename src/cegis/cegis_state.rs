@@ -35,7 +35,11 @@ pub enum TraceLog {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct FuncLog {
     pub args: Vec<Value>,
-    pub rtn: Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    // this is always a pointer, use string to store address
+    pub this: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rtn: Option<Value>,
     pub func: String
 }
 
@@ -44,7 +48,8 @@ impl Hash for FuncLog {
         for value in self.args.iter() {
             value.to_string().hash(state);
         }
-        self.rtn.to_string().hash(state);
+        self.this.hash(state);
+        self.rtn.as_ref().map(|v| v.to_string()).hash(state);
         self.func.hash(state);
     }
 }
@@ -70,7 +75,9 @@ fn encode_json_to_i64(val: &Value) -> Option<i64> {
 impl FuncLog {
     pub fn remove_key_from_data(&mut self, key: &str) {
         self.args.iter_mut().for_each(|arg| remove_key_from_json(arg, key));
-        remove_key_from_json(&mut self.rtn, key);
+        if let Some(ref mut rtn_val) = self.rtn {
+            remove_key_from_json(rtn_val, key);
+        }
     }
     // Remove all non-atomic @ fields to atomize the Log
     pub fn atomize(&mut self) {
@@ -222,7 +229,7 @@ impl CEGISState {
                             current_logs.as_mut()?.get_mut(&address).expect("Should ensured key").push(atomic_func_log);
                         },
                         FuncConfig::Init{args: _} => {
-                            let address = func_log.rtn.as_object()?.get("@address")?.as_u64()? as usize;
+                            let address = func_log.rtn.as_ref()?.as_object()?.get("@address")?.as_u64()? as usize;
                             if !current_logs.as_ref()?.contains_key(&address) {
                                 current_logs.as_mut()?.insert(address, vec![]);
                             }
@@ -272,6 +279,7 @@ impl CEGISState {
                         non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
                             args: current_history.iter().map(|v| Value::from(*v)).collect(),
                             func: entry.func,
+                            this: entry.this,
                             rtn: entry.rtn
                         });
                     },
@@ -288,6 +296,7 @@ impl CEGISState {
                         non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
                             args: query_call_hist.iter().map(|v| Value::from(*v)).collect(),
                             func: entry.func,
+                            this: entry.this,
                             rtn: entry.rtn
                         });
                     }
@@ -303,6 +312,7 @@ impl CEGISState {
                         non_pure_logs.get_mut(&entry.func).expect("Should ensured key").insert(FuncLog {
                             args: current_history.iter().map(|v| Value::from(*v)).collect(),
                             func: entry.func,
+                            this: entry.this,
                             rtn: entry.rtn
                         });
                     }

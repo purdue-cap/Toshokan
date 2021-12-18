@@ -138,7 +138,7 @@ pub fn format_value(val: &Value) -> Option<String> {
     }
 }
 
-pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool) -> HelperResult {
+pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool, java: bool) -> HelperResult {
     // Expecting parameters: logs, n_unknown, history_capacity, optional(unknown_fill_string), optional(hist_fill_string)
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
@@ -175,11 +175,14 @@ pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool) -
                 Some(hist_v)
             }
         )
-        .map(|hist_v| format!("{{ {} }}", hist_v.join(", ")))
+        .map(|hist_v| format!("<prefix>{{ {} }}", hist_v.join(", "))
+            .replace("<prefix>", if java {"new int[]"} else {""})
+        )
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Hist array parse failed"))?;
     let unknown_hist_string = if full_expand {
-        format!("{{ {} }}", std::iter::repeat(unknown_fill_string).take(hist_cap).collect::<Vec<_>>().join(", "))
+        format!("<prefix>{{ {} }}", std::iter::repeat(unknown_fill_string).take(hist_cap).collect::<Vec<_>>().join(", "))
+            .replace("<prefix>", if java {"new int[]"} else {""})
     } else {
         unknown_fill_string
     };
@@ -193,7 +196,7 @@ pub fn expand_to_full_hist_arrays(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    hist_array_handler(h, out, true)
+    hist_array_handler(h, out, true, false)
 }
 
 
@@ -202,8 +205,17 @@ pub fn expand_to_hist_arrays(h: &Helper,
                     _: &Context,
                     _: &mut RenderContext,
                     out: &mut dyn Output) -> HelperResult {
-    hist_array_handler(h, out, false)
+    hist_array_handler(h, out, false, false)
 }
+
+pub fn expand_to_java_hist_arrays(h: &Helper,
+                    _: &Handlebars,
+                    _: &Context,
+                    _: &mut RenderContext,
+                    out: &mut dyn Output) -> HelperResult {
+    hist_array_handler(h, out, true, true)
+}
+
 
 pub fn expand_to_hist_lens(h: &Helper,
                     _: &Handlebars,
@@ -525,6 +537,7 @@ pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("expand-to-arg-array", Box::new(expand_to_arg_array));
     hb.register_helper("expand-to-hist-arrays", Box::new(expand_to_hist_arrays));
     hb.register_helper("expand-to-full-hist-arrays", Box::new(expand_to_full_hist_arrays));
+    hb.register_helper("expand-to-java-hist-arrays", Box::new(expand_to_java_hist_arrays));
     hb.register_helper("expand-to-hist-lens", Box::new(expand_to_hist_lens));
     hb.register_helper("expand-to-rtn-array", Box::new(expand_to_rtn_array));
     hb.register_helper("expand-to-ith-rtn-array", Box::new(expand_to_ith_rtn_array));
@@ -631,18 +644,21 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
-                    rtn: json!(1),
-                    func: "sqrt".to_string()
+                    rtn: Some(json!(1)),
+                    func: "sqrt".to_string(),
+                    this: None
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
-                    rtn: json!(2),
-                    func: "sqrt".to_string()
+                    rtn: Some(json!(2)),
+                    func: "sqrt".to_string(),
+                    this: None
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
-                    rtn: json!(5),
-                    func: "sqrt".to_string()
+                    rtn: Some(json!(5)),
+                    func: "sqrt".to_string(),
+                    this: None
                 })
             ]
         };
@@ -667,11 +683,12 @@ mod tests {
                             "b": 2
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 2,
                         "b": 1
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
@@ -682,11 +699,12 @@ mod tests {
                             "b": 4
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 3
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
@@ -697,11 +715,12 @@ mod tests {
                             "b": 4
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 5
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 }),
             ]
@@ -739,12 +758,14 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(6)],
-                    rtn: json!(3),
+                    rtn: Some(json!(3)),
+                    this: None,
                     func: "pop".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
-                    rtn: json!(5),
+                    rtn: Some(json!(5)),
+                    this: None,
                     func: "pop".to_string()
                 })
             ]
@@ -768,12 +789,14 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(6)],
-                    rtn: json!(3),
+                    rtn: Some(json!(3)),
+                    this: None,
                     func: "pop".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
-                    rtn: json!(5),
+                    rtn: Some(json!(5)),
+                    this: None,
                     func: "pop".to_string()
                 })
             ]
@@ -789,6 +812,37 @@ mod tests {
     }
 
     #[test]
+    fn expands_to_java_hist_arrays() -> Result<(), Box<dyn Error>> {
+        let data = HistLogParam {
+            encoding: vec![
+                ("push".to_string(), 1usize), 
+                ("pop".to_string(), 2usize)].into_iter().collect(),
+            logs: vec![
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(6)],
+                    rtn: Some(json!(3)),
+                    this: None,
+                    func: "pop".to_string()
+                }),
+                TraceLog::FuncCall(FuncLog {
+                    args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
+                    rtn: Some(json!(5)),
+                    this: None,
+                    func: "pop".to_string()
+                })
+            ]
+        };
+
+        let mut hb = Handlebars::new();
+        register_helpers(&mut hb);
+
+        let template = r#"hist: {{expand-to-java-hist-arrays logs 2 8}}"#;
+        assert_eq!(hb.render_template(template, &data)?, "hist: new int[]{ 2, 1, 6, 0, 0, 0, 0, 0 }, new int[]{ 2, 1, 1, 3, 8, 0, 0, 0 }, new int[]{ ??, ??, ??, ??, ??, ??, ??, ?? }, new int[]{ ??, ??, ??, ??, ??, ??, ??, ?? }");
+
+        Ok(())
+    }
+
+    #[test]
     fn expands_to_hist_lens() -> Result<(), Box<dyn Error>> {
         let data = HistLogParam {
             encoding: vec![
@@ -797,12 +851,14 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(6)],
-                    rtn: json!(3),
+                    rtn: Some(json!(3)),
+                    this: None,
                     func: "pop".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2), json!(1), json!(1), json!(3), json!(8)],
-                    rtn: json!(5),
+                    rtn: Some(json!(5)),
+                    this: None,
                     func: "pop".to_string()
                 })
             ]
@@ -823,17 +879,20 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
-                    rtn: json!(1),
+                    rtn: Some(json!(1)),
+                    this: None,
                     func: "sqrt".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
-                    rtn: json!(2),
+                    rtn: Some(json!(2)),
+                    this: None,
                     func: "sqrt".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
-                    rtn: json!(5),
+                    rtn: Some(json!(5)),
+                    this: None,
                     func: "sqrt".to_string()
                 })
             ]
@@ -842,7 +901,7 @@ mod tests {
         register_helpers(&mut hb);
 
         let template = "rtn: {{expand-to-rtn-array logs 2}}";
-        assert_eq!(hb.render_template(template, &data)?, "rtn: 1, 2, 5, 0, 0");
+        assert_eq!(hb.render_template(template, &data)?, "rtn: Some(1, 2, 5, 0), 0");
 
         Ok(())
     }
@@ -859,11 +918,12 @@ mod tests {
                             "b": 2
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 2,
                         "b": 1
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
@@ -874,11 +934,12 @@ mod tests {
                             "b": 4
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 3
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
@@ -889,11 +950,12 @@ mod tests {
                             "b": 4
                         })
                     ],
-                    rtn: json!({
+                    rtn: Some(json!({
                         "@class_name": "std::vector",
                         "a": 4,
                         "b": 5
-                    }),
+                    })),
+                    this: None,
                     func: "inv".to_string()
                 })
             ]
@@ -903,7 +965,7 @@ mod tests {
 
         let template = r#"rtn: {{expand-to-rtn-array logs "null" 2 }}"#;
         assert_eq!(hb.render_template(template, &data)?,
-            "rtn: new vector@std( a=2, b=1 ), new vector@std( a=4, b=3 ), new vector@std( a=4, b=5 ), null, null");
+            "rtn: Some(new vector@std( a=2, b=1 ), new vector@std( a=4, b=3 ), new vector@std( a=4, b=5 ), null), null");
         Ok(())
     }
 
@@ -918,7 +980,7 @@ mod tests {
 
         let template = r#"rtn: {{expand-to-rtn-array logs "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
-            "rtn: null, null");
+            "rtn: Some(null), null");
         Ok(())
     }
 
@@ -928,17 +990,20 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1), json!(2)],
-                    rtn: json!(vec![1, 2]),
+                    rtn: Some(json!(vec![1, 2])),
+                    this: None,
                     func: "vec".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5), json!(2)],
-                    rtn: json!(vec![2, 5]),
+                    rtn: Some(json!(vec![2, 5])),
+                    this: None,
                     func: "vec".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25), json!(26)],
-                    rtn: json!(vec![25, 26]),
+                    rtn: Some(json!(vec![25, 26])),
+                    this: None,
                     func: "vec".to_string()
                 })
             ]
@@ -958,7 +1023,7 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
-                    rtn: json!([{
+                    rtn: Some(json!([{
                         "@class_name": "std::vector",
                         "a": 1,
                         "b": 0
@@ -967,12 +1032,13 @@ mod tests {
                         "a": 0,
                         "b": 1
                     }
-                    ]),
+                    ])),
+                    this: None,
                     func:"inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(2)],
-                    rtn: json!([{
+                    rtn: Some(json!([{
                         "@class_name": "std::vector",
                         "a": 2,
                         "b": 0
@@ -981,12 +1047,13 @@ mod tests {
                         "a": 0,
                         "b": 2
                     }
-                    ]),
+                    ])),
+                    this: None,
                     func:"inv".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(3)],
-                    rtn: json!([{
+                    rtn: Some(json!([{
                         "@class_name": "std::vector",
                         "a": 3,
                         "b": 0
@@ -995,7 +1062,8 @@ mod tests {
                         "a": 0,
                         "b": 3
                     }
-                    ]),
+                    ])),
+                    this: None,
                     func:"inv".to_string()
                 })
             ]
@@ -1005,7 +1073,7 @@ mod tests {
 
         let template = r#"rtn: {{expand-to-ith-rtn-array logs 1 "null" 2 }}"#;
         assert_eq!(hb.render_template(template, &data)?,
-            "rtn: new vector@std( a=0, b=1 ), new vector@std( a=0, b=2 ), new vector@std( a=0, b=3 ), null, null");
+            "rtn: Some(new vector@std( a=0, b=1 ), new vector@std( a=0, b=2 ), new vector@std( a=0, b=3 ), null), null");
         Ok(())
     }
 
@@ -1020,7 +1088,7 @@ mod tests {
 
         let template = r#"rtn: {{expand-to-ith-rtn-array logs 0 "null" 2}}"#;
         assert_eq!(hb.render_template(template, &data)?,
-            "rtn: null, null");
+            "rtn: Some(null), null");
         Ok(())
     }
 
@@ -1137,17 +1205,20 @@ mod tests {
             logs: vec![
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(1)],
-                    rtn: json!(1),
+                    rtn: Some(json!(1)),
+                    this: None,
                     func: "sqrt".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(5)],
-                    rtn: json!(2),
+                    rtn: Some(json!(2)),
+                    this: None,
                     func: "sqrt".to_string()
                 }),
                 TraceLog::FuncCall(FuncLog {
                     args: vec![json!(25)],
-                    rtn: json!(5),
+                    rtn: Some(json!(5)),
+                    this: None,
                     func: "sqrt".to_string()
                 })
             ]

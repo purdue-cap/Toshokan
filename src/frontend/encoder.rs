@@ -13,6 +13,8 @@ pub enum EncoderSource {
     Rewrite
 }
 
+test_fixture!(EncoderSource, dummy, EncoderSource::LoadFromStr("".into()));
+
 impl From<PathBuf> for EncoderSource {
     fn from(p: PathBuf) -> Self {EncoderSource::LoadFromFile(p)}
 }

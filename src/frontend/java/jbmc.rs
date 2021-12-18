@@ -42,6 +42,8 @@ pub struct JBMCConfig {
     pub string_inputs: Vec<String>,
 }
 
+test_fixture!(JBMCConfig, dummy, builder{bin_path("")});
+
 impl<'c> JBMCRunner<'c> {
     pub fn new(jbmc_config: &'c JBMCConfig) -> Self {
         Self {

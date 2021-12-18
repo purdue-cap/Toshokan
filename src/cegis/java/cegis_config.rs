@@ -38,9 +38,23 @@ pub struct CEGISConfigParams {
     pub n_inputs: usize,
     #[builder(default = "10")]
     pub n_unknowns: usize,
+    #[builder(default = "10")]
+    pub hist_cap_padding: usize,
     pub output_dir: PathBuf,
     #[builder(default = "false")]
     pub keep_tmp: bool,
     #[builder(default = "false")]
     pub enable_record: bool,
 }
+
+test_fixture!(CEGISConfigParams, dummy, builder{
+    jbmc_config(JBMCConfig::test_fixture_dummy()),
+    javac_bin(""),
+    jsketch_config(JSketchConfig::test_fixture_dummy()),
+    lib_funcs(vec![]),
+    c_e_encoder_src(EncoderSource::test_fixture_dummy()),
+    verif_entrance(""),
+    output_classes(vec![]),
+    n_inputs(0usize),
+    output_dir("")
+});

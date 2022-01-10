@@ -23,6 +23,8 @@ pub struct JSketchConfig {
     pub inbits: Option<usize>,
     #[builder(default)]
     pub cbits: Option<usize>,
+    #[builder(default)]
+    pub array_bound: Option<usize>,
     #[builder(setter(each = "sk_opt"), default)]
     pub sk_opts: Vec<String>,
 }
@@ -56,6 +58,13 @@ impl<'c> JSketchRunner<'c> {
 
         if let Some(bound) = self.jsketch_config.cbits {
             flags.push(format!("--cbits={}", bound).into());
+        }
+
+        if let Some(bound) = self.jsketch_config.array_bound {
+            flags.push("-sk_opts=--bnd-arr-size".into());
+            flags.push(format!("--sk_opts={}", bound).into());
+            flags.push("-sk_opts=--bnd-arr1d-size".into());
+            flags.push(format!("--sk_opts={}", bound).into());
         }
 
         for opt in self.jsketch_config.sk_opts.iter() {

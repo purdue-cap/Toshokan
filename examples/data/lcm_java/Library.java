@@ -6,11 +6,12 @@ public class Library {
            b = swap;
        }
        int gcd = 0;
+       int product = a*b;
        while (b != 0) {
             gcd = b;
             b = a % b;
             a = gcd;
        }
-       return b*a/gcd;
+       return product/gcd;
    }
 }

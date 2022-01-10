@@ -21,19 +21,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } 
     let jbmc_config = JBMCConfigBuilder::default()
         .bin_path(jbmc_bin)
-        .unwind(128)
-        .unwind_growth_step(16)
-        .unwind_maximum(256)
-        .primitive_input_bound(Some((0, 7)))
+        .unwind(6)
+        .unwind_growth_step(2)
+        .unwind_maximum(16)
+        .primitive_input_bound(Some((0, 511)))
         .build()?;
     let jsketch_config = JSketchConfigBuilder::default()
         .dir_path(jsketch_dir)
         .inline(None)
-        .unroll(128)
-        .inbits(3)
+        .unroll(16)
+        .inbits(9)
         .cbits(6)
         .build()?;
-    let config_params = CEGISConfigParamsBuilder::default()
+    let mut config_builder = CEGISConfigParamsBuilder::default()
         .jbmc_config(jbmc_config)
         .javac_bin(javac_bin)
         .jsketch_config(jsketch_config)
@@ -48,8 +48,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .n_inputs(5 as usize)
         .output_dir("results/")
         .keep_tmp(true)
-        .enable_record(true)
-        .build()?;
+        .enable_record(true);
+    if let Ok(env_path) = std::env::var("CPROVER_JAR") {
+        config_builder = config_builder.verif_classpath(env_path.into());
+    }
+    let config_params = config_builder.build()?;
     let config = CEGISConfig::new(config_params);
     let mut cegis_loop = CEGISLoop::new(config);
     if let Err(err) = cegis_loop.run_loop() {

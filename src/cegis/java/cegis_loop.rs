@@ -127,6 +127,9 @@ impl<'r> CEGISLoop<'r> {
         self.work_dir = Some(temp_dir_obj.path().to_path_buf());
         let class_dir = temp_dir_obj.path().join("classes");
         fs::create_dir(&class_dir)?;
+        // Output directory for JSketch
+        let jsketch_out_dir = temp_dir_obj.path().join("jsketch_out");
+        fs::create_dir(&class_dir)?;
         if self.config.get_params().keep_tmp {
             temp_dir_saver.set_temp_dir_obj(temp_dir_obj);
         }
@@ -140,6 +143,7 @@ impl<'r> CEGISLoop<'r> {
         jsketch_runner.common_files.extend(
             self.config.get_params().synth_files.iter().cloned()
         );
+        jsketch_runner.out_dir = Some(jsketch_out_dir);
 
         // Initialize JavaRunner, JBMCRunner and JBMCLogAnalyzer
         let mut javac_runner = JavacRunner::new(

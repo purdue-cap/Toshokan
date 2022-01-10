@@ -8,7 +8,8 @@ use derive_builder::Builder;
 pub struct JSketchRunner<'c> {
     jsketch_config: &'c JSketchConfig,
     pub extra_flags: Vec<OsString>,
-    pub common_files: Vec<PathBuf>
+    pub common_files: Vec<PathBuf>,
+    pub out_dir: Option<PathBuf>
 }
 
 #[derive(Builder)]
@@ -36,13 +37,18 @@ impl<'c> JSketchRunner<'c> {
         Self {
             jsketch_config: jsketch_config,
             extra_flags: vec![],
-            common_files: vec![]
+            common_files: vec![],
+            out_dir: None
         }
     }
 
     fn build_flags(&self) -> Vec<OsString> {
         // Default flags
         let mut flags = vec![OsString::from("--java_codegen")];
+
+        if let Some(path) = self.out_dir.as_ref().and_then(|path| path.to_str()) {
+            flags.push(format!("--out_dir={}", path).into());
+        }
 
         if let Some(bound) = self.jsketch_config.inline {
             flags.push(format!("--inline={}", bound).into());
@@ -97,9 +103,17 @@ impl<'c> JSketchRunner<'c> {
                 format!("JSketch failure: {}", std::str::from_utf8(&result.stderr).unwrap_or("<decode failure>"))))
         } else {
             for class in classes {
-                let mut src_file: PathBuf = [self.jsketch_config.dir_path.as_os_str(),
-                    OsStr::new("result"), OsStr::new("java"),
-                    OsStr::new(class.as_ref())].iter().collect();
+                let mut src_file: PathBuf = 
+                    if let Some(ref out_dir) = self.out_dir {
+                        [out_dir.as_os_str(),
+                        OsStr::new("java"),
+                        OsStr::new(class.as_ref())].iter().collect()
+                    } else {
+                        [self.jsketch_config.dir_path.as_os_str(),
+                        OsStr::new("result"),
+                        OsStr::new("java"),
+                        OsStr::new(class.as_ref())].iter().collect()
+                    };
                 src_file.set_extension("java");
                 let mut dst_file: PathBuf = save_dir.as_ref().to_path_buf();
                 dst_file.push(Path::new(class.as_ref()));

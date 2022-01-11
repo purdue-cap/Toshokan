@@ -129,7 +129,7 @@ impl<'r> CEGISLoop<'r> {
         fs::create_dir(&class_dir)?;
         // Output directory for JSketch
         let jsketch_out_dir = temp_dir_obj.path().join("jsketch_out");
-        fs::create_dir(&class_dir)?;
+        fs::create_dir(&jsketch_out_dir)?;
         if self.config.get_params().keep_tmp {
             temp_dir_saver.set_temp_dir_obj(temp_dir_obj);
         }

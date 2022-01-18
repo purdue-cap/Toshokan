@@ -67,9 +67,9 @@ impl<'c> JSketchRunner<'c> {
         }
 
         if let Some(bound) = self.jsketch_config.array_bound {
-            flags.push("-sk_opts=--bnd-arr-size".into());
+            flags.push("--sk_opts=--bnd-arr-size".into());
             flags.push(format!("--sk_opts={}", bound).into());
-            flags.push("-sk_opts=--bnd-arr1d-size".into());
+            flags.push("--sk_opts=--bnd-arr1d-size".into());
             flags.push(format!("--sk_opts={}", bound).into());
         }
 

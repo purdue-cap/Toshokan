@@ -7,6 +7,8 @@ use serde_json::Value;
 
 handlebars_helper!(range: |x: u64| (0..x).collect::<Vec<u64>>());
 handlebars_helper!(add: |x: u64, y: u64| x + y);
+handlebars_helper!(mul: |x: u64, y: u64| x * y);
+handlebars_helper!(two_d_index: |dim: u64, base: u64, offset: u64| base * dim + offset);
 handlebars_helper!(subtree: |obj: object, key: str| obj.get(key).cloned().unwrap_or(Value::Array(vec![])));
 
 pub fn get_n_logs(h: &Helper,
@@ -539,6 +541,8 @@ pub fn for_trans_c_e<'reg, 'rc>(
 pub fn register_helpers(hb: &mut Handlebars) {
     hb.register_helper("range", Box::new(range));
     hb.register_helper("add", Box::new(add));
+    hb.register_helper("mul", Box::new(mul));
+    hb.register_helper("two-d-index", Box::new(two_d_index));
     hb.register_helper("subtree", Box::new(subtree));
     hb.register_helper("get-n-logs", Box::new(get_n_logs));
     hb.register_helper("get-encoding-offset", Box::new(get_encoding_offset));

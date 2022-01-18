@@ -138,8 +138,12 @@ pub fn format_value(val: &Value) -> Option<String> {
     }
 }
 
-pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool, java: bool) -> HelperResult {
+pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, mut full_expand: bool, java: bool) -> HelperResult {
     // Expecting parameters: logs, n_unknown, history_capacity, optional(unknown_fill_string), optional(hist_fill_string)
+    // Java hist arrays must full expand
+    if java {
+        full_expand = true;
+    }
     let logs_array = h.param(0)
         .ok_or(RenderError::new("First parameter not found"))?
         .value().as_array()
@@ -175,14 +179,19 @@ pub fn hist_array_handler(h: &Helper, out: &mut dyn Output, full_expand: bool, j
                 Some(hist_v)
             }
         )
-        .map(|hist_v| format!("<prefix>{{ {} }}", hist_v.join(", "))
-            .replace("<prefix>", if java {"new int[]"} else {""})
-        )
+        .map(|hist_v| {
+            let inner_array = hist_v.join(", ");
+            if java {inner_array} else {format!("{{ {} }}", inner_array)}
+        })
     ).collect::<Option<Vec<_>>>()
         .ok_or(RenderError::new("Hist array parse failed"))?;
     let unknown_hist_string = if full_expand {
-        format!("<prefix>{{ {} }}", std::iter::repeat(unknown_fill_string).take(hist_cap).collect::<Vec<_>>().join(", "))
-            .replace("<prefix>", if java {"new int[]"} else {""})
+        let inner_array = std::iter::repeat(unknown_fill_string).take(hist_cap).collect::<Vec<_>>().join(", ");
+        if java {
+            inner_array
+        } else {
+            format!("{{ {} }}", inner_array)
+        }
     } else {
         unknown_fill_string
     };
@@ -837,7 +846,7 @@ mod tests {
         register_helpers(&mut hb);
 
         let template = r#"hist: {{expand-to-java-hist-arrays logs 2 8}}"#;
-        assert_eq!(hb.render_template(template, &data)?, "hist: new int[]{ 2, 1, 6, 0, 0, 0, 0, 0 }, new int[]{ 2, 1, 1, 3, 8, 0, 0, 0 }, new int[]{ ??, ??, ??, ??, ??, ??, ??, ?? }, new int[]{ ??, ??, ??, ??, ??, ??, ??, ?? }");
+        assert_eq!(hb.render_template(template, &data)?, "hist: 2, 1, 6, 0, 0, 0, 0, 0, 2, 1, 1, 3, 8, 0, 0, 0, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??, ??");
 
         Ok(())
     }

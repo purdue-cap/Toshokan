@@ -98,7 +98,7 @@ impl CEGISState {
     // 4. stateful methods: side effect unlimited
     // Effectively now we only have 1 and 2
     // TODO: support type 3 and 4 here
-    fn unpack_logs(&self) -> Option<HashMap<String, Vec<FuncLog>>> {
+    fn unpack_logs(&mut self) -> Option<HashMap<String, Vec<FuncLog>>> {
 
         // log matrix is indexed by (func_code - 1) due to the offset we put into function codes
         let mut log_matrix: Vec<HashSet<FuncLog>> = vec![HashSet::new(); self.func_hist_codes.len()];
@@ -115,6 +115,10 @@ impl CEGISState {
                     current_hist.push(log.clone());
                     // Encode current history (after this call) into int array
                     let hist_encoded = self.encode_method_hist(current_hist)?;
+                    // Ensure history array length
+                    if hist_encoded.len() > self.max_hist_size {
+                        self.max_hist_size = hist_encoded.len();
+                    }
                     // Insert encoded func log
                     log_matrix.get_mut(func_idx)?.insert(
                         FuncLog {

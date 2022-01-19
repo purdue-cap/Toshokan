@@ -111,10 +111,10 @@ impl CEGISState {
                     // Pure method
                     // Put into current obj stack
                     let current_hist = current_obj_stack.entry(obj.clone()).or_default();
-                    // Encode current history (before this call) into int array
-                    let hist_encoded = self.encode_method_hist(current_hist)?;
                     // Put this call into history
                     current_hist.push(log.clone());
+                    // Encode current history (after this call) into int array
+                    let hist_encoded = self.encode_method_hist(current_hist)?;
                     // Insert encoded func log
                     log_matrix.get_mut(func_idx)?.insert(
                         FuncLog {
@@ -163,7 +163,31 @@ mod tests {
         let mut state = CEGISState::new(&params);
         state.logs.extend(analyzer.get_traces().iter().cloned());
         state.update_params();
-        // TODO: add assertions for 
+        // TODO: add assertions for params
+        println!("{:#?}", state.get_params());
+        Ok(())
+    }
+
+
+    static JBMC_REGRESS_002: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_002/full.json");
+    #[test]
+    fn unpacks_regress_002_logs() -> Result<(), Box<dyn Error>> {
+        let logs: JBMCLogs = serde_json::from_str(JBMC_REGRESS_002)?;
+        let func_sigs = vec![
+            "Stack()".to_string(),
+            "Stack.push(int)".to_string(),
+            "Stack.pop()".to_string(),
+            ];
+        let mut analyzer = JBMCLogAnalyzer::new(func_sigs);
+        analyzer.analyze_logs(&logs)?;
+        let mut params = CEGISConfigParams::test_fixture_dummy();
+        params.lib_funcs.push("Stack()".into());
+        params.lib_funcs.push("Stack.push(int)".into());
+        params.lib_funcs.push("Stack.pop()".into());
+        let mut state = CEGISState::new(&params);
+        state.logs.extend(analyzer.get_traces().iter().cloned());
+        state.update_params();
+        // TODO: add assertions for params
         println!("{:#?}", state.get_params());
         Ok(())
     }

@@ -612,4 +612,19 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_REGRESS_002: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_002/full.json");
+    #[test]
+    fn parses_regress_002_full() -> Result<(), Box<dyn Error>> {
+        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_002)?;
+        let mut analyzer = LogAnalyzer::new(vec![
+            "Stack()".to_string(),
+            "Stack.push(int)".to_string(),
+            "Stack.pop()".to_string(),
+            ]);
+        analyzer.analyze_logs(&logs)?;
+        println!("{:#?}", analyzer.get_c_e_s());
+        println!("{:#?}", analyzer.get_traces());
+        Ok(())
+    }
+
 }

@@ -7,54 +7,94 @@ from matplotlib import patches
 
 content = sys.stdin.read()
 content = content.replace("\t", ",")
+content = content.replace("{", '"{')
+content = content.replace("}", '}"')
 rdr = DictReader(content.split("\n"))
 entries = list(rdr)
-names = [e["Benchmark"] for e in entries]
+names_mock = [e["Benchmark"] for e in entries]
+names_model = [e["Benchmark"] for e in entries if e['Model Time'] != "N/A"]
 
 # slow_down = [float(e['Execution Time'])/float(e['Mock Time']) if e['Mock Time'] != '$\\infty$' else 0 for e in entries]
-slow_down = [float(e['Execution Time'])-float(e['Mock Time']) if e['Mock Time'] != '$\\infty$' else 0 for e in entries]
+slow_down_mock = [float(e['Execution Time'])-float(e['Mock Time']) if e['Mock Time'] != '$\\infty$' else 0 for e in entries]
+slow_down_model = [float(e['Execution Time'])-float(e['Model Time']) for e in entries if e['Model Time'] != "N/A"]
+slow_down_ratio_mock = [float(e['Execution Time'])/float(e['Mock Time']) if e['Mock Time'] != '$\\infty$' else 0 for e in entries]
+slow_down_ratio_model = [float(e['Execution Time'])/float(e['Model Time']) for e in entries if e['Model Time'] != "N/A"]
 # loc_re = re.compile(r'\d+\((\d+)\\%\)') # Extracting ratio in %
-loc_re = re.compile(r'(\d+)\(\d+\\%\)') # Extracting LoC raw number
-extra_code = [int(loc_re.match(e['Mock LoC']).group(1)) for e in entries]
+loc_re = re.compile(r'(\d+)\((\d+)\\%\)') # Extracting LoC raw number
+extra_code_mock = [int(loc_re.match(e['Mock LoC']).group(1)) for e in entries]
+extra_code_ratio_mock = [int(loc_re.match(e['Mock LoC']).group(2)) for e in entries]
+extra_code_ratio_mock = [(e+100)/100 for e in extra_code_ratio_mock]
+extra_code_model = [int(loc_re.match(e['Model LoC']).group(1)) for e in entries if e['Model Time'] != "N/A"]
+extra_code_ratio_model = [int(loc_re.match(e['Model LoC']).group(2)) for e in entries if e['Model Time'] != "N/A"]
+extra_code_ratio_model = [(e+100)/100 for e in extra_code_ratio_model]
 # extra_code = [x / (x + 100) for x in extra_code]
 
-points = list(zip(extra_code, slow_down, names))
+points_mock = list(zip(extra_code_mock, slow_down_mock, names_mock))
+points_model = list(zip(extra_code_model, slow_down_model, names_model))
+points_mock_ratio = list(zip(extra_code_ratio_mock, slow_down_ratio_mock, names_mock))
+points_model_ratio = list(zip(extra_code_ratio_model, slow_down_ratio_model, names_model))
 
-cluster_cond = lambda p: False
-# clustered_x = [p[0] for p in points if cluster_cond(p)]
-# clustered_y = [p[1] for p in points if cluster_cond(p)]
-# clustered_n = [p[2] for p in points if cluster_cond(p)]
-# xmin = min(clustered_x)
-# ymin = min(clustered_y)
-# xmax = max(clustered_x)
-# ymax = max(clustered_y)
-# xmargin = 0.15
-# ymargin = 0.2
-# width = xmax - xmin
-# height = ymax - ymin
-# box_start = (xmin - xmargin * width, ymin - ymargin * height)
-# box_width = width * (1 + 2*xmargin)
-# box_height = height * (1 + 2*ymargin)
+points_model = [p for p in points_model if p[2] != "primality_sqrt_generators"]
 
+cluster_cond = lambda p: p[0] < 25 and p[1] < 15
+clustered_x_mock = [p[0] for p in points_mock if cluster_cond(p)]
+clustered_y_mock = [p[1] for p in points_mock if cluster_cond(p)]
+clustered_n_mock = [p[2] for p in points_mock if cluster_cond(p)]
+clustered_x_model = [p[0] for p in points_model if cluster_cond(p)]
+clustered_y_model = [p[1] for p in points_model if cluster_cond(p)]
+clustered_n_model = [p[2] for p in points_model if cluster_cond(p)]
+xmin = min(clustered_x_mock + clustered_x_model)
+ymin = min(clustered_y_mock + clustered_y_model)
+xmax = max(clustered_x_mock + clustered_x_model)
+ymax = max(clustered_y_mock + clustered_y_model)
+xmargin = 0.1
+ymargin = 0.1
+width = xmax - xmin
+height = ymax - ymin
+box_start = (xmin - xmargin * width, ymin - ymargin * height)
+box_width = width * (1 + 2*xmargin)
+box_height = height * (1 + 2*ymargin)
 
-other_x = [p[0] for p in points if not cluster_cond(p)]
-other_y = [p[1] for p in points if not cluster_cond(p)]
-other_n = [p[2] for p in points if not cluster_cond(p)]
+mock_x = [p[0] for p in points_mock]
+mock_y = [p[1] for p in points_mock]
+mock_n = [p[2] if not cluster_cond(p) else None for p in points_mock ]
+model_x = [p[0] for p in points_model]
+model_y = [p[1] for p in points_model]
+model_n = [p[2] if not cluster_cond(p) else None for p in points_model ]
 
 fig = plt.figure()
 ax = fig.add_subplot()
 
-# ax.set_xscale("log")
+# ax.set_yscale("log")
 # plt.xlabel("Mock LoC / Total LoC")
-plt.xlabel("Mock LoC")
+plt.xlabel("Mock or Model LoC")
 # plt.ylabel("Factor of Slow down on Toshokan as Compared to Mock")
-plt.ylabel("Extra Time on Toshokan as Compared to Mock / s")
+plt.ylabel("Toshokan Time - Mock or Model Time (s)")
 
 
 # ax.scatter(clustered_x, clustered_y, marker="o")
-ax.scatter(other_x, other_y, marker="x")
+ax.scatter(mock_x, mock_y, marker="x")
+ax.scatter(model_x, model_y, marker="o")
+ax.legend(["Mock", "Model"], loc="lower right")
 
-for i, txt in enumerate(other_n):
+for i, txt in enumerate(mock_n):
+    xytext = (-10, 5)
+    # Special annotate adaptions
+    if txt == 'heap_test':
+        xytext = (-40, 5)
+    if txt == 'heap_test_complex':
+        xytext = (-85, 5)
+    if txt == 'heap_test_param':
+        xytext = (-75, 5)
+    if txt == 'heap_sort':
+        xytext = (-40, -15)
+    if txt == 'sk_CipherFactory':
+        xytext = (-10, -10)
+    if txt == 'arraylist_match':
+        xytext = (-20, -10)
+    if txt:
+        ax.annotate(txt, (mock_x[i], mock_y[i]), xytext=xytext, textcoords="offset points")
+for i, txt in enumerate(model_n):
     xytext = (-10, 5)
     # Special annotate adaptions
     # if txt == 'evalPoly_combined':
@@ -65,11 +105,12 @@ for i, txt in enumerate(other_n):
     #     xytext = (-35, 5)
     # if txt == 'heap_test_complex':
     #     xytext = (-50, 5)
-    ax.annotate(txt, (other_x[i], other_y[i]), xytext=xytext, textcoords="offset points")
+    if txt:
+        ax.annotate(txt, (model_x[i], model_y[i]), xytext=xytext, textcoords="offset points")
 
-# rect = patches.Rectangle(box_start, box_width, box_height, facecolor='none', edgecolor='black')
-# ax.add_patch(rect)
-# ax.annotate("Clustered Benchmarks", (box_start[0]+box_width, box_start[1]+box_height))
+rect = patches.Rectangle(box_start, box_width, box_height, facecolor='none', edgecolor='black')
+ax.add_patch(rect)
+ax.annotate("Clustered Benchmarks", (box_start[0]+box_width+1, box_start[1]))
 
 # loc, _ = plt.yticks()
 # loc = list(loc)
@@ -79,19 +120,219 @@ for i, txt in enumerate(other_n):
 # lbl = [str(int(l)) for _, l in enumerate(loc)] 
 # plt.yticks(loc, lbl)
 
-plt.savefig("scatter.png")
+plt.savefig("scatter.pdf")
 
-# plt.clf()
+plt.clf()
 
-# fig = plt.figure()
-# ax = fig.add_subplot()
+fig = plt.figure()
+ax = fig.add_subplot()
 
-# plt.xlabel("% of Mock LoC as Compared to Benchmark LoC")
-# plt.ylabel("Factor of Slow down on Toshokan as Compared to Mock")
+plt.xlabel("Mock or Model LoC")
+plt.ylabel("Toshokan Time - Mock or Model Time (s)")
 
-# ax.scatter(clustered_x, clustered_y, marker="o")
+ax.scatter(clustered_x_mock, clustered_y_mock, marker="x")
+ax.scatter(clustered_x_model, clustered_y_model, marker="o")
+ax.legend(["Mock", "Model"], loc="lower right")
 
-# for i, txt in enumerate(clustered_n):
-#     ax.annotate(txt, (clustered_x[i], clustered_y[i]))
+for i, txt in enumerate(clustered_n_mock):
+    xytext = (-10, 5)
+    arrow = None
+    # Special annotate adaptions
+    if txt == 'closestpair_sortfull':
+        xytext = (-75, -10)
+    if txt == 'binarysearch_sort':
+        xytext = (-30, 5)
+    if txt == 'arraylist_match':
+        xytext = (-70, 5)
+    if txt == 'lcm_n_numbers':
+        xytext = (-40, 5)
+    if txt == 'primality_sqrt_generators':
+        xytext = (-60, 5)
+    if txt == 'evalPoly_1':
+        xytext = (-10, 40)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'evalPoly_2':
+        xytext = (50, 30)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'evalPoly_combined':
+        xytext = (30, 45)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'stack_match':
+        xytext = (0, -10)
+    if txt == 'powerroot_sqrt':
+        xytext = (5, -10)
+    if txt == 'primality_sqrt':
+        xytext = (-10, 10)
+    if txt == 'gcd_n_numbers':
+        xytext = (-30, -10)
+    if txt == 'closest_power_two_ilog_generators':
+        xytext = (-60, 7)
+    if txt:
+        ax.annotate(txt, (clustered_x_mock[i], clustered_y_mock[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
+for i, txt in enumerate(clustered_n_model):
+    xytext = (-10, 5)
+    arrow = None
+    # Special annotate adaptions
+    if txt == 'gcd_n_numbers':
+        xytext = (5, 0)
+    if txt == 'closestpair_sortfull':
+        xytext = (5, 0)
+    if txt == 'binarysearch_sort':
+        xytext = (5, -5)
+    if txt == 'activitysched_sortindex':
+        xytext = (-105, 5)
+    if txt == 'closest_power_two_ilog_generators':
+        xytext = (-140, 30)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'lcm_n_numbers':
+        xytext = (-60, 5)
+    if txt == 'powerroot_sqrt':
+        xytext = (5, -10)
+    if txt:
+        ax.annotate(txt, (clustered_x_model[i], clustered_y_model[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
+loc = list(range(8,24,3)) 
+lbl = [str(l) for l in loc]
+plt.xticks(loc, lbl)
 
-# plt.savefig("scatter_cluster.png")
+plt.savefig("scatter_cluster.pdf")
+
+plt.clf()
+
+cluster_cond = lambda p: p[0] < 2 and p[1] < 6
+clustered_x_mock = [p[0] for p in points_mock_ratio if cluster_cond(p)]
+clustered_y_mock = [p[1] for p in points_mock_ratio if cluster_cond(p)]
+clustered_n_mock = [p[2] for p in points_mock_ratio if cluster_cond(p)]
+clustered_x_model = [p[0] for p in points_model_ratio if cluster_cond(p)]
+clustered_y_model = [p[1] for p in points_model_ratio if cluster_cond(p)]
+clustered_n_model = [p[2] for p in points_model_ratio if cluster_cond(p)]
+xmin = min(clustered_x_mock + clustered_x_model)
+ymin = min(clustered_y_mock + clustered_y_model)
+xmax = max(clustered_x_mock + clustered_x_model)
+ymax = max(clustered_y_mock + clustered_y_model)
+xmargin = 0.1
+ymargin = 0.1
+width = xmax - xmin
+height = ymax - ymin
+box_start = (xmin - xmargin * width, ymin - ymargin * height)
+box_width = width * (1 + 2*xmargin)
+box_height = height * (1 + 2*ymargin)
+
+mock_x = [p[0] for p in points_mock_ratio]
+mock_y = [p[1] for p in points_mock_ratio]
+mock_n = [p[2] if not cluster_cond(p) else None for p in points_mock_ratio ]
+model_x = [p[0] for p in points_model_ratio]
+model_y = [p[1] for p in points_model_ratio]
+model_n = [p[2] if not cluster_cond(p) else None for p in points_model_ratio ]
+
+fig = plt.figure()
+ax = fig.add_subplot()
+
+plt.xlabel("Total Loc / Benchmark LoC")
+plt.ylabel("Toshokan Time / Mock or Model Time")
+
+ax.scatter(mock_x, mock_y, marker="x")
+ax.scatter(model_x, model_y, marker="o")
+ax.legend(["Mock", "Model"], loc="lower right")
+
+for i, txt in enumerate(mock_n):
+    xytext = (-40, 5)
+    # Special annotate adaptions
+    if txt == "heap_test_complex":
+        xytext = (-85, 5)
+    if txt == "heap_test_param":
+        xytext = (-85, -10)
+    if txt == "arraylist_match":
+        xytext = (10, -10)
+    if txt == "set_match":
+        xytext = (-10, 10)
+    if txt == "sk_CipherFactory":
+        xytext = (-5, 5)
+    if txt:
+        ax.annotate(txt, (mock_x[i], mock_y[i]), xytext=xytext, textcoords="offset points")
+for i, txt in enumerate(model_n):
+    xytext = (-20, 5)
+    if txt:
+        ax.annotate(txt, (model_x[i], model_y[i]), xytext=xytext, textcoords="offset points")
+
+rect = patches.Rectangle(box_start, box_width, box_height, facecolor='none', edgecolor='black')
+ax.add_patch(rect)
+ax.annotate("Clustered Benchmarks", (box_start[0]+box_width+0.1, box_start[1]))
+
+plt.savefig("scatter_ratio.pdf")
+
+plt.clf()
+
+fig = plt.figure()
+ax = fig.add_subplot()
+
+plt.xlabel("Total Loc / Benchmark LoC")
+plt.ylabel("Toshokan Time / Mock or Model Time")
+
+ax.scatter(clustered_x_mock, clustered_y_mock, marker="x")
+ax.scatter(clustered_x_model, clustered_y_model, marker="o")
+ax.legend(["Mock", "Model"], loc="lower right")
+
+for i, txt in enumerate(clustered_n_mock):
+    xytext = (-10, 5)
+    arrow = None
+    # Special annotate adaptions
+    if txt == 'closestpair_sortfull':
+        xytext = (-20, -35)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'binarysearch_sort':
+        xytext = (-10, -10)
+    if txt == 'arraylist_match':
+        xytext = (-70, 5)
+    if txt == 'lcm_n_numbers':
+        xytext = (5, 5)
+    if txt == 'primality_sqrt_generators':
+        xytext = (-55, 15)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'activitysched_sortindex':
+        xytext = (5, 0)
+    if txt == 'evalPoly_1':
+        xytext = (-15, -10)
+    if txt == 'evalPoly_2':
+        xytext = (-15, 5)
+    if txt == 'evalPoly_combined':
+        xytext = (-15, 10)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'stack_match':
+        xytext = (-30, -10)
+    if txt == 'primality_sqrt':
+        xytext = (-60, 5)
+    if txt == 'closest_power_two_ilog_generators':
+        xytext = (-40, 25)
+        arrow = {'arrowstyle':'-'}
+    if txt:
+        ax.annotate(txt, (clustered_x_mock[i], clustered_y_mock[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
+for i, txt in enumerate(clustered_n_model):
+    xytext = (-10, 5)
+    arrow = None
+    # Special annotate adaptions
+    if txt == 'gcd_n_numbers':
+        xytext = (-10, 5)
+    if txt == 'closestpair_sortfull':
+        xytext = (-40, 15)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'activitysched_sortindex':
+        xytext = (5, 0)
+    if txt == 'closest_power_two_ilog_generators':
+        xytext = (-30, 20)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'lcm_n_numbers':
+        xytext = (-60, 5)
+    if txt == 'binarysearch_sort':
+        xytext = (-25, -15)
+        arrow = {'arrowstyle':'-'}
+    if txt == 'powerroot_sqrt':
+        xytext = (-40, 5)
+    if txt == 'primality_sqrt':
+        xytext = (-20, 5)
+    if txt:
+        ax.annotate(txt, (clustered_x_model[i], clustered_y_model[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
+# loc = list(range(0,29,3)) 
+# lbl = [str(l) for l in loc]
+# plt.xticks(loc, lbl)
+
+plt.savefig("scatter_ratio_cluster.pdf")

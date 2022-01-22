@@ -246,7 +246,9 @@ pub enum ValueInfo {
         binary: String,
         data: String,
         width: usize
-    }
+    },
+    #[serde(rename = "unknown")]
+    Unknown
 }
 
 impl ValueInfo {
@@ -627,4 +629,40 @@ mod tests {
         Ok(())
     }
 
+    static JBMC_REGRESS_003: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_003/full.json");
+    #[test]
+    fn parses_regress_003_full() -> Result<(), Box<dyn Error>> {
+        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_003)?;
+        let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
+        analyzer.analyze_logs(&logs)?;
+        println!("{:#?}", analyzer.get_c_e_s());
+        println!("{:#?}", analyzer.get_traces());
+        Ok(())
+    }
+
+    static JBMC_REGRESS_003_TRACE1: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_003/trace1.json");
+    #[test]
+    fn parses_regress_003_trace1() -> Result<(), Box<dyn Error>> {
+        let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_003_TRACE1);
+        if let Ok(content) = result {
+            println!("{:#?}", content);
+        } else if let Err(error) = result {
+            println!("{:#?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
+
+    static JBMC_REGRESS_003_TRACE2: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_003/trace2.json");
+    #[test]
+    fn parses_regress_003_trace2() -> Result<(), Box<dyn Error>> {
+        let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_003_TRACE2);
+        if let Ok(content) = result {
+            println!("{:#?}", content);
+        } else if let Err(error) = result {
+            println!("{:#?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
 }

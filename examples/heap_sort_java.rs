@@ -4,11 +4,11 @@ use std::path::PathBuf;
 use tempfile::Builder as TempFileBuilder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let base_data_dir = std::env::current_dir()?.join(file!()).parent().ok_or("Get parent failed")?.join("data/lcm_java");
+    let base_data_dir = std::env::current_dir()?.join(file!()).parent().ok_or("Get parent failed")?.join("data/heap_sort_java");
     let synthesis_template = base_data_dir.join("Synthesis.java");
-    let lib_src_file = base_data_dir.join("Library.java");
+    let lib_src_file = base_data_dir.join("Heap.java");
     let verif_src_file = base_data_dir.join("Main.java");
-    let api_src_file = base_data_dir.join("LCM.java");
+    let api_src_file = base_data_dir.join("HeapSort.java");
     let synthesis_common_file = base_data_dir.join("Synthesis_common.java");
     let jsketch_dir = PathBuf::from(std::env::var("JSKETCH_DIR")?);
     let mut jbmc_bin = PathBuf::from("jbmc");
@@ -21,31 +21,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } 
     let jbmc_config = JBMCConfigBuilder::default()
         .bin_path(jbmc_bin)
-        .unwind(6)
+        .unwind(8)
         .unwind_growth_step(2)
-        .unwind_maximum(8)
-        .primitive_input_bound(Some((0, 15)))
+        .unwind_maximum(16)
+        .primitive_input_bound(Some((0, 7)))
         .build()?;
     let jsketch_config = JSketchConfigBuilder::default()
         .dir_path(jsketch_dir)
-        .inline(None)
-        .unroll(8)
-        .inbits(4)
-        .cbits(3)
+        .inline(4)
+        .unroll(16)
+        .inbits(3)
+        .cbits(4)
+        .array_bound(4096)
         .build()?;
     let mut config_builder = CEGISConfigParamsBuilder::default()
         .jbmc_config(jbmc_config)
         .javac_bin(javac_bin)
         .jsketch_config(jsketch_config)
-        .lib_func("Library.lcm(int, int)".into())
+        .lib_func("Heap()".into())
+        .lib_func("Heap.insert(int)".into())
+        .lib_func("Heap.popMin()".into())
         .c_e_encoder_src(synthesis_template)
         .verif_src_file(lib_src_file.into())
         .verif_src_file(verif_src_file.into())
         .verif_src_file(api_src_file.into())
         .verif_entrance("Main.main")
         .synth_file(synthesis_common_file)
-        .output_class("LCM".into())
-        .n_inputs(5 as usize)
+        .output_class("HeapSort".into())
+        .n_inputs(3 as usize)
         .output_dir("results/")
         .keep_tmp(true)
         .enable_record(true);
@@ -60,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Err(err);
     }
 
-    let (mut record_file, record_file_path) = TempFileBuilder::new().prefix("lcm_java.").suffix(".record.json").tempfile_in(".")?.keep()?;
+    let (mut record_file, record_file_path) = TempFileBuilder::new().prefix("heap_sort_java.").suffix(".record.json").tempfile_in(".")?.keep()?;
     cegis_loop.get_recorder().ok_or("Recorder uninitialized")?.write_json_pretty(&mut record_file)?;
     println!("Record File: {}", record_file_path.file_name().ok_or("No record file name")?.to_str().ok_or("Record file name decode failed")?);
     Ok(())

@@ -2,11 +2,11 @@ import org.cprover.CProver;
 public class Main {
     public static void main(int x0, int x1, int x2, int x3, int x4) {
         // 3 , 4, 5 12
-        CProver.assume(x0 >= 0 && x0 < 8);
-        CProver.assume(x1 >= 0 && x1 < 8);
-        CProver.assume(x2 >= 0 && x2 < 8);
-        CProver.assume(x3 >= 0 && x3 < 8);
-        CProver.assume(x4 >= 0 && x4 < 8);
+        CProver.assume(x0 >= 0 && x0 < 5);
+        CProver.assume(x1 >= 0 && x1 < 5);
+        CProver.assume(x2 >= 0 && x2 < 5);
+        CProver.assume(x3 >= 0 && x3 < 5);
+        CProver.assume(x4 >= 0 && x4 < 5);
         int [] array = new int[] {x0, x1, x2, x3, x4};
         for (int i = 0; i < array.length; i++)
             if (array[i] == 0) return;

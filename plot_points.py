@@ -34,9 +34,10 @@ points_model = list(zip(extra_code_model, slow_down_model, names_model))
 points_mock_ratio = list(zip(extra_code_ratio_mock, slow_down_ratio_mock, names_mock))
 points_model_ratio = list(zip(extra_code_ratio_model, slow_down_ratio_model, names_model))
 
-points_model = [p for p in points_model if p[2] != "primality_sqrt_generators"]
+# points_model = [p for p in points_model if p[2] != "primality_sqrt_generators"]
 
-cluster_cond = lambda p: p[0] < 25 and p[1] < 15
+# cluster_cond = lambda p: False
+cluster_cond = lambda p: p[0] < 40 and p[1] < 25
 clustered_x_mock = [p[0] for p in points_mock if cluster_cond(p)]
 clustered_y_mock = [p[1] for p in points_mock if cluster_cond(p)]
 clustered_n_mock = [p[2] for p in points_mock if cluster_cond(p)]
@@ -80,31 +81,21 @@ ax.legend(["Mock", "Model"], loc="lower right")
 for i, txt in enumerate(mock_n):
     xytext = (-10, 5)
     # Special annotate adaptions
-    if txt == 'heap_test':
-        xytext = (-40, 5)
-    if txt == 'heap_test_complex':
-        xytext = (-85, 5)
-    if txt == 'heap_test_param':
-        xytext = (-75, 5)
-    if txt == 'heap_sort':
-        xytext = (-40, -15)
-    if txt == 'sk_CipherFactory':
-        xytext = (-10, -10)
     if txt == 'arraylist_match':
-        xytext = (-20, -10)
+        xytext = (-20, -12)
+    if txt == 'stack_match':
+        xytext = (-20, -12)
+    if txt == 'primality_sqrt':
+        xytext = (-10, -12)
+    if txt == 'heap_sort':
+        xytext = (-40, -10)
     if txt:
         ax.annotate(txt, (mock_x[i], mock_y[i]), xytext=xytext, textcoords="offset points")
 for i, txt in enumerate(model_n):
     xytext = (-10, 5)
     # Special annotate adaptions
-    # if txt == 'evalPoly_combined':
-    #     xytext = (-10, -10)
-    # if txt == 'heap_test_param':
-    #     xytext = (-40, -10)
-    # if txt == 'heap_test':
-    #     xytext = (-35, 5)
-    # if txt == 'heap_test_complex':
-    #     xytext = (-50, 5)
+    if txt == 'arraylist_match':
+        xytext = (0, 5)
     if txt:
         ax.annotate(txt, (model_x[i], model_y[i]), xytext=xytext, textcoords="offset points")
 
@@ -132,73 +123,38 @@ plt.ylabel("Toshokan Time - Mock or Model Time (s)")
 
 ax.scatter(clustered_x_mock, clustered_y_mock, marker="x")
 ax.scatter(clustered_x_model, clustered_y_model, marker="o")
-ax.legend(["Mock", "Model"], loc="lower right")
+ax.legend(["Mock", "Model"], loc="upper left")
 
 for i, txt in enumerate(clustered_n_mock):
-    xytext = (-10, 5)
+    xytext = (-15, 5)
     arrow = None
     # Special annotate adaptions
-    if txt == 'closestpair_sortfull':
-        xytext = (-75, -10)
-    if txt == 'binarysearch_sort':
-        xytext = (-30, 5)
-    if txt == 'arraylist_match':
-        xytext = (-70, 5)
-    if txt == 'lcm_n_numbers':
-        xytext = (-40, 5)
-    if txt == 'primality_sqrt_generators':
-        xytext = (-60, 5)
-    if txt == 'evalPoly_1':
-        xytext = (-10, 40)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'evalPoly_2':
-        xytext = (50, 30)
-        arrow = {'arrowstyle':'-'}
     if txt == 'evalPoly_combined':
-        xytext = (30, 45)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'stack_match':
-        xytext = (0, -10)
-    if txt == 'powerroot_sqrt':
-        xytext = (5, -10)
-    if txt == 'primality_sqrt':
-        xytext = (-10, 10)
-    if txt == 'gcd_n_numbers':
-        xytext = (-30, -10)
-    if txt == 'closest_power_two_ilog_generators':
-        xytext = (-60, 7)
+        xytext = (-15, -10)
+    if txt == 'set_match':
+        xytext = (-35, 5)
     if txt:
         ax.annotate(txt, (clustered_x_mock[i], clustered_y_mock[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
 for i, txt in enumerate(clustered_n_model):
-    xytext = (-10, 5)
+    xytext = (-15, 5)
     arrow = None
     # Special annotate adaptions
-    if txt == 'gcd_n_numbers':
-        xytext = (5, 0)
-    if txt == 'closestpair_sortfull':
-        xytext = (5, 0)
-    if txt == 'binarysearch_sort':
-        xytext = (5, -5)
-    if txt == 'activitysched_sortindex':
-        xytext = (-105, 5)
-    if txt == 'closest_power_two_ilog_generators':
-        xytext = (-140, 30)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'lcm_n_numbers':
+    if txt == 'evalPoly_combined':
         xytext = (-60, 5)
-    if txt == 'powerroot_sqrt':
-        xytext = (5, -10)
+    if txt == 'set_match':
+        xytext = (-45, 5)
     if txt:
         ax.annotate(txt, (clustered_x_model[i], clustered_y_model[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
-loc = list(range(8,24,3)) 
-lbl = [str(l) for l in loc]
-plt.xticks(loc, lbl)
+# loc = list(range(8,24,3)) 
+# lbl = [str(l) for l in loc]
+# plt.xticks(loc, lbl)
 
 plt.savefig("scatter_cluster.pdf")
 
 plt.clf()
 
-cluster_cond = lambda p: p[0] < 2 and p[1] < 6
+# cluster_cond = lambda p: False
+cluster_cond = lambda p: p[0] < 1.6 and p[1] < 7.5
 clustered_x_mock = [p[0] for p in points_mock_ratio if cluster_cond(p)]
 clustered_y_mock = [p[1] for p in points_mock_ratio if cluster_cond(p)]
 clustered_n_mock = [p[2] for p in points_mock_ratio if cluster_cond(p)]
@@ -232,31 +188,38 @@ plt.ylabel("Toshokan Time / Mock or Model Time")
 
 ax.scatter(mock_x, mock_y, marker="x")
 ax.scatter(model_x, model_y, marker="o")
-ax.legend(["Mock", "Model"], loc="lower right")
+ax.legend(["Mock", "Model"], loc="upper left")
 
 for i, txt in enumerate(mock_n):
-    xytext = (-40, 5)
+    xytext = (-10, 5)
+    arrow = None
     # Special annotate adaptions
-    if txt == "heap_test_complex":
-        xytext = (-85, 5)
-    if txt == "heap_test_param":
-        xytext = (-85, -10)
-    if txt == "arraylist_match":
-        xytext = (10, -10)
     if txt == "set_match":
-        xytext = (-10, 10)
-    if txt == "sk_CipherFactory":
-        xytext = (-5, 5)
+        xytext = (-20, -10)
+    if txt == "stack_match":
+        xytext = (-35, -10)
+    if txt == "heap_sort":
+        xytext = (-35, 5)
     if txt:
-        ax.annotate(txt, (mock_x[i], mock_y[i]), xytext=xytext, textcoords="offset points")
+        ax.annotate(txt, (mock_x[i], mock_y[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
 for i, txt in enumerate(model_n):
-    xytext = (-20, 5)
+    xytext = (-10, 5)
+    arrow = None
+    if txt == "primality_sqrt":
+        xytext = (-35, -10)
+    if txt == "set_match":
+        xytext = (-30, 5)
+    if txt == "arraylist_match":
+        xytext = (-30, 5)
+    if txt == "evalPoly_combined":
+        xytext = (20, -5)
+        arrow = {'arrowstyle':'-'}
     if txt:
-        ax.annotate(txt, (model_x[i], model_y[i]), xytext=xytext, textcoords="offset points")
+        ax.annotate(txt, (model_x[i], model_y[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
 
 rect = patches.Rectangle(box_start, box_width, box_height, facecolor='none', edgecolor='black')
 ax.add_patch(rect)
-ax.annotate("Clustered Benchmarks", (box_start[0]+box_width+0.1, box_start[1]))
+ax.annotate("Clustered Benchmarks", (box_start[0]+box_width+0.02, box_start[1]))
 
 plt.savefig("scatter_ratio.pdf")
 
@@ -270,65 +233,29 @@ plt.ylabel("Toshokan Time / Mock or Model Time")
 
 ax.scatter(clustered_x_mock, clustered_y_mock, marker="x")
 ax.scatter(clustered_x_model, clustered_y_model, marker="o")
-ax.legend(["Mock", "Model"], loc="lower right")
+ax.legend(["Mock", "Model"], loc="upper left")
 
 for i, txt in enumerate(clustered_n_mock):
-    xytext = (-10, 5)
+    xytext = (-15, 5)
     arrow = None
-    # Special annotate adaptions
-    if txt == 'closestpair_sortfull':
-        xytext = (-20, -35)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'binarysearch_sort':
-        xytext = (-10, -10)
-    if txt == 'arraylist_match':
-        xytext = (-70, 5)
-    if txt == 'lcm_n_numbers':
-        xytext = (5, 5)
-    if txt == 'primality_sqrt_generators':
-        xytext = (-55, 15)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'activitysched_sortindex':
-        xytext = (5, 0)
-    if txt == 'evalPoly_1':
+    if txt == "powerroot_sqrt":
+        xytext = (10, 10)
+        arrow = {'arrowstyle': '-'}
+    if txt == "gcd_n_numbers":
         xytext = (-15, -10)
-    if txt == 'evalPoly_2':
-        xytext = (-15, 5)
-    if txt == 'evalPoly_combined':
-        xytext = (-15, 10)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'stack_match':
-        xytext = (-30, -10)
-    if txt == 'primality_sqrt':
-        xytext = (-60, 5)
-    if txt == 'closest_power_two_ilog_generators':
-        xytext = (-40, 25)
-        arrow = {'arrowstyle':'-'}
+    # Special annotate adaptions
     if txt:
         ax.annotate(txt, (clustered_x_mock[i], clustered_y_mock[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
 for i, txt in enumerate(clustered_n_model):
-    xytext = (-10, 5)
+    xytext = (-15, 5)
     arrow = None
-    # Special annotate adaptions
-    if txt == 'gcd_n_numbers':
-        xytext = (-10, 5)
-    if txt == 'closestpair_sortfull':
-        xytext = (-40, 15)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'activitysched_sortindex':
+    if txt == "evalPoly_combined":
         xytext = (5, 0)
-    if txt == 'closest_power_two_ilog_generators':
-        xytext = (-30, 20)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'lcm_n_numbers':
-        xytext = (-60, 5)
-    if txt == 'binarysearch_sort':
-        xytext = (-25, -15)
-        arrow = {'arrowstyle':'-'}
-    if txt == 'powerroot_sqrt':
-        xytext = (-40, 5)
-    if txt == 'primality_sqrt':
+    if txt == "evalPoly_1":
         xytext = (-20, 5)
+    if txt == "evalPoly_2":
+        xytext = (-40, 5)
+    # Special annotate adaptions
     if txt:
         ax.annotate(txt, (clustered_x_model[i], clustered_y_model[i]), xytext=xytext, textcoords="offset points", arrowprops=arrow)
 # loc = list(range(0,29,3)) 

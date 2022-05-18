@@ -28,6 +28,8 @@ pub struct JSketchConfig {
     pub array_bound: Option<usize>,
     #[builder(setter(each = "sk_opt"), default)]
     pub sk_opts: Vec<String>,
+    #[builder(default)]
+    pub no_lib: bool,
 }
 
 test_fixture!(JSketchConfig, dummy, builder{dir_path("")});
@@ -64,6 +66,10 @@ impl<'c> JSketchRunner<'c> {
 
         if let Some(bound) = self.jsketch_config.cbits {
             flags.push(format!("--cbits={}", bound).into());
+        }
+
+        if self.jsketch_config.no_lib {
+            flags.push("--no-lib".into());
         }
 
         if let Some(bound) = self.jsketch_config.array_bound {

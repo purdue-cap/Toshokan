@@ -17,9 +17,10 @@ pub enum LogItem {
         #[serde(rename = "messageType")]
         message_type: String
     },
-    Result {
-        result: Vec<VerifyResult>
+    Results {
+        results: Vec<VerifyResult>
     },
+    Result(VerifyResult),
     CProverStatus {
         #[serde(rename = "cProverStatus")]
         status: StatusInfo
@@ -44,6 +45,7 @@ pub enum StatusInfo {
     Success,
     #[serde(rename = "FAILURE")]
     #[serde(alias = "failure")]
+    #[serde(alias = "failed")]
     Failure
 }
 
@@ -439,15 +441,20 @@ impl LogAnalyzer {
 
     fn analyze_results<'l>(&mut self, results: &'l Vec<VerifyResult>) -> Result<(), TraceError> {
         for result in results {
-            if let StatusInfo::Success = result.status {
-                continue;
-            }
-            let unwind_prop_regex = Regex::new(r"^.*(\.unwind\.\d+$|\.recursion)$").expect("Hardcoded regex");
-            if unwind_prop_regex.is_match(&result.property) {
-                self.unwind_err_loops.push(result.property.clone());
-            }
-            self.analyze_traces(&result.trace)?;
+            self.analyze_result(result)?;
         }
+        Ok(())
+    }
+
+    fn analyze_result<'l>(&mut self, result: &'l VerifyResult) -> Result<(), TraceError> {
+        if let StatusInfo::Success = result.status {
+            return Ok(());
+        }
+        let unwind_prop_regex = Regex::new(r"^.*(\.unwind\.\d+$|\.recursion)$").expect("Hardcoded regex");
+        if unwind_prop_regex.is_match(&result.property) {
+            self.unwind_err_loops.push(result.property.clone());
+        }
+        self.analyze_traces(&result.trace)?;
         Ok(())
     }
 
@@ -463,8 +470,11 @@ impl LogAnalyzer {
                         return Ok(true);
                     }
                 }
-                LogItem::Result {result} => {
-                    self.analyze_results(result)?;
+                LogItem::Results {results} => {
+                    self.analyze_results(results)?;
+                }
+                LogItem::Result(result) => {
+                    self.analyze_result(result)?;
                 }
                 _ => {continue;}
             }
@@ -657,6 +667,30 @@ mod tests {
     #[test]
     fn parses_regress_003_trace2() -> Result<(), Box<dyn Error>> {
         let result : Result<Vec<VerifyTrace>, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_003_TRACE2);
+        if let Ok(content) = result {
+            println!("{:#?}", content);
+        } else if let Err(error) = result {
+            println!("{:#?}", error);
+            return Err(Box::new(error));
+        }
+        Ok(())
+    }
+
+    static JBMC_REGRESS_004: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_004/full.json");
+    #[test]
+    fn parses_regress_004_full() -> Result<(), Box<dyn Error>> {
+        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_004)?;
+        let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
+        analyzer.analyze_logs(&logs)?;
+        println!("{:#?}", analyzer.get_c_e_s());
+        println!("{:#?}", analyzer.get_traces());
+        Ok(())
+    }
+
+    static JBMC_REGRESS_004_TRACE: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_004/trace.json");
+    #[test]
+    fn parses_regress_004_trace() -> Result<(), Box<dyn Error>> {
+        let result : Result<LogItem, serde_json::Error> = serde_json::from_str(JBMC_REGRESS_004_TRACE);
         if let Ok(content) = result {
             println!("{:#?}", content);
         } else if let Err(error) = result {

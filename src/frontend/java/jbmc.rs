@@ -40,6 +40,8 @@ pub struct JBMCConfig {
     pub assume_input_integral: bool,
     #[builder(setter(each = "string_input"), default)]
     pub string_inputs: Vec<String>,
+    #[builder(setter(each = "other_flag"), default)]
+    pub other_flags: Vec<String>,
 }
 
 test_fixture!(JBMCConfig, dummy, builder{bin_path("")});
@@ -131,6 +133,8 @@ impl<'c> JBMCRunner<'c> {
             flags.push(input_val.into());
         }
 
+        flags.extend(self.jbmc_config.other_flags.iter().map(|f| f.into()));
+        
         flags.push("--classpath".into());
         // Build classpath
         // input classpath must be put before the extra ones

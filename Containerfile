@@ -21,11 +21,22 @@ RUN wget https://people.csail.mit.edu/asolar/sketch-1.7.6.tar.gz && \
     ./configure && \
     make -j8
 
+FROM openjdk:8-jdk as jsketch_builder
+
+RUN apt update -y && apt install -y \
+    git maven
+
+RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && \
+    ln -s /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
+    ln -s /usr/local/openjdk-8/bin/java /usr/bin/java
+
+RUN cd /opt/jsketch/jskparser && make p; make j && rm -rf /opt/jsketch/.git
+
 FROM openjdk:8-jdk
 
 RUN apt update -y && apt install -y \
-    git curl build-essential \
-    python2 python3-matplotlib
+    curl build-essential \
+    python2 python3-matplotlib python-is-python2
 
 COPY --from=sketch_builder /opt/sketch/sketch-backend/src/SketchSolver/cegis /opt/sketch/sketch-frontend/sketch /opt/sketch/sketch-frontend/sketch-1.7.6-noarch.jar /opt/sketch
 COPY --from=sketch_builder /opt/sketch/sketch-frontend/runtime /opt/sketch/runtime
@@ -47,10 +58,10 @@ ENV RUSTUP_HOME=/opt/rust \
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
 
-RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch
+COPY --from=jsketch_builder /opt/jsketch /opt/jsketch
 
 COPY . /opt/toshokan
 
-RUN cd /opt/toshokan && cargo build --examples
+RUN cd /opt/toshokan && cargo build --examples --release
 
 ENTRYPOINT ["/bin/bash"]

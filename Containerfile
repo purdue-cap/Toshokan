@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk as jbmc_builder
 
 RUN apt update -y && apt install -y \
-    build-essential git maven
+    build-essential git maven bison flex
 
 RUN git clone https://github.com/diffblue/cbmc /opt/cbmc && \
     cd /opt/cbmc && make -C src DOWNLOADER=wget minisat2-download -j8 && \

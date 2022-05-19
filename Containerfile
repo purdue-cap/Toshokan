@@ -47,7 +47,7 @@ ENV RUSTUP_HOME=/opt/rust \
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
 
-RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && cd /opt/jsketch/ && git checkout 
+RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch
 
 COPY . /opt/toshokan
 

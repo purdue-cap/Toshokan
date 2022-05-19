@@ -24,7 +24,7 @@ RUN wget https://people.csail.mit.edu/asolar/sketch-1.7.6.tar.gz && \
 FROM openjdk:8-jdk as jsketch_builder
 
 RUN apt update -y && apt install -y \
-    git maven
+    git maven build-essential
 
 RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && \
     ln -sf /usr/local/openjdk-8/bin/javac /usr/bin/javac && \

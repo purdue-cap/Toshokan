@@ -1,57 +1,65 @@
-use clap::{AppSettings, Clap};
+use clap::Parser;
 use libpartlibspec::predinfer::predgen;
 use std::fs;
 use rand::Rng;
 
-#[derive(Clap)]
-#[clap(version = "0.1.0")]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
+#[clap(version = "0.1.0", about)]
 struct PGConfig {
-    #[clap(about="Grammar file to read grammar from")]
+    /// Grammar file to read grammar from
     grammar: String,
-    #[clap(short, long, about="Suppress stderr messages")]
+    #[clap(short, long)]
+    /// Suppress stderr messages
     quiet: bool,
     #[clap(subcommand)]
     subcmd: PGSubCmd,
 }
 
-#[derive(Clap)]
+#[derive(Parser)]
+#[clap(about)]
 enum PGSubCmd {
-    #[clap(about="Randomly generate ASTs")]
+    /// Randomly generate ASTs
     Random(PGRandom),
-    #[clap(about="Generate all ASTs based on height")]
+    /// Generate all ASTs based on height
     Genallh(PGGenallh),
-    #[clap(about="Generate all ASTs based on size")]
+    /// Generate all ASTs based on size
     Genall(PGGenall)
 }
 
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
+#[clap(about)]
 struct PGRandom {
-    #[clap(short, long, about="Max height of AST to be generated")]
+    #[clap(short, long)]
+    /// Max height of AST to be generated
     height: usize,
-    #[clap(short, long, about="Min height of AST to be generated", default_value="1")]
+    #[clap(short, long, default_value="1")]
+    /// Min height of AST to be generated
     min_height: usize,
-    #[clap(short, long, about="Number of AST to be generated")]
+    #[clap(short, long)]
+    /// Number of AST to be generated
     number: usize,
-    #[clap(short, long, about="Generate all ASTs at max height")]
+    #[clap(short, long)]
+    /// Generate all ASTs at max height
     fixed: bool,
-    #[clap(short, long, about="Retry after failure, until number of ASTs are successfully generated")]
+    #[clap(short, long)]
+    /// Retry after failure, until number of ASTs are successfully generated
     retry: bool
 
 }
 
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
+#[clap(about)]
 struct PGGenallh {
-    #[clap(short, long, about="Max height of AST to be generated")]
+    #[clap(short, long)]
+    /// Max height of AST to be generated
     max_height: usize
 }
 
-#[derive(Clap)]
-#[clap(setting = AppSettings::ColoredHelp)]
+#[derive(Parser)]
+#[clap(about)]
 struct PGGenall {
-    #[clap(short, long, about="Size of AST to be generated")]
+    #[clap(short, long)]
+    /// Size of AST to be generated
     size: usize
 }
 

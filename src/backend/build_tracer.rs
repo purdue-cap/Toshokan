@@ -4,11 +4,28 @@ use std::os::raw::{c_int, c_char};
 use std::path::Path;
 use log::debug;
 
+#[cfg(feature = "libclang")]
 extern {
     fn build_tracer(configs: *const *const c_char,
             configs_len: c_int,
             input_file: *const c_char,
             output_file: *const c_char) -> c_int;
+}
+
+#[cfg(feature = "libclang")]
+fn build_tracer_rust(configs: *const *const c_char,
+        configs_len: c_int,
+        input_file: *const c_char,
+        output_file: *const c_char) -> c_int {
+    unsafe {build_tracer(configs, configs_len, input_file, output_file)}
+}
+
+#[cfg(not(feature = "libclang"))]
+fn build_tracer_rust(_configs: *const *const c_char,
+        _configs_len: c_int,
+        _input_file: *const c_char,
+        _output_file: *const c_char) -> c_int {
+    255
 }
 
 pub fn build_tracer_to_file<P: AsRef<Path>>(
@@ -20,12 +37,11 @@ pub fn build_tracer_to_file<P: AsRef<Path>>(
     let c_input_file = CString::new(input_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
     let c_output_file = CString::new(output_file.as_ref().as_os_str().as_bytes()).or(Err(-128))?;
     debug!(target:"LibraryTracer", "Calling CPP Function with args: ({:?}, {:?}, {:?}, {:?})", configs, c_configs_len, c_input_file, c_output_file); 
-    let rtn_val = unsafe { build_tracer(
+    let rtn_val = build_tracer_rust(
         vec_c_configs.as_slice().as_ptr(),
         c_configs_len,
         c_input_file.as_ptr(),
-        c_output_file.as_ptr())
-    };
+        c_output_file.as_ptr());
     debug!(target:"LibraryTracer", "CPP Function rtn code: {}", rtn_val);
     if rtn_val == 0 {
         Ok(())

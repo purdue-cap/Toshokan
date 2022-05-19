@@ -17,12 +17,15 @@ path = "src/main.rs"
 name = "predgenerator"
 path = "src/predgenerator.rs"
 
+[features]
+dev = ["pest", "pest_derive"]
+libclang = []
+
 # TODO: boost versions
 [dependencies]
-clang = ">=0.23.0"
 clap = "3.0.0-beta.2"
-pest = ">=2.1.2"
-pest_derive = ">=2.1.0"
+pest = {version = ">=2.1.2", optional = true}
+pest_derive = {version = ">=2.1.0", optional = true}
 tempfile = ">=3.1.0"
 handlebars = "=3.0.1"
 itertools = "0.10"

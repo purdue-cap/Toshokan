@@ -1,3 +1,4 @@
+#[cfg(feature = "dev")]
 pub mod parser;
 
 mod sketch_runner;

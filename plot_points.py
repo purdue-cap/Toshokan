@@ -4,6 +4,7 @@ import sys
 import re
 from matplotlib import pyplot as plt
 from matplotlib import patches
+import numpy as np
 
 content = sys.stdin.read()
 content = content.replace("\t", ",")
@@ -153,8 +154,12 @@ plt.savefig("scatter_cluster.pdf")
 
 plt.clf()
 
+# Change x axis to mock or model loc / benchmark loc
+points_mock_ratio = [(p[0] - 1, p[1], p[2]) for p in points_mock_ratio]
+points_model_ratio = [(p[0] - 1, p[1], p[2]) for p in points_model_ratio]
+
 # cluster_cond = lambda p: False
-cluster_cond = lambda p: p[0] < 1.6 and p[1] < 7.5
+cluster_cond = lambda p: p[0] < 1.0 and p[1] < 7.5
 clustered_x_mock = [p[0] for p in points_mock_ratio if cluster_cond(p)]
 clustered_y_mock = [p[1] for p in points_mock_ratio if cluster_cond(p)]
 clustered_n_mock = [p[2] for p in points_mock_ratio if cluster_cond(p)]
@@ -183,7 +188,7 @@ model_n = [p[2] if not cluster_cond(p) else None for p in points_model_ratio ]
 fig = plt.figure()
 ax = fig.add_subplot()
 
-plt.xlabel("Total Loc / Benchmark LoC")
+plt.xlabel("Mock or Model LoC / Benchmark LoC")
 plt.ylabel("Toshokan Time / Mock or Model Time")
 
 ax.scatter(mock_x, mock_y, marker="x")
@@ -220,6 +225,12 @@ for i, txt in enumerate(model_n):
 rect = patches.Rectangle(box_start, box_width, box_height, facecolor='none', edgecolor='black')
 ax.add_patch(rect)
 ax.annotate("Clustered Benchmarks", (box_start[0]+box_width+0.02, box_start[1]))
+loc = np.linspace(0.0, 2.5, 6)
+lbl = [str(l) for l in loc]
+plt.xticks(loc, lbl)
+loc = np.linspace(0, 12, 5)
+lbl = [str(l) for l in loc]
+plt.yticks(loc, lbl)
 
 plt.savefig("scatter_ratio.pdf")
 
@@ -228,7 +239,7 @@ plt.clf()
 fig = plt.figure()
 ax = fig.add_subplot()
 
-plt.xlabel("Total Loc / Benchmark LoC")
+plt.xlabel("Mock or Model LoC / Benchmark LoC")
 plt.ylabel("Toshokan Time / Mock or Model Time")
 
 ax.scatter(clustered_x_mock, clustered_y_mock, marker="x")

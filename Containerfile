@@ -24,7 +24,8 @@ RUN wget https://people.csail.mit.edu/asolar/sketch-1.7.6.tar.gz && \
 FROM openjdk:8-jdk
 
 RUN apt update -y && apt install -y \
-    git curl python2 python3-matplotlib
+    git curl build-essential \
+    python2 python3-matplotlib
 
 COPY --from=sketch_builder /opt/sketch/sketch-backend/src/SketchSolver/cegis /opt/sketch/sketch-frontend/sketch /opt/sketch/sketch-frontend/sketch-1.7.6-noarch.jar /opt/sketch
 COPY --from=sketch_builder /opt/sketch/sketch-frontend/runtime /opt/sketch/runtime

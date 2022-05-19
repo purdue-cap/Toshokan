@@ -27,8 +27,8 @@ RUN apt update -y && apt install -y \
     git maven
 
 RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && \
-    ln -s /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
-    ln -s /usr/local/openjdk-8/bin/java /usr/bin/java
+    ln -sf /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
+    ln -sf /usr/local/openjdk-8/bin/java /usr/bin/java
 
 RUN cd /opt/jsketch/jskparser && make p; make j && rm -rf /opt/jsketch/.git
 

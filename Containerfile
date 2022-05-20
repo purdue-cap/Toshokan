@@ -30,7 +30,7 @@ RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && \
     ln -sf /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
     ln -sf /usr/local/openjdk-8/bin/java /usr/bin/java
 
-RUN cd /opt/jsketch/jskparser && make p; make j && rm -rf /opt/jsketch/.git
+RUN cd /opt/jsketch/jskparser && make p; make j && rm -rf /opt/jsketch/.git && rm -rf /opt/jsketch/test
 
 FROM openjdk:8-jdk
 
@@ -61,7 +61,5 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
 COPY --from=jsketch_builder /opt/jsketch /opt/jsketch
 
 COPY . /opt/toshokan
-
-RUN cd /opt/toshokan && cargo build --examples --release
 
 ENTRYPOINT ["/bin/bash"]

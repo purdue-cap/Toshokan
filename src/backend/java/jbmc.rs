@@ -18,7 +18,7 @@ pub enum LogItem {
         message_type: String
     },
     Results {
-        results: Vec<VerifyResult>
+        result: Vec<VerifyResult>
     },
     Result(VerifyResult),
     CProverStatus {
@@ -470,8 +470,8 @@ impl LogAnalyzer {
                         return Ok(true);
                     }
                 }
-                LogItem::Results {results} => {
-                    self.analyze_results(results)?;
+                LogItem::Results {result} => {
+                    self.analyze_results(result)?;
                 }
                 LogItem::Result(result) => {
                     self.analyze_result(result)?;
@@ -544,7 +544,9 @@ mod tests {
         let mut analyzer = LogAnalyzer::new(Vec::<String>::new());
         let result = analyzer.analyze_logs(&logs);
         println!("{:?}", result);
-        assert!(matches!(result, Err(TraceError::JBMCUnwindError{..})));
+        println!("{:?}", analyzer.get_unwind_err_loops());
+        assert!(matches!(result, Ok(false)));
+        assert!(!analyzer.get_unwind_err_loops().is_empty());
         Ok(())
     }
 

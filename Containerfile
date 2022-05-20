@@ -58,8 +58,19 @@ ENV RUSTUP_HOME=/opt/rust \
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
 
-COPY --from=jsketch_builder /opt/jsketch /opt/jsketch
+# COPY --from=jsketch_builder /opt/jsketch /opt/jsketch
+RUN apt update -y && apt install -y \
+    git maven build-essential
+
+RUN git clone https://github.com/plum-umd/java-sketch /opt/jsketch && \
+    ln -sf /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
+    ln -sf /usr/local/openjdk-8/bin/java /usr/bin/java
+
+RUN cd /opt/jsketch/jskparser && make p; make j
 
 COPY . /opt/toshokan
+
+RUN ln -sf /usr/local/openjdk-8/bin/javac /usr/bin/javac && \
+    ln -sf /usr/local/openjdk-8/bin/java /usr/bin/java
 
 ENTRYPOINT ["/bin/bash"]

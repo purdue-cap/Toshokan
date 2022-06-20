@@ -1,4 +1,5 @@
 /target
+/javaTracer/target
 .envrc
 **/*.rs.bk
 Cargo.lock

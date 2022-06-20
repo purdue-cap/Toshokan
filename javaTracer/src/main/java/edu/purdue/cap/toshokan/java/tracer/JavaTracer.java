@@ -1,6 +1,7 @@
 package edu.purdue.cap.toshokan.java.tracer;
 
 import java.lang.instrument.Instrumentation;
+import com.google.gson.Gson;
 
 /**
  * Hello world!
@@ -9,6 +10,8 @@ import java.lang.instrument.Instrumentation;
 public class JavaTracer 
 {
     public static void premain(String agentOpts, Instrumentation inst ) {
-        System.out.println("Hello World with " + agentOpts);
+        Gson gson = new Gson();
+        JavaTracerConfig config = gson.fromJson(agentOpts, JavaTracerConfig.class);
+        System.out.println("Hello World with " + config.info);
     }
 }

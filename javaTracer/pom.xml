@@ -24,6 +24,11 @@
       <artifactId>gson</artifactId>
       <version>2.9.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <version>3.27.0-GA</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -77,6 +82,8 @@
             <archive>
               <manifestEntries>
                 <Premain-Class>edu.purdue.cap.toshokan.java.tracer.JavaTracer</Premain-Class>
+                <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                <Can-Retransform-Classes>true</Can-Retransform-Classes>
               </manifestEntries>
             </archive>
           </configuration>

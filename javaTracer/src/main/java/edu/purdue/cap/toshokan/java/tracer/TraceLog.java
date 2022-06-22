@@ -5,4 +5,6 @@ public class TraceLog {
     public String methodName;
     public Object args[];
     public Object ret;
+    public Object thisObj;
+    public Integer thisId;
 }

@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.Modifier;
 import javassist.NotFoundException;
 
 public class TraceClassTransformer implements ClassFileTransformer{
     private String targetClsName;
     private ClassLoader targetClsLoader;
     private ArrayList<String> methods;
+    private boolean enableThisObj;
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> cls, ProtectionDomain dmn, byte[] clsFile) {
         String finalClsName = this.targetClsName.replaceAll("\\.", "/");
@@ -38,6 +40,12 @@ public class TraceClassTransformer implements ClassFileTransformer{
                     loggerBlock.append("log.methodName = \""+ mtd +  "\";");
                     loggerBlock.append("log.args = $args;");
                     loggerBlock.append("log.ret = ($w)$_;");
+                    if (!Modifier.isStatic(m.getModifiers())) {
+                        if (this.enableThisObj) {
+                            loggerBlock.append("log.thisObj = $0;");
+                        }
+                        loggerBlock.append("log.thisId = new Integer(System.identityHashCode($0));");
+                    }
                     loggerBlock.append("System.err.print(\"[javaTracer] log:\");");
                     loggerBlock.append("System.err.println(gson.toJson(log));");
                     loggerBlock.append(" }");
@@ -60,9 +68,10 @@ public class TraceClassTransformer implements ClassFileTransformer{
         }
         return clsFile;
     }
-    public TraceClassTransformer(String className, ClassLoader clsLd, ArrayList<String> methods) {
+    public TraceClassTransformer(String className, ClassLoader clsLd, ArrayList<String> methods, boolean enableThisObj) {
         this.targetClsName = className;
         this.targetClsLoader = clsLd;
         this.methods = methods;
+        this.enableThisObj = enableThisObj;
     }
 }

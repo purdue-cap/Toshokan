@@ -24,18 +24,18 @@ public class JavaTracer
             mtdPerCls.get(info.className).add(info.method);
         }
         for (Map.Entry<String, ArrayList<String>> entry: mtdPerCls.entrySet()) {
-            transformClass(entry.getKey(), entry.getValue(), inst);
+            transformClass(entry.getKey(), entry.getValue(), inst, config);
         }
         
     }
 
-    private static void transformClass(String className, ArrayList<String> methods, Instrumentation inst) {
+    private static void transformClass(String className, ArrayList<String> methods, Instrumentation inst, JavaTracerConfig config) {
         Class<?> targetCls;
         ClassLoader targetClLd;
         try {
             targetCls = Class.forName(className);
             targetClLd = targetCls.getClassLoader();
-            transform(targetCls, targetClLd, methods, inst);
+            transform(targetCls, targetClLd, methods, inst, config);
             return;
         } catch (Exception exp) {
             System.err.println("[javaTracer] Class not found with Class.forName");
@@ -44,15 +44,15 @@ public class JavaTracer
             if (cl.getName().equals(className)) {
                 targetCls = cl;
                 targetClLd = targetCls.getClassLoader();
-                transform(targetCls, targetClLd, methods, inst);
+                transform(targetCls, targetClLd, methods, inst, config);
                 return;
             }
         }
         throw new RuntimeException("Failed to find class:" + className);
     }
 
-    private static void transform(Class<?> cl, ClassLoader loader, ArrayList<String> methods, Instrumentation inst) {
-        TraceClassTransformer tr = new TraceClassTransformer(cl.getName(), loader, methods);
+    private static void transform(Class<?> cl, ClassLoader loader, ArrayList<String> methods, Instrumentation inst, JavaTracerConfig config) {
+        TraceClassTransformer tr = new TraceClassTransformer(cl.getName(), loader, methods, config.enableThisObj);
         inst.addTransformer(tr, true);
         try {
             inst.retransformClasses(cl);

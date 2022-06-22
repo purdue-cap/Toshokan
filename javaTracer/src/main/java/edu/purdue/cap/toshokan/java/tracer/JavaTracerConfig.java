@@ -7,6 +7,6 @@ public class JavaTracerConfig {
         public MethodInfo() {}
     }
     public MethodInfo methods[] = null;
-    public String info = null;
+    public boolean enableThisObj = false;
     public JavaTracerConfig() {}
 }

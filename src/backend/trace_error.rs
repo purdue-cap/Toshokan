@@ -10,13 +10,16 @@ quick_error! {
             source(err)
             display("{}", err)
         }
-        JSONError(json_buf: Option<Vec<u8>>, err: JSONError) {
+        JSONError(json_buf: Option<Result<String, std::string::FromUtf8Error>>, err: JSONError) {
             from(err: JSONError) -> (None, err)
-            context(buf: Vec<u8>, err: JSONError) -> (Some(buf), err)
+            context(buf: Vec<u8>, err: JSONError) -> (Some(String::from_utf8(buf)), err)
             source(err)
             display("{}", err)
         }
         JBMCLogError(err: &'static str) {
+            display("{}", err)
+        }
+        JavaTracerLogError(err: &'static str) {
             display("{}", err)
         }
         JBMCUnwindError(assertion: String) {

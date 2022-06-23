@@ -1,0 +1,8 @@
+Picked up _JAVA_OPTIONS: -Dawt.useSystemAAFontSettings=on
+[javaTracer] log:{"className":"Test","methodName":"test0","methodSig":"(I)V","args":[1]}
+[javaTracer] log:{"className":"Test","methodName":"test0","methodSig":"(I)V","args":[2]}
+[javaTracer] log:{"className":"Test","methodName":"test1","methodSig":"(I)I","args":[3],"ret":0}
+[javaTracer] log:{"className":"Test","methodName":"test1","methodSig":"(I)I","args":[4],"ret":0}
+[javaTracer] log:{"className":"Adder","methodName":"doAdd","methodSig":"(I)I","args":[4],"ret":7,"thisId":97730845}
+Exception in thread "main" java.lang.AssertionError
+	at Test.main(Test.java:16)

@@ -99,10 +99,10 @@ impl<'r> CEGISLoop<'r> {
         
         let logs = match logs_result {
             Ok(logs) => logs,
-            Err(TraceError::JSONError(Some(json_buf), json_err)) => {
+            Err(TraceError::JSONError(Some(Ok(json_buf)), json_err)) => {
                 let mut failed_file = fs::File::create(&verification_dir.join("failed_log.json"))?;
-                failed_file.write(&json_buf)?;
-                return Err(Box::new(TraceError::JSONError(Some(json_buf), json_err)))
+                failed_file.write(json_buf.as_bytes())?;
+                return Err(Box::new(TraceError::JSONError(Some(Ok(json_buf)), json_err)))
             },
             Err(other_error) => return Err(Box::new(other_error))
         };

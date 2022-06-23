@@ -1,9 +1,8 @@
 use std::ffi::{OsString, OsStr};
 use std::path::PathBuf;
 use std::process::Command;
-use crate::backend::{TraceError ,java::JBMCLogs};
+use crate::backend::TraceError;
 use derive_builder::Builder;
-use quick_error::ResultExt;
 
 pub struct JBMCRunner<'c> {
     jbmc_config: &'c JBMCConfig,
@@ -149,7 +148,7 @@ impl<'c> JBMCRunner<'c> {
         flags
     }
 
-    pub fn run<S: AsRef<str>, Sp: AsRef<OsStr>>(&self, entrance: S, class_dir: Sp) -> Result<JBMCLogs, TraceError>{
+    pub fn run<S: AsRef<str>, Sp: AsRef<OsStr>>(&self, entrance: S, class_dir: Sp) -> Result<Vec<u8>, TraceError>{
         let mut args = self.build_flags(class_dir);
         args.push(OsString::from(entrance.as_ref()));
 
@@ -157,7 +156,7 @@ impl<'c> JBMCRunner<'c> {
         cmd.args(args);
 
         let result = cmd.output()?;
-        Ok(serde_json::from_slice(&result.stdout).context(result.stdout)?)
+        Ok(result.stdout)
     }
 }
 

@@ -4,6 +4,8 @@ use std::collections::{HashMap, HashSet};
 use crate::cegis::FuncLog;
 use regex::Regex;
 use super::super::TraceError::{self, JBMCLogError};
+use super::super::traits::*;
+use quick_error::ResultExt;
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
@@ -340,10 +342,6 @@ impl LogAnalyzer {
         }
     }
 
-    pub fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&self.c_e_s}
-    pub fn get_traces(&self) -> &Vec<Vec<FuncLog>> {&self.traces}
-    pub fn get_unwind_err_loops(&self) -> &Vec<String> {&self.unwind_err_loops}
-
     fn analyze_traces<'l>(&mut self, traces: &'l Vec<VerifyTrace>) -> Result<(), TraceError> {
         let mut it = traces.iter();
         // For parsing input (C.E.s)
@@ -458,7 +456,7 @@ impl LogAnalyzer {
         Ok(())
     }
 
-    pub fn analyze_logs<'l>(&mut self, logs: &'l VerifyLogs) -> Result<bool, TraceError> {
+    fn analyze_parsed_logs<'l>(&mut self, logs: &'l VerifyLogs) -> Result<bool, TraceError> {
         // Clear internal storage
         self.c_e_s.clear();
         self.traces.clear();
@@ -480,6 +478,18 @@ impl LogAnalyzer {
             }
         }
         return Ok(false);
+    }
+}
+
+impl AnalyzeTracingVerifierLog for LogAnalyzer {
+    type Error = TraceError;
+    fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&self.c_e_s}
+    fn get_traces(&self) -> &Vec<Vec<FuncLog>> {&self.traces}
+    fn get_unwind_err_loops(&self) -> &Vec<String> {&self.unwind_err_loops}
+
+    fn analyze_logs(&mut self, logs: &[u8]) -> Result<bool, TraceError> {
+        let parsed_log: VerifyLogs = serde_json::from_slice(logs).context(logs.to_vec())?;
+        self.analyze_parsed_logs(&parsed_log)
     }
 }
 
@@ -517,10 +527,9 @@ mod tests {
 
     #[test]
     fn extracts_input() -> Result<(), Box<dyn Error>> {
-        let logs: VerifyLogs = serde_json::from_str(JBMC_SAMPLE_OUTPUT)?;
         let func_sigs = vec!["SimpleTest.main(int)".to_string()];
         let mut analyzer = LogAnalyzer::new(func_sigs);
-        analyzer.analyze_logs(&logs)?;
+        analyzer.analyze_logs(JBMC_SAMPLE_OUTPUT.as_bytes())?;
         assert_eq!(analyzer.c_e_s, vec![vec![0 as i32]]);
         Ok(())
     }
@@ -528,10 +537,9 @@ mod tests {
     static JBMC_TEST_SIMPLE_RETURN : &'static str = include_str!("../../../tests/data/jbmc_test_simple_return.json");
     #[test]
     fn extracts_trace() -> Result<(), Box<dyn Error>> {
-        let logs: VerifyLogs = serde_json::from_str(JBMC_TEST_SIMPLE_RETURN)?;
         let func_sigs = vec!["Library.add(int, int)".to_string()];
         let mut analyzer = LogAnalyzer::new(func_sigs);
-        analyzer.analyze_logs(&logs)?;
+        analyzer.analyze_logs(JBMC_TEST_SIMPLE_RETURN.as_bytes())?;
         // TODO: assertions for traces
         println!("{:?}", analyzer.traces);
         Ok(())
@@ -540,13 +548,13 @@ mod tests {
     static JBMC_UNWINDING_ERROR: &'static str = include_str!("../../../tests/data/jbmc_unwinding_error.json");
     #[test]
     fn errors_on_unwinding_failure() -> Result<(), Box<dyn Error>> {
-        let logs: VerifyLogs = serde_json::from_str(JBMC_UNWINDING_ERROR)?;
         let mut analyzer = LogAnalyzer::new(Vec::<String>::new());
-        let result = analyzer.analyze_logs(&logs);
+        let result = analyzer.analyze_logs(JBMC_UNWINDING_ERROR.as_bytes());
+        let verifier_analyzer = &analyzer as &dyn AnalyzeVerifierLog<Error=_>;
         println!("{:?}", result);
-        println!("{:?}", analyzer.get_unwind_err_loops());
+        println!("{:?}", verifier_analyzer.get_unwind_err_loops());
         assert!(matches!(result, Ok(false)));
-        assert!(!analyzer.get_unwind_err_loops().is_empty());
+        assert!(!verifier_analyzer.get_unwind_err_loops().is_empty());
         Ok(())
     }
 
@@ -568,11 +576,12 @@ mod tests {
     static JBMC_REGRESS_001: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_001/full.json");
     #[test]
     fn parses_regress_001_full() -> Result<(), Box<dyn Error>> {
-        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_001)?;
         let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
-        analyzer.analyze_logs(&logs)?;
-        println!("{:#?}", analyzer.get_c_e_s());
-        println!("{:#?}", analyzer.get_traces());
+        analyzer.analyze_logs(JBMC_REGRESS_001.as_bytes())?;
+        let verifier_analyzer = &analyzer as &dyn AnalyzeVerifierLog<Error=_>;
+        let tracer_analyzer = &analyzer as &dyn AnalyzeTracerLog<Error=_>;
+        println!("{:#?}", verifier_analyzer.get_c_e_s());
+        println!("{:#?}", tracer_analyzer.get_traces());
         Ok(())
     }
 
@@ -617,10 +626,9 @@ mod tests {
 
     #[test]
     fn extracts_trace_from_object_example() -> Result<(), Box<dyn Error>> {
-        let logs: VerifyLogs = serde_json::from_str(JBMC_OBJECT_SAMPLE)?;
         let func_sigs = vec!["Adder(int)".to_string(), "Adder.add(int)".to_string()];
         let mut analyzer = LogAnalyzer::new(func_sigs);
-        analyzer.analyze_logs(&logs)?;
+        analyzer.analyze_logs(JBMC_OBJECT_SAMPLE.as_bytes())?;
         // TODO: assertions for traces
         println!("{:?}", analyzer.traces);
         Ok(())
@@ -629,26 +637,28 @@ mod tests {
     static JBMC_REGRESS_002: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_002/full.json");
     #[test]
     fn parses_regress_002_full() -> Result<(), Box<dyn Error>> {
-        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_002)?;
         let mut analyzer = LogAnalyzer::new(vec![
             "Stack()".to_string(),
             "Stack.push(int)".to_string(),
             "Stack.pop()".to_string(),
             ]);
-        analyzer.analyze_logs(&logs)?;
-        println!("{:#?}", analyzer.get_c_e_s());
-        println!("{:#?}", analyzer.get_traces());
+        analyzer.analyze_logs(JBMC_REGRESS_002.as_bytes())?;
+        let verifier_analyzer = &analyzer as &dyn AnalyzeVerifierLog<Error=_>;
+        let tracer_analyzer = &analyzer as &dyn AnalyzeTracerLog<Error=_>;
+        println!("{:#?}", verifier_analyzer.get_c_e_s());
+        println!("{:#?}", tracer_analyzer.get_traces());
         Ok(())
     }
 
     static JBMC_REGRESS_003: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_003/full.json");
     #[test]
     fn parses_regress_003_full() -> Result<(), Box<dyn Error>> {
-        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_003)?;
         let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
-        analyzer.analyze_logs(&logs)?;
-        println!("{:#?}", analyzer.get_c_e_s());
-        println!("{:#?}", analyzer.get_traces());
+        analyzer.analyze_logs(JBMC_REGRESS_003.as_bytes())?;
+        let verifier_analyzer = &analyzer as &dyn AnalyzeVerifierLog<Error=_>;
+        let tracer_analyzer = &analyzer as &dyn AnalyzeTracerLog<Error=_>;
+        println!("{:#?}", verifier_analyzer.get_c_e_s());
+        println!("{:#?}", tracer_analyzer.get_traces());
         Ok(())
     }
 
@@ -681,11 +691,12 @@ mod tests {
     static JBMC_REGRESS_004: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_004/full.json");
     #[test]
     fn parses_regress_004_full() -> Result<(), Box<dyn Error>> {
-        let logs : VerifyLogs = serde_json::from_str(JBMC_REGRESS_004)?;
         let mut analyzer = LogAnalyzer::new(vec!["Library.sqrt(int)".to_string()]);
-        analyzer.analyze_logs(&logs)?;
-        println!("{:#?}", analyzer.get_c_e_s());
-        println!("{:#?}", analyzer.get_traces());
+        analyzer.analyze_logs(JBMC_REGRESS_004.as_bytes())?;
+        let verifier_analyzer = &analyzer as &dyn AnalyzeVerifierLog<Error=_>;
+        let tracer_analyzer = &analyzer as &dyn AnalyzeTracerLog<Error=_>;
+        println!("{:#?}", verifier_analyzer.get_c_e_s());
+        println!("{:#?}", tracer_analyzer.get_traces());
         Ok(())
     }
 

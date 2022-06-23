@@ -151,21 +151,21 @@ impl CEGISState {
 mod tests {
     use super::*;
     use std::error::Error;
-    use crate::backend::java::{JBMCLogs, JBMCLogAnalyzer};
+    use crate::backend::java::JBMCLogAnalyzer;
     use crate::cegis::java::CEGISConfigParams;
+    use crate::backend::traits::*;
 
     static JBMC_OBJECT_SAMPLE : &'static str = include_str!("../../../tests/data/jbmc_object_sample.json");
     #[test]
     fn unpacks_java_logs() -> Result<(), Box<dyn Error>> {
-        let logs: JBMCLogs = serde_json::from_str(JBMC_OBJECT_SAMPLE)?;
         let func_sigs = vec!["Adder(int)".to_string(), "Adder.add(int)".to_string()];
         let mut analyzer = JBMCLogAnalyzer::new(func_sigs);
-        analyzer.analyze_logs(&logs)?;
+        analyzer.analyze_logs(JBMC_OBJECT_SAMPLE.as_bytes())?;
         let mut params = CEGISConfigParams::test_fixture_dummy();
         params.lib_funcs.push("Adder(int)".into());
         params.lib_funcs.push("Adder.add(int)".into());
         let mut state = CEGISState::new(&params);
-        state.logs.extend(analyzer.get_traces().iter().cloned());
+        state.logs.extend((&analyzer as &dyn AnalyzeTracerLog<Error=_>).get_traces().iter().cloned());
         state.update_params();
         // TODO: add assertions for params
         println!("{:#?}", state.get_params());
@@ -176,20 +176,19 @@ mod tests {
     static JBMC_REGRESS_002: &'static str = include_str!("../../../tests/data/jbmc_parser_regress_002/full.json");
     #[test]
     fn unpacks_regress_002_logs() -> Result<(), Box<dyn Error>> {
-        let logs: JBMCLogs = serde_json::from_str(JBMC_REGRESS_002)?;
         let func_sigs = vec![
             "Stack()".to_string(),
             "Stack.push(int)".to_string(),
             "Stack.pop()".to_string(),
             ];
         let mut analyzer = JBMCLogAnalyzer::new(func_sigs);
-        analyzer.analyze_logs(&logs)?;
+        analyzer.analyze_logs(JBMC_REGRESS_002.as_bytes())?;
         let mut params = CEGISConfigParams::test_fixture_dummy();
         params.lib_funcs.push("Stack()".into());
         params.lib_funcs.push("Stack.push(int)".into());
         params.lib_funcs.push("Stack.pop()".into());
         let mut state = CEGISState::new(&params);
-        state.logs.extend(analyzer.get_traces().iter().cloned());
+        state.logs.extend((&analyzer as &dyn AnalyzeTracerLog<Error=_>).get_traces().iter().cloned());
         state.update_params();
         // TODO: add assertions for params
         println!("{:#?}", state.get_params());

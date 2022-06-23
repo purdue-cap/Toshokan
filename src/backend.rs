@@ -1,3 +1,4 @@
+pub mod traits;
 pub mod build_tracer;
 
 mod log_analyzer;

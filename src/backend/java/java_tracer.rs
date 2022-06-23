@@ -5,6 +5,7 @@ use super::super::TraceError;
 use std::io::BufRead;
 use quick_error::ResultExt;
 use std::iter::repeat;
+use super::super::traits::*;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct JavaTracerLog {
@@ -128,22 +129,15 @@ fn parse_param_types_from_sig(sig_str: &str) -> Option<Vec<String>> {
     } else {None}
 }
 
-impl LogAnalyzer {
-    pub fn new() -> Self {
-        Self {
-            traces: vec![],
-        }
-    }
-
+impl AnalyzeTracingVerifierLog for LogAnalyzer {
+    type Error = TraceError;
     // FIXME: For now, javaTracer verifier is meant for fixed tests benches only
     // and is guaranteed to have no c.e.s, but this can be changed to enable random testing
-    pub fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&EMPTY_C_E}
-    pub fn get_traces(&self) -> &Vec<Vec<FuncLog>> {&self.traces}
+    fn get_c_e_s(&self) -> &Vec<Vec<i32>> {&EMPTY_C_E}
     // Testing does not have unwind errors
-    pub fn get_unwind_err_loops(&self) -> &Vec<String> {&EMPTY_UNWIND_ERR_LOOPS}
-
-    pub fn analyze_logs<R>(&mut self, mut logs_reader: R) -> Result<bool, TraceError> 
-        where R: BufRead {
+    fn get_unwind_err_loops(&self) -> &Vec<String> {&EMPTY_UNWIND_ERR_LOOPS}
+    fn get_traces(&self) -> &Vec<Vec<FuncLog>> {&self.traces}
+    fn analyze_logs(&mut self, mut logs_reader: &[u8]) -> Result<bool, TraceError> {
         let mut buffer = String::new();
         let mut no_exceptions = true;
         // FIXME: there is only one sequence of trace here, corresponding to only one run traced
@@ -178,6 +172,14 @@ impl LogAnalyzer {
     }
 }
 
+impl LogAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            traces: vec![],
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -203,8 +205,8 @@ mod tests {
         let mut analyzer = LogAnalyzer::new();
         let result = analyzer.analyze_logs(SAMPLE_STDERR)?;
         assert_eq!(result, false);
-        assert_eq!(analyzer.get_c_e_s(), &Vec::<Vec<i32>>::new());
-        assert_eq!(analyzer.get_traces(), &vec![vec![
+        assert_eq!((&analyzer as &dyn AnalyzeVerifierLog<Error=_>).get_c_e_s(), &Vec::<Vec<i32>>::new());
+        assert_eq!((&analyzer as &dyn AnalyzeTracerLog<Error=_>).get_traces(), &vec![vec![
             FuncLog {
                 args: vec![json!(1i32)],
                 this: None,

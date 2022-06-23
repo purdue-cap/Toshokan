@@ -5,7 +5,7 @@ use super::{CEGISState, CEGISConfig, CEGISRecorder, super::FuncLog};
 use crate::frontend::template_helpers::register_helpers;
 use crate::frontend::{Encoder, Renderer, CEEncoder};
 use crate::frontend::java::{JSketchRunner, JBMCRunner, JavacRunner};
-use crate::backend::{java::JBMCLogAnalyzer, TraceError};
+use crate::backend::{java::JBMCLogAnalyzer, TraceError, traits::*};
 use tempfile::{tempdir, TempDir};
 use tempfile::Builder as TempFileBuilder;
 use std::io::Write;
@@ -87,7 +87,7 @@ impl<'r> CEGISLoop<'r> {
     // Returning Ok(None) means verification passed
     // Otherwise returns (C.E.s, Traces)
     fn verify<'a>(&self, compiler: &mut JavacRunner,
-        runner: &mut JBMCRunner, analyzer: &'a mut JBMCLogAnalyzer)
+        runner: &mut JBMCRunner, analyzer: &'a mut dyn AnalyzeTracingVerifierLog<Error=TraceError>)
         -> Result<Option<(&'a Vec<Vec<i32>>, &'a Vec<Vec<FuncLog>>)>, Box<dyn std::error::Error>> {
         let verification_dir = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             format!("verification_{}", self.state.get_iter_count()));

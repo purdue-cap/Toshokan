@@ -5,10 +5,16 @@ use std::collections::HashMap;
 use crate::backend::TraceError;
 use serde_json::{Value, json};
 use std::process::Command;
+#[cfg(feature = "inline_java_tracer")]
+use std::io::{Error as IOError, Write};
+#[cfg(feature = "inline_java_tracer")]
+use tempfile::{NamedTempFile, TempPath};
 
 pub struct JavaTracerRunner<'c, 'l> {
     config: &'c JavaTracerConfig,
     lib_funcs: Vec<&'l str>,
+    #[cfg(feature = "inline_java_tracer")]
+    temp_agent_jar: Option<TempPath>,
     pub extra_tracer_config: HashMap<String, Value>,
     pub extra_class_path: Vec<PathBuf>,
 }
@@ -33,44 +39,74 @@ pub struct JavaTracerConfig {
     pub other_class_paths: Vec<PathBuf>,
 }
 
+#[cfg(feature = "inline_java_tracer")]
+static INLINED_AGENT_JAR: &'static [u8] = include_bytes!("../../../javaTracer/target/javaTracer-1.0-SNAPSHOT-jar-with-dependencies.jar");
+
 impl<'c, 'l> JavaTracerRunner<'c, 'l> {
     pub fn new<I>(config: &'c JavaTracerConfig, lib_func_iter: I) -> Self
         where I: IntoIterator<Item=&'l str>{
         Self {
             config: config,
+            #[cfg(feature = "inline_java_tracer")]
+            temp_agent_jar: None,
             lib_funcs: lib_func_iter.into_iter().collect(),
             extra_tracer_config: HashMap::new(),
             extra_class_path: vec![],
         }
     }
+    #[cfg(feature = "inline_java_tracer")]
+    pub fn new_with_inlined_jar<I>(config: &'c JavaTracerConfig, lib_func_iter: I) -> Result<Self, IOError>
+        where I: IntoIterator<Item=&'l str>{
+        let mut temp_agent_jar = NamedTempFile::new()?;
+        temp_agent_jar.write(INLINED_AGENT_JAR)?;
+        temp_agent_jar.flush()?;
+        Ok(Self {
+            config: config,
+            temp_agent_jar: Some(temp_agent_jar.into_temp_path()),
+            lib_funcs: lib_func_iter.into_iter().collect(),
+            extra_tracer_config: HashMap::new(),
+            extra_class_path: vec![],
+        })
+    }
+
+    fn build_java_agent_flag(&self, agent_jar_path: &OsStr) -> OsString{
+        let mut java_agent_flag = OsString::new();
+
+        java_agent_flag.push("-javaagent:");
+        java_agent_flag.push(agent_jar_path);
+
+        java_agent_flag.push("=");
+
+        let method_info_dicts = self.lib_funcs.iter()
+            .flat_map(|name| parse_lib_func_name(name))
+            .map(|(class_name, method_name)|
+                json!({
+                    "className": class_name,
+                    "method": method_name
+                })).collect::<Vec<_>>();
+        
+        let mut tracer_config: serde_json::Map<String, Value> = serde_json::Map::new();
+        tracer_config.insert("methods".into(), method_info_dicts.into());
+        tracer_config.extend(self.config.other_tracer_configs.clone());
+        tracer_config.extend(self.extra_tracer_config.clone());
+        let config_string = Value::Object(tracer_config).to_string();
+        java_agent_flag.push(config_string);
+
+        java_agent_flag
+    }
 
     fn build_flags<S>(&self, class_dir: S) -> Vec<OsString> 
         where S: AsRef<OsStr> { 
         let mut flags = Vec::new();
+        #[cfg(not(feature = "inline_java_tracer"))]
         if let Some(ref agent_jar_path) = self.config.agent_jar_path {
-            let mut java_agent_flag = OsString::new();
-
-            java_agent_flag.push("-javaagent:");
-            java_agent_flag.push(agent_jar_path);
-
-            java_agent_flag.push("=");
-
-            let method_info_dicts = self.lib_funcs.iter()
-                .flat_map(|name| parse_lib_func_name(name))
-                .map(|(class_name, method_name)|
-                    json!({
-                        "className": class_name,
-                        "method": method_name
-                    })).collect::<Vec<_>>();
-            
-            let mut tracer_config: serde_json::Map<String, Value> = serde_json::Map::new();
-            tracer_config.insert("methods".into(), method_info_dicts.into());
-            tracer_config.extend(self.config.other_tracer_configs.clone());
-            tracer_config.extend(self.extra_tracer_config.clone());
-            let config_string = Value::Object(tracer_config).to_string();
-            java_agent_flag.push(config_string);
-
-            flags.push(java_agent_flag);
+            flags.push(self.build_java_agent_flag(agent_jar_path.as_os_str()));
+        }
+        #[cfg(feature = "inline_java_tracer")]
+        if let Some(ref agent_jar_path) = self.temp_agent_jar {
+            flags.push(self.build_java_agent_flag(agent_jar_path.as_os_str()));
+        } else if let Some(ref agent_jar_path) = self.config.agent_jar_path {
+            flags.push(self.build_java_agent_flag(agent_jar_path.as_os_str()));
         }
 
         flags.push("-cp".into());

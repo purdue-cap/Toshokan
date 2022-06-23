@@ -18,8 +18,9 @@ name = "predgenerator"
 path = "src/predgenerator.rs"
 
 [features]
-dev = ["pest", "pest_derive"]
+sk_parser = ["pest", "pest_derive"]
 libclang = []
+inline_java_tracer = []
 
 # TODO: boost versions
 [dependencies]

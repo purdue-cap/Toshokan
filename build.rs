@@ -1,4 +1,4 @@
-#[cfg(feature = "libclang")]
+#[cfg(any(feature = "libclang", feature = "inline_java_tracer"))]
 use std::process::Command;
 
 fn main() {
@@ -20,5 +20,9 @@ fn main() {
         for lib in lib_list {
             println!("cargo:rustc-link-lib=dylib={}", lib);
         }
+    }
+    #[cfg(feature = "inline_java_tracer")]
+    {
+        Command::new("make").current_dir("javaTracer/").output().expect("Make JavaTracer failed");
     }
 }

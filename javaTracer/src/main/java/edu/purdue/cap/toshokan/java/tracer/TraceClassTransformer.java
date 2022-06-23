@@ -38,6 +38,7 @@ public class TraceClassTransformer implements ClassFileTransformer{
                     loggerBlock.append("edu.purdue.cap.toshokan.java.tracer.TraceLog log = new edu.purdue.cap.toshokan.java.tracer.TraceLog();");
                     loggerBlock.append("log.className = \""+ cc.getName() +  "\";");
                     loggerBlock.append("log.methodName = \""+ mtd +  "\";");
+                    loggerBlock.append("log.methodSig = \""+ m.getSignature() +  "\";");
                     loggerBlock.append("log.args = $args;");
                     loggerBlock.append("log.ret = ($w)$_;");
                     if (!Modifier.isStatic(m.getModifiers())) {

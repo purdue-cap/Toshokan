@@ -1,6 +1,7 @@
-#[cfg(feature = "dev")]
+#[cfg(feature = "sk_parser")]
 pub mod parser;
 
+pub mod traits;
 mod sketch_runner;
 pub use sketch_runner::SketchRunner;
 pub use sketch_runner::VerificationResult;

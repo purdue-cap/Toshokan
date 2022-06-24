@@ -1,5 +1,5 @@
 use std::ffi::{OsString, OsStr};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use derive_builder::Builder;
 use std::collections::HashMap;
 use crate::backend::TraceError;
@@ -9,10 +9,11 @@ use std::process::Command;
 use std::io::{Error as IOError, Write};
 #[cfg(feature = "inline_java_tracer")]
 use tempfile::{NamedTempFile, TempPath};
+use super::super::traits::*;
 
-pub struct JavaTracerRunner<'c, 'l> {
-    config: &'c JavaTracerConfig,
-    lib_funcs: Vec<&'l str>,
+pub struct JavaTracerRunner {
+    config: JavaTracerConfig,
+    lib_funcs: Vec<String>,
     #[cfg(feature = "inline_java_tracer")]
     temp_agent_jar: Option<TempPath>,
     pub extra_tracer_config: HashMap<String, Value>,
@@ -27,7 +28,7 @@ fn parse_lib_func_name(name: &str)-> Option<(&str, &str)> {
     Some((class_name, func_name))
 }
 
-#[derive(Builder)]
+#[derive(Builder, Clone)]
 #[builder(pattern = "owned", setter(into))]
 pub struct JavaTracerConfig {
     pub java_bin_path: PathBuf,
@@ -42,14 +43,14 @@ pub struct JavaTracerConfig {
 #[cfg(feature = "inline_java_tracer")]
 static INLINED_AGENT_JAR: &'static [u8] = include_bytes!("../../../javaTracer/target/javaTracer-1.0-SNAPSHOT-jar-with-dependencies.jar");
 
-impl<'c, 'l> JavaTracerRunner<'c, 'l> {
-    pub fn new<I>(config: &'c JavaTracerConfig, lib_func_iter: I) -> Self
-        where I: IntoIterator<Item=&'l str>{
+impl JavaTracerRunner {
+    pub fn new<I, S>(config: JavaTracerConfig, lib_func_iter: I) -> Self
+        where I: IntoIterator<Item=S>, S: AsRef<str>{
         Self {
             config: config,
             #[cfg(feature = "inline_java_tracer")]
             temp_agent_jar: None,
-            lib_funcs: lib_func_iter.into_iter().collect(),
+            lib_funcs: lib_func_iter.into_iter().map(|s| s.as_ref().to_string()).collect(),
             extra_tracer_config: HashMap::new(),
             extra_class_path: vec![],
         }
@@ -118,10 +119,13 @@ impl<'c, 'l> JavaTracerRunner<'c, 'l> {
 
         return flags;
     }
+}
 
-    pub fn run<S: AsRef<str>, Sp: AsRef<OsStr>>(&self, entrance: S, class_dir: Sp) -> Result<Vec<u8>, TraceError>{
+impl RunJavaClassVerifier for JavaTracerRunner {
+    type Error = TraceError;
+    fn run(&self, entrance: &str, class_dir: &Path) -> Result<Vec<u8>, TraceError>{
         let mut args = self.build_flags(class_dir);
-        args.push(OsString::from(entrance.as_ref()));
+        args.push(OsString::from(entrance));
 
         let mut cmd = Command::new(self.config.java_bin_path.as_os_str());
         cmd.args(args);
@@ -129,4 +133,7 @@ impl<'c, 'l> JavaTracerRunner<'c, 'l> {
         let result = cmd.output()?;
         Ok(result.stderr)
     }
+    // unwind does not make any sense here
+    fn get_current_unwind(&self) -> Option<usize> {None}
+    fn grow_unwind(&mut self, _err_loops: &Vec<String>) -> Result<(), Self::Error> {Ok(())}
 }

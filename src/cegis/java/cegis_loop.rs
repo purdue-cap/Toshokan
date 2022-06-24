@@ -3,9 +3,9 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use super::{CEGISState, CEGISConfig, CEGISRecorder, super::FuncLog};
 use crate::frontend::template_helpers::register_helpers;
-use crate::frontend::{Encoder, Renderer, CEEncoder};
-use crate::frontend::java::{JSketchRunner, JBMCRunner, JavacRunner};
-use crate::backend::{java::JBMCLogAnalyzer, TraceError, traits::*};
+use crate::frontend::{Encoder, Renderer, CEEncoder, traits::*};
+use crate::frontend::java::{JSketchRunner, JavacRunner};
+use crate::backend::{TraceError, traits::*};
 use tempfile::{tempdir, TempDir};
 use tempfile::Builder as TempFileBuilder;
 use std::io::Write;
@@ -87,7 +87,8 @@ impl<'r> CEGISLoop<'r> {
     // Returning Ok(None) means verification passed
     // Otherwise returns (C.E.s, Traces)
     fn verify<'a>(&self, compiler: &mut JavacRunner,
-        runner: &mut JBMCRunner, analyzer: &'a mut dyn AnalyzeTracingVerifierLog<Error=TraceError>)
+        runner: &mut dyn RunJavaClassVerifier<Error=TraceError>,
+        analyzer: &'a mut dyn AnalyzeTracingVerifierLog<Error=TraceError>)
         -> Result<Option<(&'a Vec<Vec<i32>>, &'a Vec<Vec<FuncLog>>)>, Box<dyn std::error::Error>> {
         let verification_dir = self.work_dir.as_ref().ok_or("Work dir unset")?.join(
             format!("verification_{}", self.state.get_iter_count()));
@@ -133,7 +134,14 @@ impl<'r> CEGISLoop<'r> {
         if self.config.get_params().keep_tmp {
             temp_dir_saver.set_temp_dir_obj(temp_dir_obj);
         }
-
+        // Initialize JBMCRunner and JBMCLogAnalyzer
+        // We do these two first because make_ function needs mutable borrow
+        // And jsketch_runner needs persisting immutable borrow
+        // FIXME: Remove all persisting borrows from JSketchRunner,
+        // store Option of JSketchConfig in CEGISConfig instead and move it out
+        // when constructing JSketchRunner, just like how the below make_ function works
+        let (mut verify_runner, mut log_analyzer) = 
+            self.config.make_java_verifier_controllers(class_dir.as_path()).ok_or("Verifier creation failure")?;
         // Initialize CEEncoder and JSketchRunner
         // TODO: wire up CEEncoder to RewriterController
         let mut c_e_encoder = CEEncoder::new(&self.hb);
@@ -145,7 +153,7 @@ impl<'r> CEGISLoop<'r> {
         );
         jsketch_runner.out_dir = Some(jsketch_out_dir);
 
-        // Initialize JavaRunner, JBMCRunner and JBMCLogAnalyzer
+        // Initialize JavaRunner
         let mut javac_runner = JavacRunner::new(
             &self.config.get_params().javac_bin);
         javac_runner.extra_class_path.extend(
@@ -157,15 +165,6 @@ impl<'r> CEGISLoop<'r> {
             self.config.get_params().verif_src_files.iter(),
             &class_dir
         )?;
-        let mut jbmc_runner = JBMCRunner::new(
-            &self.config.get_params().jbmc_config);
-        jbmc_runner.extra_class_path.extend(
-            self.config.get_params().verif_classpaths.iter().cloned()
-        );
-        jbmc_runner.extra_class_path.push(class_dir.as_os_str().into());
-        let mut log_analyzer = JBMCLogAnalyzer::new(
-            self.config.get_params().lib_funcs.iter()
-        );
 
         self.recorder = if self.config.get_params().enable_record {
             Some(CEGISRecorder::new(Some(
@@ -207,8 +206,8 @@ impl<'r> CEGISLoop<'r> {
 
             let verif_result = self.verify(
                 &mut javac_runner,
-                &mut jbmc_runner,
-                &mut log_analyzer
+                verify_runner.as_mut(),
+                log_analyzer.as_mut()
             )?;
             if let Some(ref mut recorder) = self.recorder {
                 recorder.stop_verification();

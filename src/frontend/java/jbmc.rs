@@ -1,17 +1,18 @@
 use std::ffi::{OsString, OsStr};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use crate::backend::TraceError;
 use derive_builder::Builder;
+use super::super::traits::*;
 
-pub struct JBMCRunner<'c> {
-    jbmc_config: &'c JBMCConfig,
+pub struct JBMCRunner {
+    jbmc_config: JBMCConfig,
     current_unwind: Option<usize>,
     pub extra_class_path: Vec<OsString>,
     pub extra_flags: Vec<OsString>,
 }
 
-#[derive(Builder)]
+#[derive(Builder, Clone)]
 #[builder(pattern = "owned", setter(into))]
 pub struct JBMCConfig {
     pub bin_path: PathBuf,
@@ -45,35 +46,13 @@ pub struct JBMCConfig {
 
 test_fixture!(JBMCConfig, dummy, builder{bin_path("")});
 
-impl<'c> JBMCRunner<'c> {
-    pub fn new(jbmc_config: &'c JBMCConfig) -> Self {
+impl JBMCRunner {
+    pub fn new(jbmc_config: JBMCConfig) -> Self {
         Self {
-            jbmc_config: jbmc_config,
             current_unwind: jbmc_config.unwind.clone(),
+            jbmc_config: jbmc_config,
             extra_class_path: vec![],
             extra_flags: vec![]
-        }
-    }
-
-    pub fn get_current_unwind(&self) -> Option<usize> {self.current_unwind.clone()}
-
-    pub fn grow_unwind(&mut self, err_loops: &Vec<String>) -> Result<(), TraceError> {
-        // Upon enter this function, an unwind error should already be detected
-        if let (Some(current), Some(step)) = (self.current_unwind, self.jbmc_config.unwind_growth_step) {
-            let new_unwind = current + step;
-            if let Some(bound) = self.jbmc_config.unwind_maximum {
-                if new_unwind > bound {
-                    // Exceeded bound, throw error
-                    return Err(TraceError::JBMCUnwindError(err_loops.join(",")));
-                }
-            }
-            // Within bound/no bound, set new unwind
-            self.current_unwind = Some(new_unwind);
-            Ok(())
-        } else {
-            // Either no step set, or no unwind set
-            // Either case, an unwind error should be a hard error, throw it
-            Err(TraceError::JBMCUnwindError(err_loops.join(",")))
         }
     }
 
@@ -147,10 +126,13 @@ impl<'c> JBMCRunner<'c> {
         flags.extend(self.extra_flags.iter().cloned());
         flags
     }
+}
 
-    pub fn run<S: AsRef<str>, Sp: AsRef<OsStr>>(&self, entrance: S, class_dir: Sp) -> Result<Vec<u8>, TraceError>{
+impl RunJavaClassVerifier for JBMCRunner {
+    type Error = TraceError;
+    fn run(&self, entrance: &str, class_dir: &Path) -> Result<Vec<u8>, TraceError>{
         let mut args = self.build_flags(class_dir);
-        args.push(OsString::from(entrance.as_ref()));
+        args.push(OsString::from(entrance));
 
         let mut cmd = Command::new(self.jbmc_config.bin_path.as_os_str());
         cmd.args(args);
@@ -158,6 +140,28 @@ impl<'c> JBMCRunner<'c> {
         let result = cmd.output()?;
         Ok(result.stdout)
     }
+    fn get_current_unwind(&self) -> Option<usize> {self.current_unwind.clone()}
+
+    fn grow_unwind(&mut self, err_loops: &Vec<String>) -> Result<(), TraceError> {
+        // Upon enter this function, an unwind error should already be detected
+        if let (Some(current), Some(step)) = (self.current_unwind, self.jbmc_config.unwind_growth_step) {
+            let new_unwind = current + step;
+            if let Some(bound) = self.jbmc_config.unwind_maximum {
+                if new_unwind > bound {
+                    // Exceeded bound, throw error
+                    return Err(TraceError::JBMCUnwindError(err_loops.join(",")));
+                }
+            }
+            // Within bound/no bound, set new unwind
+            self.current_unwind = Some(new_unwind);
+            Ok(())
+        } else {
+            // Either no step set, or no unwind set
+            // Either case, an unwind error should be a hard error, throw it
+            Err(TraceError::JBMCUnwindError(err_loops.join(",")))
+        }
+    }
+
 }
 
 // TODO: Unit tests

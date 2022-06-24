@@ -1,7 +1,12 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::ffi::OsString;
 use crate::frontend::EncoderSource;
-use crate::frontend::java::{JBMCConfig, JSketchConfig};
+use crate::frontend::java::{JBMCConfig, JSketchConfig, JavaTracerConfig};
+use crate::frontend::java::{JBMCRunner, JavaTracerRunner};
+use crate::frontend::traits::*;
+use crate::backend::java::{JBMCLogAnalyzer, JavaTracerLogAnalyzer};
+use crate::backend::TraceError;
+use crate::backend::traits::*;
 use derive_builder::Builder;
 
 pub struct CEGISConfig {
@@ -17,10 +22,24 @@ impl CEGISConfig {
     pub fn get_params(&self) -> &CEGISConfigParams {&self.params}
 }
 
+pub enum JavaClassVerifierConfig {
+    Jbmc(JBMCConfig),
+    Test(JavaTracerConfig)
+}
+
+impl From<JBMCConfig> for JavaClassVerifierConfig {
+    fn from(c: JBMCConfig) -> Self {JavaClassVerifierConfig::Jbmc(c)}
+}
+
+impl From<JavaTracerConfig> for JavaClassVerifierConfig {
+    fn from(c: JavaTracerConfig) -> Self {JavaClassVerifierConfig::Test(c)}
+}
+
 #[derive(Builder)]
 #[builder(pattern = "owned", setter(into))]
 pub struct CEGISConfigParams {
-    pub jbmc_config: JBMCConfig,
+    #[builder(setter(strip_option))]
+    pub verifier_config: Option<JavaClassVerifierConfig>,
     pub javac_bin: PathBuf,
     pub jsketch_config: JSketchConfig,
     #[builder(setter(each = "lib_func"))]
@@ -47,8 +66,44 @@ pub struct CEGISConfigParams {
     pub enable_record: bool,
 }
 
+impl CEGISConfigParamsBuilder {
+    pub fn jbmc_config(self, config: JBMCConfig) -> Self {self.verifier_config(config)}
+    pub fn java_tracer_config(self, config: JavaTracerConfig) -> Self {self.verifier_config(config)}
+}
+
+impl CEGISConfig {
+    pub fn make_java_verifier_controllers(&mut self, class_dir: &Path)
+        -> Option<(Box<dyn RunJavaClassVerifier<Error=TraceError>>, Box<dyn AnalyzeTracingVerifierLog<Error=TraceError>>)> {
+        match self.params.verifier_config.take()? {
+            JavaClassVerifierConfig::Jbmc(config)
+                => {
+                    let mut runner = JBMCRunner::new(config.clone());
+                    runner.extra_class_path.extend(
+                        self.get_params().verif_classpaths.iter().cloned()
+                    );
+                    runner.extra_class_path.push(class_dir.as_os_str().into());
+                    let log_analyzer = JBMCLogAnalyzer::new(
+                        self.get_params().lib_funcs.iter()
+                    );
+                    Some((Box::new(runner), Box::new(log_analyzer)))
+                },
+            JavaClassVerifierConfig::Test(config)
+                => {
+                    let mut runner = JavaTracerRunner::new(config.clone(), self.get_params().lib_funcs.iter());
+                    runner.extra_class_path.extend(
+                        self.get_params().verif_classpaths.iter().map(|s| s.into())
+                    );
+                    runner.extra_class_path.push(class_dir.as_os_str().into());
+                    let log_analyzer = JavaTracerLogAnalyzer::new();
+                    Some((Box::new(runner), Box::new(log_analyzer)))
+                }
+        }
+
+    }
+}
+
 test_fixture!(CEGISConfigParams, dummy, builder{
-    jbmc_config(JBMCConfig::test_fixture_dummy()),
+    verifier_config(JBMCConfig::test_fixture_dummy()),
     javac_bin(""),
     jsketch_config(JSketchConfig::test_fixture_dummy()),
     lib_funcs(vec![]),

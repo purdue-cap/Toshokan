@@ -5,7 +5,9 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 
 import javassist.ClassPool;
+import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
@@ -32,26 +34,34 @@ public class TraceClassTransformer implements ClassFileTransformer{
 
             for(String mtd: methods) {
                 try {
-                    CtMethod m = cc.getDeclaredMethod(mtd);
-                    StringBuilder loggerBlock = new StringBuilder();
-                    loggerBlock.append("{ com.google.gson.Gson gson = new com.google.gson.Gson();");
-                    loggerBlock.append("edu.purdue.cap.toshokan.java.tracer.TraceLog log = new edu.purdue.cap.toshokan.java.tracer.TraceLog();");
-                    loggerBlock.append("log.className = \""+ cc.getName() +  "\";");
-                    loggerBlock.append("log.methodName = \""+ mtd +  "\";");
-                    loggerBlock.append("log.methodSig = \""+ m.getSignature() +  "\";");
-                    loggerBlock.append("log.args = $args;");
-                    loggerBlock.append("log.ret = ($w)$_;");
-                    if (!Modifier.isStatic(m.getModifiers())) {
-                        if (this.enableThisObj) {
-                            loggerBlock.append("log.thisObj = $0;");
-                        }
-                        loggerBlock.append("log.thisId = new Integer(System.identityHashCode($0));");
+                    CtBehavior ms[];
+                    if (mtd.equals("<init>")) {
+                        ms = cc.getDeclaredConstructors();
                     }
-                    loggerBlock.append("System.err.print(\"[javaTracer] log:\");");
-                    loggerBlock.append("System.err.println(gson.toJson(log));");
-                    loggerBlock.append(" }");
+                    else {
+                        ms = cc.getDeclaredMethods(mtd);
+                    }
+                    for (CtBehavior m: ms) {
+                        StringBuilder loggerBlock = new StringBuilder();
+                        loggerBlock.append("{ com.google.gson.Gson gson = new com.google.gson.Gson();");
+                        loggerBlock.append("edu.purdue.cap.toshokan.java.tracer.TraceLog log = new edu.purdue.cap.toshokan.java.tracer.TraceLog();");
+                        loggerBlock.append("log.className = \""+ cc.getName() +  "\";");
+                        loggerBlock.append("log.methodName = \""+ mtd +  "\";");
+                        loggerBlock.append("log.methodSig = \""+ m.getSignature() +  "\";");
+                        loggerBlock.append("log.args = $args;");
+                        loggerBlock.append("log.ret = ($w)$_;");
+                        if (!Modifier.isStatic(m.getModifiers())) {
+                            if (this.enableThisObj) {
+                                loggerBlock.append("log.thisObj = $0;");
+                            }
+                            loggerBlock.append("log.thisId = new Integer(System.identityHashCode($0));");
+                        }
+                        loggerBlock.append("System.err.print(\"[javaTracer] log:\");");
+                        loggerBlock.append("System.err.println(gson.toJson(log));");
+                        loggerBlock.append(" }");
 
-                    m.insertAfter(loggerBlock.toString());
+                        m.insertAfter(loggerBlock.toString());
+                    }
 
                 } catch (Exception ex) {
                     System.err.print("Exception:");

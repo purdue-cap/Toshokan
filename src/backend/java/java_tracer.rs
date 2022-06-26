@@ -151,16 +151,24 @@ impl AnalyzeTracingVerifierLog for LogAnalyzer {
                 let log_content = &buffer["[javaTracer] log:".len()..];
                 let java_tracer_log: JavaTracerLog = serde_json::from_str(log_content)
                     .context(log_content.as_bytes().to_vec())?;
-                current_traces.push(FuncLog {
-                    args: java_tracer_log.args,
-                    this: java_tracer_log.this_id.map(|i| i.to_string()),
-                    rtn: java_tracer_log.rtn,
-                    func: format!("{}.{}({})",
+                let func_name = if java_tracer_log.method_name == "<init>" {
+                    format!("{}({})", java_tracer_log.class_name,
+                        parse_param_types_from_sig(&java_tracer_log.method_sig)
+                        .ok_or(TraceError::JavaTracerLogError("signature str parsing failure"))?
+                        .join(", "))
+                } else {
+                    format!("{}.{}({})",
                         java_tracer_log.class_name,
                         java_tracer_log.method_name,
                         parse_param_types_from_sig(&java_tracer_log.method_sig)
                         .ok_or(TraceError::JavaTracerLogError("signature str parse failure"))?
                         .join(", "))
+                };
+                current_traces.push(FuncLog {
+                    args: java_tracer_log.args,
+                    this: java_tracer_log.this_id.map(|i| i.to_string()),
+                    rtn: java_tracer_log.rtn,
+                    func: func_name
                 });
             } else if buffer.starts_with("Exception in thread") {
                 no_exceptions = false;
@@ -240,5 +248,72 @@ mod tests {
         ]]);
         Ok(())
     }
+
+    static SAMPLE_STDERR_WITH_INIT: &'static [u8] = include_bytes!("../../../tests/data/java_tracer_sample_init.stderr");
+    #[test]
+    fn parses_sample_stderr_with_init() -> Result<(), Box<dyn std::error::Error>> {
+        let mut analyzer = LogAnalyzer::new();
+        let result = analyzer.analyze_logs(SAMPLE_STDERR_WITH_INIT)?;
+        assert_eq!(result, false);
+        assert_eq!((&analyzer as &dyn AnalyzeVerifierLog<Error=_>).get_c_e_s(), &Vec::<Vec<i32>>::new());
+        assert_eq!((&analyzer as &dyn AnalyzeTracerLog<Error=_>).get_traces(), &vec![vec![
+            FuncLog {
+                args: vec![json!(1i32)],
+                this: None,
+                rtn: None,
+                func: "Test.test0(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(2i32)],
+                this: None,
+                rtn: None,
+                func: "Test.test0(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(3i32)],
+                this: None,
+                rtn: Some(json!(0i32)),
+                func: "Test.test1(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(4i32)],
+                this: None,
+                rtn: Some(json!(0i32)),
+                func: "Test.test1(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(5i32), json!(6i32)],
+                this: None,
+                rtn: Some(json!(0i32)),
+                func: "Test.test1(int, int)".into()
+            },
+            FuncLog {
+                args: vec![json!(3i32)],
+                this: Some("100555887".into()),
+                rtn: None,
+                func: "Adder(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(4i32)],
+                this: Some("100555887".into()),
+                rtn: Some(json!(7i32)),
+                func: "Adder.doAdd(int)".into()
+            },
+            FuncLog {
+                args: vec![json!(3i32), json!(4i32)],
+                this: Some("1769597131".into()),
+                rtn: None,
+                func: "Adder(int, int)".into()
+            },
+            FuncLog {
+                args: vec![json!(9i32)],
+                this: Some("1769597131".into()),
+                rtn: Some(json!(16i32)),
+                func: "Adder.doAdd(int)".into()
+            },
+        ]]);
+        Ok(())
+    }
+
 
 }
